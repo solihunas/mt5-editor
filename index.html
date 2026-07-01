@@ -6,26 +6,23 @@
 <title>MT5 Riwayat — Demo Edukasi Anti-Penipuan</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Inter:wght@400;500;600;700&family=Oswald:wght@400;500;600;700&family=Roboto+Condensed:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
-/* ══ Revisi CSS: font halaman → Roboto Condensed, letter-spacing rapat global ══ */
+:root{--right-pad:16px;}
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;
   font-family:'Roboto Condensed',-apple-system,'Roboto','Segoe UI',Arial,sans-serif;
   letter-spacing:-0.3px;}
 html,body{background:radial-gradient(ellipse at top left,#1a0830 0%,#08000f 55%,#000000 100%);display:flex;flex-direction:column;align-items:center;min-height:100vh;}
-
-/* fallback jika font gagal dimuat (offline dsb): rapatkan huruf via scaleX, HANYA pada
-   konten teks yang bisa diedit — bukan foto asli, supaya foto tidak gepeng */
 #htmlZone.font-fallback{transform:scaleX(0.92);transform-origin:left top;width:108.7%;}
 
-#ctrlbar{width:100%;max-width:420px;background:rgba(8,0,20,0.9);display:flex;gap:8px;padding:8px 10px;border-bottom:1px solid rgba(140,60,255,0.2);}
-.ctrl{border:1px solid rgba(140,60,255,0.25);border-radius:8px;padding:9px 14px;font-size:12.5px;font-weight:700;cursor:pointer;color:#9a85c0;background:rgba(20,5,40,0.8);text-align:center;transition:.15s;}
+#ctrlbar{width:100%;max-width:420px;background:rgba(8,0,20,0.9);display:flex;gap:6px;padding:8px 10px;border-bottom:1px solid rgba(140,60,255,0.2);flex-wrap:wrap;}
+.ctrl{border:1px solid rgba(140,60,255,0.25);border-radius:8px;padding:9px 12px;font-size:12px;font-weight:700;cursor:pointer;color:#9a85c0;background:rgba(20,5,40,0.8);text-align:center;transition:.15s;}
 .ctrl:active{filter:brightness(1.3);}
 .ctrl.dl{background:rgba(40,140,90,0.4);border-color:rgba(60,200,120,0.4);color:#6de8a0;}
+.ctrl.gs{background:rgba(40,90,150,0.4);border-color:rgba(60,150,220,0.4);color:#7dc4ff;}
 .ctrl.rs{margin-left:auto;background:rgba(50,15,25,0.6);border-color:rgba(180,60,80,0.3);color:#e09098;}
 
-/* ── bar project ── */
 #projectbar{width:100%;max-width:420px;display:flex;gap:6px;padding:8px 10px 6px;overflow-x:auto;background:rgba(8,0,20,0.9);border-bottom:1px solid rgba(140,60,255,0.15);}
 #projectbar::-webkit-scrollbar{height:4px;}
 .ptab{display:flex;align-items:center;gap:6px;padding:6px 8px 6px 12px;border-radius:16px;background:rgba(120,50,220,0.16);border:1px solid rgba(140,60,255,0.3);color:#c8b0ee;font-size:12px;font-weight:700;white-space:nowrap;cursor:pointer;flex-shrink:0;}
@@ -40,61 +37,70 @@ html,body{background:radial-gradient(ellipse at top left,#1a0830 0%,#08000f 55%,
 #photowrap{position:relative;width:406.667px;background:#fff;}
 #photowrap>img{display:block;width:100%;height:auto;user-select:none;-webkit-user-drag:none;pointer-events:none;}
 
-/* ── ringkasan ── */
 .summary{background:#fff;}
-.srow{display:flex;align-items:flex-end;padding:3px 16px 2px 16px;border-bottom:1px solid #f0f0f0;line-height:18px;}
-.slbl{white-space:nowrap;flex-shrink:0;}
+.srow{display:flex;align-items:flex-end;padding:3px 0 2px 16px;border-bottom:1px solid #f0f0f0;line-height:18px;}
+.slbl{white-space:nowrap;flex-shrink:0;font-size:15px;font-weight:700;color:#1c1c1c;}
 .sdot{flex:1;border-bottom:1.5px dotted #cbcbcb;margin:0 6px 4px;}
-.sval{white-space:nowrap;}
+.sval{white-space:nowrap;padding-right:var(--right-pad);cursor:pointer;}
+body:not(.cap) .sval:hover{outline:1.5px dashed rgba(10,132,255,.5);outline-offset:1px;}
 
-/* ── daftar transaksi ── */
 .trow{display:flex;align-items:stretch;border-bottom:1px solid #f2f2f2;background:#fff;position:relative;}
 .tbar{width:4px;flex-shrink:0;}.tbar.lo{background:#E87545;}.tbar.pr{background:#34C759;}.tbar.no{background:transparent;}
-.tc{flex:1;padding:6px 14px 5px 10px;display:flex;justify-content:space-between;align-items:center;}
-.tsl{display:flex;align-items:baseline;line-height:20px;}
+.tc{flex:1;padding:6px 0 5px 10px;display:flex;justify-content:space-between;align-items:center;}
+.tleft{min-width:0;}
+.tsl{display:flex;align-items:baseline;line-height:20px;white-space:nowrap;}
 .tcomma{margin-right:5px;font-weight:700;color:#1c1c1c;}
-.tprices{margin-top:2px;line-height:16px;font-size:13.5px;color:#1a1a1a;font-weight:500;} /* revisi: +1px, #1a1a1a, weight 500 */
-.tright{text-align:right;}
-.tdate{line-height:20px;}
-.tpnl{line-height:16px;margin-top:2px;}
+.tprices{margin-top:2px;line-height:16px;white-space:nowrap;}
+.tright{text-align:right;padding-right:var(--right-pad);flex-shrink:0;}
+.tdate{line-height:20px;white-space:nowrap;}
+.tpnl{line-height:16px;margin-top:2px;white-space:nowrap;}
+.symtxt{cursor:pointer;}
+body:not(.cap) .symtxt:hover{outline:1.5px dashed rgba(10,132,255,.5);outline-offset:1px;}
+
 .rowbtns{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:flex;gap:6px;z-index:5;}
-.delbtn,.copybtn{background:#f0f0f3;border:1px solid #dcdcdc;color:#9b9b9b;font-size:11px;font-weight:700;cursor:pointer;border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center;}
+.delbtn,.copybtn,.editbtn{border:1px solid #dcdcdc;font-size:11px;font-weight:700;cursor:pointer;border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center;}
+.delbtn{background:#f0f0f3;color:#9b9b9b;}
+.copybtn{background:#f0f0f3;color:#9b9b9b;}
+.editbtn{background:#eaf4ff;color:#0a84ff;border-color:#cfe4ff;}
 .delbtn:active{background:#ff3b30;color:#fff;border-color:#ff3b30;}
 .copybtn:active{background:#0a84ff;color:#fff;border-color:#0a84ff;}
-.addbtn{display:block;width:calc(100% - 32px);margin:11px 16px 12px;padding:11px;border:1.5px dashed #c8c8cc;background:#fff;color:#0a84ff;font-size:14px;font-weight:500;border-radius:8px;cursor:pointer;text-align:center;}
+.editbtn:active{background:#0a84ff;color:#fff;}
 
-body:not(.cap) .ed{cursor:pointer;}
-body:not(.cap) .ed:hover{outline:1.5px dashed rgba(10,132,255,.5);outline-offset:1px;}
-body.cap .rowbtns,body.cap .addbtn{display:none!important;}
+.addrow{display:flex;gap:8px;margin:11px 16px 12px;}
+.addbtn{flex:1;padding:11px 4px;border:1.5px dashed;background:#fff;font-size:13.5px;font-weight:600;border-radius:8px;cursor:pointer;text-align:center;}
+.addbtn.buy{border-color:#a8d2ff;color:#0a84ff;}
+.addbtn.sell{border-color:#f4b8b0;color:#e0322e;}
 
-/* ── panel pengaturan teks (modal) ── */
-#epop-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:899;display:none;}
-#epop{position:fixed;z-index:900;top:50%;left:50%;transform:translate(-50%,-50%);width:92%;max-width:360px;max-height:88vh;overflow-y:auto;background:#fff;border-radius:16px;padding:18px 18px 16px;box-shadow:0 20px 60px rgba(0,0,0,.4);display:none;}
-#epop .eplbl{font-size:11px;color:#8e8e93;margin:0 0 6px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;}
-#epop .epsec{font-size:10.5px;color:#a0a0a8;font-weight:700;letter-spacing:.5px;text-transform:uppercase;margin:14px 0 6px;}
-#einput{width:100%;border:1.5px solid #0a84ff;border-radius:9px;padding:8px 11px;font-size:15px;color:#1c1c1c;outline:none;}
+body.cap .rowbtns,body.cap .addrow{display:none!important;}
+
+/* ── modal umum (form transaksi, mini-edit, gaya global, preview) ── */
+.ov-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:899;display:none;}
+.ov-panel{position:fixed;z-index:900;top:50%;left:50%;transform:translate(-50%,-50%);width:92%;max-width:370px;max-height:88vh;overflow-y:auto;background:#fff;border-radius:16px;padding:18px 18px 16px;box-shadow:0 20px 60px rgba(0,0,0,.4);display:none;}
+.ov-panel .eplbl{font-size:11px;color:#8e8e93;margin:0 0 8px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;}
+.ov-panel .epsec{font-size:10.5px;color:#5a5aa0;font-weight:700;letter-spacing:.5px;text-transform:uppercase;margin:14px 0 6px;padding-top:8px;border-top:1px solid #eee;}
+.ov-panel .epsec:first-of-type{border-top:none;padding-top:0;}
 .fld{width:100%;border:1px solid #d8d8dc;border-radius:8px;padding:7px 9px;font-size:13px;color:#1c1c1c;background:#fff;}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
 .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
+.grid4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px;}
 .fieldlbl{font-size:10px;color:#8e8e93;font-weight:600;margin-bottom:3px;display:block;}
-.styrow{display:flex;gap:8px;align-items:center;}
-#efsize{width:100%;border:1px solid #d8d8dc;border-radius:7px;padding:6px 2px;font-size:13px;text-align:center;}
+.styrow{display:flex;gap:6px;align-items:center;}
+.numinp{width:100%;border:1px solid #d8d8dc;border-radius:7px;padding:6px 2px;font-size:12.5px;text-align:center;}
+.stepbtn{width:22px;height:28px;border:1px solid #d8d8dc;background:#f5f5f7;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;color:#333;flex-shrink:0;}
 input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0;}
 input[type=number]{-moz-appearance:textfield;}
-.stepbtn{width:26px;height:30px;border:1px solid #d8d8dc;background:#f5f5f7;border-radius:6px;font-size:14px;font-weight:700;cursor:pointer;color:#333;flex-shrink:0;}
-.togglebtn{border:1.5px solid #d8d8dc;background:#f5f5f7;color:#555;border-radius:7px;padding:7px 10px;font-size:12px;font-weight:700;cursor:pointer;width:100%;}
-.togglebtn.on{background:#0a84ff;border-color:#0a84ff;color:#fff;}
-.swrow{display:flex;gap:10px;margin-top:6px;align-items:center;}
-.sw{width:24px;height:24px;border-radius:50%;cursor:pointer;border:3px solid transparent;transition:transform .15s;flex-shrink:0;}
-.sw:active{transform:scale(1.2);}
-.sw.sel{border-color:#000;transform:scale(1.15);}
-#ehex{font-family:monospace;text-transform:uppercase;}
-#ecolorpick{width:34px;height:34px;padding:0;border:1px solid #d8d8dc;border-radius:8px;cursor:pointer;flex-shrink:0;}
+.dirtoggle{display:flex;gap:8px;margin-bottom:12px;}
+.dirbtn{flex:1;padding:10px;border-radius:9px;border:1.5px solid #d8d8dc;background:#f7f7f9;color:#888;font-weight:700;cursor:pointer;font-size:13px;}
+.dirbtn.buy.on{background:#0a84ff;border-color:#0a84ff;color:#fff;}
+.dirbtn.sell.on{background:#e0322e;border-color:#e0322e;color:#fff;}
+.previewline{margin-top:12px;padding:10px 12px;background:#f7f8fb;border-radius:10px;font-size:13px;text-align:center;}
+.previewline b{font-size:16px;}
+.hexrow{display:flex;gap:8px;align-items:center;}
+.hexrow input[type=color]{width:34px;height:32px;padding:0;border:1px solid #d8d8dc;border-radius:8px;cursor:pointer;flex-shrink:0;}
 .epbrow{display:flex;gap:7px;margin-top:16px;}
 .epok{flex:1;background:#0a84ff;color:#fff;border:none;border-radius:9px;padding:10px 4px;font-size:12.5px;font-weight:700;cursor:pointer;}
 .epcancel{flex:1;background:#f2f2f7;color:#1c1c1c;border:none;border-radius:9px;padding:10px 4px;font-size:12.5px;font-weight:600;cursor:pointer;}
-.epclear{flex:1;background:#fff0f0;color:#e0322e;border:1px solid #f0c8c8;border-radius:9px;padding:10px 4px;font-size:11.5px;font-weight:600;cursor:pointer;}
-.epresetsty{width:100%;margin-top:7px;background:#fff8ea;color:#b8860b;border:1px solid #f0e0b8;border-radius:9px;padding:8px 4px;font-size:11.5px;font-weight:600;cursor:pointer;}
+.epghost{width:100%;margin-top:8px;background:#fff8ea;color:#b8860b;border:1px solid #f0e0b8;border-radius:9px;padding:8px 4px;font-size:11.5px;font-weight:600;cursor:pointer;}
 
 #modal{position:fixed;inset:0;background:rgba(0,0,0,.92);backdrop-filter:blur(8px);z-index:1000;display:none;flex-direction:column;align-items:center;justify-content:center;padding:16px;}
 #modal .mtit{color:#d0b0ff;font-size:14px;margin-bottom:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;}
@@ -112,12 +118,13 @@ input[type=number]{-moz-appearance:textfield;}
 
 <div id="ctrlbar">
   <button class="ctrl dl" id="dlbtn" onclick="doDownload()">⬇ HD</button>
+  <button class="ctrl gs" onclick="openGsPanel()">⚙ Gaya Global</button>
   <button class="ctrl rs" onclick="resetProject()" title="Reset project aktif ke contoh awal">↻ Reset</button>
 </div>
 
 <div id="projectbar"></div>
 
-<div class="hint">Header/status bar/navigasi = <b>foto asli</b>. Ketuk teks untuk buka <b>panel pengaturan</b> (nilai, font, ukuran, ketebalan, warna hex, spasi &amp; lebar huruf). Tambah/hapus/duplikat baris transaksi, dan kelola banyak <b>project</b> — semua tersimpan otomatis di perangkat ini.</div>
+<div class="hint">Header/status bar/navigasi = <b>foto asli</b>. Font/ukuran/ketebalan/lebar/warna diatur <b>global</b> lewat "⚙ Gaya Global" (berlaku ke semua baris). Tambah transaksi lewat tombol Buy/Sell — hasil &amp; warna dihitung otomatis. Semua tersimpan otomatis per project.</div>
 
 <div id="photowrap">
   <img src="assets/riwayat-top.jpg" alt="Header Riwayat MT5">
@@ -125,70 +132,56 @@ input[type=number]{-moz-appearance:textfield;}
   <div id="htmlZone">
     <div class="summary" id="summaryList"></div>
     <div id="tlist"></div>
-    <button class="addbtn" onclick="addTrade()">+ Tambah baris transaksi</button>
+    <div class="addrow">
+      <button class="addbtn buy" onclick="openTradeForm('buy')">+ Tambah Buy</button>
+      <button class="addbtn sell" onclick="openTradeForm('sell')">+ Tambah Sell</button>
+    </div>
   </div>
 
   <img src="assets/riwayat-bottom.jpg" alt="Navigasi MT5">
 </div>
 
-<!-- PANEL PENGATURAN TEKS -->
-<div id="epop-backdrop" onclick="closeEp()"></div>
-<div id="epop">
-  <div class="eplbl">Pengaturan Teks</div>
-  <input id="einput" type="text" placeholder="Ketik nilai...">
-
-  <div class="epsec">Font</div>
-  <select id="efFont" class="fld"></select>
-
-  <div class="epsec">Ukuran, Ketebalan &amp; Gaya</div>
-  <div class="grid3">
-    <div>
-      <span class="fieldlbl">Ukuran (px)</span>
-      <div class="styrow"><button class="stepbtn" onclick="stepSize(-1)">−</button><input id="efsize" type="number" min="6" max="60" step="0.5"><button class="stepbtn" onclick="stepSize(1)">＋</button></div>
-    </div>
-    <div>
-      <span class="fieldlbl">Ketebalan</span>
-      <select id="efWeight" class="fld">
-        <option value="300">Ringan</option>
-        <option value="400">Reguler</option>
-        <option value="500">Sedang</option>
-        <option value="600">Semi Tebal</option>
-        <option value="700">Tebal</option>
-        <option value="800">Ekstra Tebal</option>
-      </select>
-    </div>
-    <div>
-      <span class="fieldlbl">Gaya</span>
-      <button class="togglebtn" id="efitalicbtn" onclick="toggleItalic()" style="font-style:italic;">Italic</button>
-    </div>
+<!-- FORM TRANSAKSI (tambah buy/sell + edit) -->
+<div class="ov-backdrop" id="tfBackdrop" onclick="closeTradeForm()"></div>
+<div class="ov-panel" id="tfPanel">
+  <div class="eplbl">Transaksi</div>
+  <div class="dirtoggle">
+    <button class="dirbtn buy" id="tfBuyBtn" onclick="tfSetDir('buy')">BUY</button>
+    <button class="dirbtn sell" id="tfSellBtn" onclick="tfSetDir('sell')">SELL</button>
   </div>
-
-  <div class="epsec">Tinggi &amp; Lebar Huruf</div>
-  <div class="grid3">
-    <div><span class="fieldlbl">Tinggi baris (px)</span><input id="efLH" type="number" step="0.5" class="fld" placeholder="auto"></div>
-    <div><span class="fieldlbl">Spasi huruf (px)</span><input id="efLS" type="number" step="0.1" class="fld" placeholder="0"></div>
-    <div><span class="fieldlbl">Lebar huruf (%)</span><input id="efSX" type="number" step="1" class="fld" placeholder="100"></div>
+  <div class="grid2">
+    <div><span class="fieldlbl">Simbol</span><input id="tfSym" class="fld" type="text"></div>
+    <div><span class="fieldlbl">Lot</span><input id="tfLot" class="fld" type="number" step="0.01" oninput="tfUpdatePreview()"></div>
   </div>
-
-  <div class="epsec">Warna</div>
-  <div class="styrow">
-    <input id="ecolorpick" type="color" oninput="onColorPick(this.value)">
-    <input id="ehex" class="fld" type="text" maxlength="7" placeholder="#1c1c1c" oninput="onHexInput(this.value)">
+  <div class="grid2" style="margin-top:8px;">
+    <div><span class="fieldlbl">Harga Open</span><input id="tfOpen" class="fld" type="text" inputmode="decimal" oninput="tfUpdatePreview()"></div>
+    <div><span class="fieldlbl">Harga Close</span><input id="tfClose" class="fld" type="text" inputmode="decimal" oninput="tfUpdatePreview()"></div>
   </div>
-  <div class="swrow">
-    <div class="sw" style="background:#1c1c1c" onclick="quickColor('#1c1c1c')"></div>
-    <div class="sw" style="background:#0a84ff" onclick="quickColor('#0a84ff')"></div>
-    <div class="sw" style="background:#e0322e" onclick="quickColor('#e0322e')"></div>
-    <div class="sw" style="background:#8e8e93" onclick="quickColor('#8e8e93')"></div>
-    <div class="sw" style="background:#34C759" onclick="quickColor('#34C759')"></div>
-    <div class="sw" style="background:#1a1a1a" onclick="quickColor('#1a1a1a')"></div>
-  </div>
-
-  <button class="epresetsty" onclick="resetStyleOnly()">↺ Reset gaya ke default (teks tidak berubah)</button>
-  <div class="epbrow"><button class="epok" onclick="applyEp()">OK</button><button class="epclear" onclick="clearEp()">Kosongkan</button><button class="epcancel" onclick="closeEp()">Batal</button></div>
+  <div style="margin-top:8px;"><span class="fieldlbl">Waktu (YYYY.MM.DD HH:MM:SS)</span><input id="tfTime" class="fld" type="text"></div>
+  <div class="previewline" id="tfPreview">Hasil: <b>0.00</b></div>
+  <div class="epbrow"><button class="epok" onclick="tfSubmit()">Simpan</button><button class="epcancel" onclick="closeTradeForm()">Batal</button></div>
 </div>
 
-<!-- MODAL -->
+<!-- MINI EDIT (simbol teks / nilai ringkasan) -->
+<div class="ov-backdrop" id="meBackdrop" onclick="closeMiniEdit()"></div>
+<div class="ov-panel" id="mePanel" style="max-width:300px;">
+  <div class="eplbl" id="meLabel">Edit</div>
+  <input id="meInput" class="fld" type="text" style="font-size:15px;padding:9px 11px;">
+  <div class="epbrow"><button class="epok" onclick="meSubmit()">OK</button><button class="epcancel" onclick="closeMiniEdit()">Batal</button></div>
+</div>
+
+<!-- PANEL GAYA GLOBAL -->
+<div class="ov-backdrop" id="gsBackdrop" onclick="closeGsPanel()"></div>
+<div class="ov-panel" id="gsPanel">
+  <div class="eplbl">⚙ Gaya Global (berlaku ke semua baris)</div>
+  <div id="gsBody"></div>
+  <div class="epsec">Tata Letak</div>
+  <div><span class="fieldlbl">Jarak dari kanan (px) — Keuntungan, Deposito, Swap, Komisi, Saldo, Tanggal, Hasil</span><input id="gsRightPad" class="fld" type="number" step="1"></div>
+  <div class="epbrow"><button class="epok" onclick="gsSubmit()">Simpan</button><button class="epcancel" onclick="closeGsPanel()">Batal</button></div>
+  <button class="epghost" onclick="gsResetDefault()">↺ Reset semua gaya ke default</button>
+</div>
+
+<!-- MODAL PREVIEW HD -->
 <div id="modal">
   <div class="mtit">Preview HD</div>
   <div class="mwrap"><img id="mimg"></div>
@@ -197,121 +190,143 @@ input[type=number]{-moz-appearance:textfield;}
 
 <script>
 /* ══════════════════════════════════════════════
-   FONT LOADING FALLBACK — scaleX(0.92) jika Roboto
-   Condensed gagal dimuat (mis. offline)
+   FONT FALLBACK
 ═══════════════════════════════════════════════ */
 function applyFontFallback(){
   try{
-    const ok = (document.fonts && document.fonts.check) ? document.fonts.check("700 16px 'Roboto Condensed'") : true;
+    const ok=(document.fonts&&document.fonts.check)?document.fonts.check("700 16px 'Roboto Condensed'"):true;
     if(!ok) document.getElementById('htmlZone').classList.add('font-fallback');
   }catch(e){}
 }
-if(document.fonts && document.fonts.ready) document.fonts.ready.then(applyFontFallback).catch(applyFontFallback);
+if(document.fonts&&document.fonts.ready) document.fonts.ready.then(applyFontFallback).catch(applyFontFallback);
 else window.addEventListener('load',applyFontFallback);
-setTimeout(applyFontFallback,1200); /* jaga-jaga kalau event fonts tidak pernah resolve */
+setTimeout(applyFontFallback,1200);
 
 /* ══════════════════════════════════════════════
-   MODEL FIELD TEKS
+   GAYA GLOBAL (bukan per-history) — tersimpan terpisah,
+   berlaku untuk SEMUA project
 ═══════════════════════════════════════════════ */
-const FONT_OPTIONS=[
- {label:'Default (Roboto Condensed)',value:''},
- {label:'Roboto Condensed',value:"'Roboto Condensed',sans-serif"},
- {label:'Roboto',value:"'Roboto',sans-serif"},
- {label:'Oswald (Condensed)',value:"'Oswald',sans-serif"},
- {label:'Barlow Condensed',value:"'Barlow Condensed',sans-serif"},
- {label:'Inter',value:"'Inter',sans-serif"},
- {label:'Arial',value:"Arial,sans-serif"},
- {label:'System (iOS/Android)',value:"-apple-system,'Segoe UI',Roboto,sans-serif"},
+const GS_KEY='mt5_global_style_v1';
+const STYLE_FIELDS=[
+ {key:'sym',  label:'Simbol (XAUUSDc)',        hasColor:true},
+ {key:'dir',  label:'Buy / Sell',              hasColor:false},
+ {key:'price',label:'Harga Open → Close',      hasColor:true},
+ {key:'date', label:'Tanggal &amp; Waktu',     hasColor:true},
+ {key:'pnl',  label:'Hasil Trade',             hasColor:false},
+ {key:'val',  label:'Nilai Ringkasan (Keuntungan dkk)',hasColor:true},
 ];
-
-function F(t,color,fs,fw,it,extra){
-  return Object.assign({t,color,fs,fw:fw||400,it:!!it,ff:'',ls:null,sx:100,lh:null},extra||{});
+function defaultGlobalStyle(){
+  return {
+    sym:  {fs:17,  fw:700, sx:92, color:'#1c1c1c'},
+    dir:  {fs:17,  fw:500, sx:90},
+    price:{fs:17,  fw:700, sx:90, color:'#6F6F6F'},
+    date: {fs:14.5,fw:500, sx:95, color:'#8A8A8A'},
+    pnl:  {fs:15,  fw:800, sx:80},
+    val:  {fs:15,  fw:700, sx:100,color:'#1c1c1c'},
+    posColor:'#0a84ff', negColor:'#e0322e',
+    rightPad:16, defaultLot:1.00,
+  };
 }
-const FIELD_DEFAULTS={
- sym:  {color:'#1c1c1c',fs:15,  fw:700,it:false,ff:'',ls:null,sx:100,lh:null},
- dir:  {color:'#0a84ff',fs:15,  fw:400,it:false,ff:'',ls:null,sx:100,lh:null},
- price:{color:'#1a1a1a',fs:13.5,fw:500,it:false,ff:'',ls:null,sx:100,lh:null},
- date: {color:'#8e8e93',fs:10.5,fw:400,it:false,ff:'',ls:null,sx:100,lh:null},
- pnl:  {color:'#0a84ff',fs:15,  fw:700,it:false,ff:'',ls:null,sx:100,lh:null},
- lbl:  {color:'#1c1c1c',fs:15,  fw:700,it:false,ff:'',ls:null,sx:100,lh:null},
- val:  {color:'#1c1c1c',fs:15,  fw:700,it:false,ff:'',ls:null,sx:100,lh:null},
-};
+let GS=defaultGlobalStyle();
+function loadGS(){
+  try{const raw=JSON.parse(localStorage.getItem(GS_KEY)||'null');if(raw) GS=Object.assign(defaultGlobalStyle(),raw);}catch(e){}
+  applyRightPad();
+}
+function saveGS(){localStorage.setItem(GS_KEY,JSON.stringify(GS));}
+function applyRightPad(){document.documentElement.style.setProperty('--right-pad',(GS.rightPad||16)+'px');}
+
+/* ══════════════════════════════════════════════
+   FORMAT ANGKA OTOMATIS
+   - spasi untuk ribuan/jutaan
+   - 2 digit desimal (nominal/hasil), 3 digit desimal (harga open→close)
+   - tanda +/- eksplisit untuk field bertanda (keuntungan, hasil trade)
+═══════════════════════════════════════════════ */
+function parseNum(v){const n=parseFloat(String(v).replace(/[^\d.\-]/g,''));return isNaN(n)?0:n;}
+function groupThousands(s){return s.replace(/\B(?=(\d{3})+(?!\d))/g,' ');}
+function formatMoney(value,decimals,forceSign){
+  let n=typeof value==='number'?value:parseNum(value);
+  const neg=n<0; n=Math.abs(n);
+  const parts=n.toFixed(decimals).split('.');
+  const intPart=groupThousands(parts[0]);
+  const sign=neg?'-':(forceSign?'+':'');
+  return sign+intPart+(decimals>0?'.'+parts[1]:'');
+}
+function formatPriceNum(value){return formatMoney(value,3,false);}
+
+function calcPnl(dir,lot,open,close){
+  const diff=dir==='buy'?(close-open):(open-close);
+  return diff*lot*100;
+}
+
+/* ══════════════════════════════════════════════
+   MODEL & STORE PROJECT (multi-project)
+═══════════════════════════════════════════════ */
+const STORE_KEY='mt5_projects_v4';
+const OLD_KEY_V3='mt5_projects_v3';
+let store={projects:{},order:[],activeId:'',nextNum:1};
+function cp(){return store.projects[store.activeId];}
+function escapeHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 
 function defaultTemplate(){
   return {
-    summaryData:[
-     {id:'keuntungan',lbl:F('Keuntungan:','#1c1c1c',15,700),val:F('-24.80','#e0322e',15,700)},
-     {id:'deposito',  lbl:F('Deposito','#1c1c1c',15,700),   val:F('100.00','#1c1c1c',15,700)},
-     {id:'swap',      lbl:F('Swap:','#1c1c1c',15,700),      val:F('0.00','#1c1c1c',15,700)},
-     {id:'komisi',    lbl:F('Komisi:','#1c1c1c',15,700),    val:F('0.00','#1c1c1c',15,700)},
-     {id:'saldo',     lbl:F('Saldo:','#1c1c1c',15,700),     val:F('75.20','#1c1c1c',15,700)},
-    ],
-    tdata:[
-     {sym:F('XAUUSDc','#1c1c1c',15,700), dir:F('buy 0.01','#0a84ff',15,400),  price:F('4 026.005  →  4 036.038','#1a1a1a',13.5,500), date:F('2026.06.30 08:00:39','#8e8e93',10.5,400), pnl:F('10.00','#0a84ff',15,700)},
-     {sym:F('XAUUSDc','#1c1c1c',15,700), dir:F('sell 0.01','#e0322e',15,400), price:F('4 038.027  →  4 043.033','#1a1a1a',13.5,500), date:F('2026.06.29 12:02:29','#8e8e93',10.5,400), pnl:F('-5.00','#e0322e',15,700)},
-     {sym:F('XAUUSDc','#1c1c1c',15,700), dir:F('buy 0.01','#0a84ff',15,400),  price:F('4 017.189  →  4 028.001','#1a1a1a',13.5,500), date:F('2026.06.26 01:01:13','#8e8e93',10.5,400), pnl:F('10.80','#0a84ff',15,700)},
-     {sym:F('XAUUSDc','#1c1c1c',15,700), dir:F('sell 0.01','#e0322e',15,400), price:F('3 970.908  →  3 975.875','#1a1a1a',13.5,500), date:F('2026.06.25 03:45:03','#8e8e93',10.5,400), pnl:F('-5.00','#e0322e',15,700)},
-     {sym:F('XAUUSDc','#1c1c1c',15,700), dir:F('sell 0.01','#e0322e',15,400), price:F('4 041.824  →  4 047.019','#1a1a1a',13.5,500), date:F('2026.06.24 11:50:19','#8e8e93',10.5,400), pnl:F('-5.20','#e0322e',15,700)},
-     {sym:F('XAUUSDc','#1c1c1c',15,700), dir:F('buy 0.01','#0a84ff',15,400),  price:F('4 086.568  →  4 081.631','#1a1a1a',13.5,500), date:F('2026.06.24 07:31:50','#8e8e93',10.5,400), pnl:F('-5.00','#e0322e',15,700)},
-     {sym:F('XAUUSDc','#1c1c1c',15,700), dir:F('sell 0.01','#e0322e',15,400), price:F('4 061.851  →  4 067.084','#1a1a1a',13.5,500), date:F('2026.06.24 04:58:02','#8e8e93',10.5,400), pnl:F('-5.20','#e0322e',15,700)},
-     {sym:F('XAUUSDc','#1c1c1c',15,700), dir:F('sell 0.01','#e0322e',15,400), price:F('4 120.058  →  4 125.095','#1a1a1a',13.5,500), date:F('2026.06.23 11:57:43','#8e8e93',10.5,400), pnl:F('-5.00','#e0322e',15,700)},
-     {sym:F('XAUUSDc','#1c1c1c',15,700), dir:F('sell 0.01','#e0322e',15,400), price:F('4 180.989  →  4 186.041','#1a1a1a',13.5,500), date:F('2026.06.23 00:31:01','#8e8e93',10.5,400), pnl:F('-5.00','#e0322e',15,700)},
-     {sym:F('XAUUSDc','#1c1c1c',15,700), dir:F('sell 0.01','#e0322e',15,400), price:F('4 194.895  →  4 185.113','#1a1a1a',13.5,500), date:F('2026.06.22 13:30:03','#8e8e93',10.5,400), pnl:F('9.80','#0a84ff',15,700)},
+    summaryData:{keuntungan:-24.80,deposito:100.00,swap:0.00,komisi:0.00,saldo:75.20},
+    trades:[
+     {sym:'XAUUSDc',dir:'buy', lot:0.01,open:4026.005,close:4036.038,time:'2026.06.30 08:00:39'},
+     {sym:'XAUUSDc',dir:'sell',lot:0.01,open:4038.027,close:4043.033,time:'2026.06.29 12:02:29'},
+     {sym:'XAUUSDc',dir:'buy', lot:0.01,open:4017.189,close:4028.001,time:'2026.06.26 01:01:13'},
+     {sym:'XAUUSDc',dir:'sell',lot:0.01,open:3970.908,close:3975.875,time:'2026.06.25 03:45:03'},
+     {sym:'XAUUSDc',dir:'sell',lot:0.01,open:4041.824,close:4047.019,time:'2026.06.24 11:50:19'},
+     {sym:'XAUUSDc',dir:'buy', lot:0.01,open:4086.568,close:4081.631,time:'2026.06.24 07:31:50'},
+     {sym:'XAUUSDc',dir:'sell',lot:0.01,open:4061.851,close:4067.084,time:'2026.06.24 04:58:02'},
+     {sym:'XAUUSDc',dir:'sell',lot:0.01,open:4120.058,close:4125.095,time:'2026.06.23 11:57:43'},
+     {sym:'XAUUSDc',dir:'sell',lot:0.01,open:4180.989,close:4186.041,time:'2026.06.23 00:31:01'},
+     {sym:'XAUUSDc',dir:'sell',lot:0.01,open:4194.895,close:4185.113,time:'2026.06.22 13:30:03'},
     ]
   };
 }
 
-function fieldStyle(f){
-  let s=`font-size:${f.fs}px;font-weight:${f.fw};font-style:${f.it?'italic':'normal'};color:${f.color};`;
-  if(f.ff) s+=`font-family:${f.ff};`;
-  if(f.ls!=null && f.ls!=='') s+=`letter-spacing:${f.ls}px;`;
-  if(f.lh!=null && f.lh!=='') s+=`line-height:${f.lh}px;`;
-  if(f.sx && f.sx!==100) s+=`display:inline-block;transform:scaleX(${f.sx/100});transform-origin:left;`;
-  return s;
-}
-function fieldSpan(f,path,extraClass){
-  return `<span class="ed ${extraClass||''}" style="${fieldStyle(f)}" data-path="${path}" onclick="editField('${path}')">${escapeHtml(f.t)}</span>`;
-}
-function escapeHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
-function barClass(pnlText){
-  const n=parseFloat(String(pnlText).replace(/[^0-9.\-]/g,''));
-  if(isNaN(n)||n===0) return 'no';
-  return n>0?'pr':'lo';
-}
-
-/* ══════════════════════════════════════════════
-   MULTI-PROJECT STORE
-═══════════════════════════════════════════════ */
-const STORE_KEY='mt5_projects_v3';
-const OLD_KEY='mt5_riwayat_editable_v2';
-let store={projects:{},order:[],activeId:'',nextNum:1};
-function cp(){return store.projects[store.activeId];}
-
-function idxToHex(i){return ['#1c1c1c','#0a84ff','#e0322e','#8e8e93'][i]||'#1c1c1c';}
-function migrateOld(){
+/* migrasi dari struktur lama (v3, teks per-field) -> v4 (angka mentah) */
+function migrateFromV3(){
   try{
-    const raw=localStorage.getItem(OLD_KEY);
+    const raw=localStorage.getItem(OLD_KEY_V3);
     if(!raw) return null;
     const old=JSON.parse(raw);
-    if(!old||!old.tdata) return null;
-    const conv=f=>F(f.t, f.color||idxToHex(f.c), f.fs, (f.fw===true?700:(f.fw||400)), !!f.it);
-    const summaryData=(old.summaryData||[]).map(s=>({id:s.id,lbl:conv(s.lbl),val:conv(s.val)}));
-    const tdata=(old.tdata||[]).map(d=>({sym:conv(d.sym),dir:conv(d.dir),price:conv(d.price),date:conv(d.date),pnl:conv(d.pnl)}));
-    localStorage.removeItem(OLD_KEY);
-    return {summaryData,tdata};
+    if(!old||!old.projects) return null;
+    const projects={};
+    Object.keys(old.projects).forEach(id=>{
+      const p=old.projects[id];
+      const summaryData={};
+      (p.summaryData||[]).forEach(s=>{summaryData[s.id]=parseNum(s.val&&s.val.t);});
+      const trades=(p.tdata||[]).map(d=>{
+        const dirTxt=(d.dir&&d.dir.t)||'buy 0.01';
+        const dir=/sell/i.test(dirTxt)?'sell':'buy';
+        const lotM=dirTxt.match(/([\d.]+)\s*$/);
+        const lot=lotM?parseFloat(lotM[1]):0.01;
+        const priceTxt=(d.price&&d.price.t)||'';
+        const priceParts=priceTxt.split('→').map(s=>parseNum(s));
+        return {sym:(d.sym&&d.sym.t)||'XAUUSDc',dir,lot,open:priceParts[0]||0,close:priceParts[1]||0,time:(d.date&&d.date.t)||''};
+      });
+      projects[id]={name:p.name,summaryData,trades};
+    });
+    localStorage.removeItem(OLD_KEY_V3);
+    return {projects,order:old.order,activeId:old.activeId,nextNum:old.nextNum||2};
   }catch(e){return null;}
 }
 
 function initStore(){
   let data=null;
   try{data=JSON.parse(localStorage.getItem(STORE_KEY)||'null');}catch(e){}
-  if(data && data.projects && data.order && data.order.length){
+  if(data&&data.projects&&data.order&&data.order.length){
     store=data;
     if(!store.projects[store.activeId]) store.activeId=store.order[0];
   }else{
-    const migrated=migrateOld();
-    const id='p1';
-    store={projects:{[id]:{name:'Project 1', ...(migrated||defaultTemplate())}},order:[id],activeId:id,nextNum:2};
+    const migrated=migrateFromV3();
+    if(migrated&&migrated.order&&migrated.order.length){
+      store=migrated;
+    }else{
+      const id='p1';
+      store={projects:{[id]:{name:'Project 1',...defaultTemplate()}},order:[id],activeId:id,nextNum:2};
+    }
   }
   renderProjectBar();renderSummary();renderTrades();
   _projectLoaded=true;
@@ -329,7 +344,7 @@ function addProject(){
   const id='p'+Date.now();
   const name='Project '+store.nextNum;
   store.nextNum++;
-  store.projects[id]={name, ...defaultTemplate()};
+  store.projects[id]={name,...defaultTemplate()};
   store.order.push(id);
   store.activeId=id;
   renderProjectBar();renderSummary();renderTrades();saveProject();
@@ -350,138 +365,245 @@ function deleteProject(id,event){
 }
 
 /* ══════════════════════════════════════════════
-   RENDER
+   RENDER RINGKASAN & DAFTAR TRANSAKSI
+   (gaya SELALU dari GS — global, bukan per-baris)
 ═══════════════════════════════════════════════ */
+const SUMMARY_ROWS=[
+ {key:'keuntungan',label:'Keuntungan:',signed:true},
+ {key:'deposito',  label:'Deposito',   signed:false},
+ {key:'swap',      label:'Swap:',      signed:false},
+ {key:'komisi',    label:'Komisi:',    signed:false},
+ {key:'saldo',     label:'Saldo:',     signed:false},
+];
+/* span dengan "lebar huruf" (stretch) memakai transform:scaleX, yang HANYA
+   mengubah tampilan, bukan kotak layout — kalau dibiarkan, kotak yang tidak
+   ikut menyusut bisa menyebabkan celah (before teks berikutnya) atau
+   overflow/terpotong (before elemen di sebelah kanan, mis. tanggal).
+   applyStretchBoxes() menyusutkan width kotak layout supaya sama persis
+   dengan ukuran visual setelah scaleX, jadi tidak ada celah maupun potongan,
+   dan tetap presisi rata kanan/kiri sesuai transform-origin. */
+function spanTag(text,st,originRight,extraAttrs){
+  let css=`font-size:${st.fs}px;font-weight:${st.fw};color:${st.color||'#1c1c1c'};`;
+  const sx=(st.sx==null)?100:st.sx;
+  if(sx&&sx!==100) css+=`display:inline-block;transform:scaleX(${sx/100});transform-origin:${originRight?'right':'left'};max-width:none;`;
+  return `<span style="${css}" data-sx="${sx}" ${extraAttrs||''}>${escapeHtml(text)}</span>`;
+}
+function applyStretchBoxes(root){
+  (root||document).querySelectorAll('[data-sx]').forEach(el=>{
+    const sx=parseFloat(el.dataset.sx);
+    el.style.width='';
+    if(!sx||sx===100) return;
+    const natural=el.offsetWidth;
+    el.style.width=(natural*sx/100)+'px';
+  });
+}
+
 function renderSummary(){
   const c=document.getElementById('summaryList');
-  c.innerHTML=cp().summaryData.map((s,i)=>`<div class="srow">${fieldSpan(s.lbl,'summary.'+i+'.lbl','slbl')}<span class="sdot"></span>${fieldSpan(s.val,'summary.'+i+'.val','sval')}</div>`).join('');
+  const d=cp().summaryData;
+  c.innerHTML=SUMMARY_ROWS.map(r=>{
+    const raw=d[r.key]||0;
+    const color=r.key==='keuntungan'?(raw<0?GS.negColor:(raw>0?GS.posColor:GS.val.color)):GS.val.color;
+    const st=Object.assign({},GS.val,{color});
+    const txt=formatMoney(raw,2,r.signed);
+    const span=spanTag(txt,st,true,`class="sval" onclick="openMiniValueEdit('${r.key}')"`);
+    return `<div class="srow"><span class="slbl">${r.label}</span><span class="sdot"></span>${span}</div>`;
+  }).join('');
+  applyStretchBoxes(c);
 }
+
 function renderTrades(){
   const c=document.getElementById('tlist');
-  c.innerHTML=cp().tdata.map((d,i)=>{
-    const bar=barClass(d.pnl.t);
-    return `<div class="trow"><div class="tbar ${bar}"></div><div class="tc"><div><div class="tsl">${fieldSpan(d.sym,i+'.sym')}<span class="tcomma">,</span>${fieldSpan(d.dir,i+'.dir')}</div><div class="tprices">${fieldSpan(d.price,i+'.price')}</div></div><div class="tright"><div class="tdate">${fieldSpan(d.date,i+'.date')}</div><div class="tpnl">${fieldSpan(d.pnl,i+'.pnl')}</div></div></div><div class="rowbtns"><button class="delbtn" onclick="delT(${i})">✕</button><button class="copybtn" onclick="copyT(${i})">⧉</button></div></div>`;
+  const trades=cp().trades;
+  c.innerHTML=trades.map((t,i)=>{
+    const pnl=calcPnl(t.dir,t.lot,t.open,t.close);
+    const bar=pnl>0?'pr':(pnl<0?'lo':'no');
+    const dirColor=t.dir==='buy'?GS.posColor:GS.negColor;
+    const pnlColor=pnl<0?GS.negColor:GS.posColor;
+    const symSpan=spanTag(t.sym,GS.sym,false,`class="symtxt" onclick="openSymEdit(${i})"`);
+    const dirSpan=spanTag((t.dir==='buy'?'buy':'sell')+' '+Number(t.lot).toFixed(2),Object.assign({},GS.dir,{color:dirColor}),false);
+    const priceSpan=spanTag(formatPriceNum(t.open)+'  →  '+formatPriceNum(t.close),GS.price,false);
+    const dateSpan=spanTag(t.time,GS.date,true);
+    const pnlSpan=spanTag(formatMoney(pnl,2,true),Object.assign({},GS.pnl,{color:pnlColor}),true);
+    return `<div class="trow"><div class="tbar ${bar}"></div><div class="tc"><div class="tleft"><div class="tsl">${symSpan}<span class="tcomma">,</span>${dirSpan}</div><div class="tprices">${priceSpan}</div></div><div class="tright"><div class="tdate">${dateSpan}</div><div class="tpnl">${pnlSpan}</div></div></div><div class="rowbtns"><button class="editbtn" onclick="openTradeForm('${t.dir}',${i})">✎</button><button class="copybtn" onclick="copyT(${i})">⧉</button><button class="delbtn" onclick="delT(${i})">✕</button></div></div>`;
   }).join('');
-}
-
-function getField(path){
-  if(path.startsWith('summary.')){const [,i,which]=path.split('.');return cp().summaryData[+i][which];}
-  const [i,which]=path.split('.');return cp().tdata[+i][which];
-}
-function setField(path,newF){
-  if(path.startsWith('summary.')){const [,i,which]=path.split('.');cp().summaryData[+i][which]=newF;}
-  else{const [i,which]=path.split('.');cp().tdata[+i][which]=newF;}
-}
-function fieldTypeOf(path){
-  return path.startsWith('summary.')?path.split('.')[2]:path.split('.')[1];
+  applyStretchBoxes(c);
 }
 
 /* ══════════════════════════════════════════════
-   PANEL PENGATURAN TEKS
+   FORM TAMBAH / EDIT TRANSAKSI (Buy/Sell)
 ═══════════════════════════════════════════════ */
-let curPath=null;
-(function fillFontSelect(){
-  const sel=document.getElementById('efFont');
-  sel.innerHTML=FONT_OPTIONS.map(o=>`<option value="${o.value}">${o.label}</option>`).join('');
-})();
-
-function editField(path){
-  const f=getField(path);
-  curPath=path;
-  document.getElementById('einput').value=f.t;
-  document.getElementById('efsize').value=f.fs;
-  document.getElementById('efFont').value=f.ff||'';
-  document.getElementById('efWeight').value=String(f.fw||400);
-  document.getElementById('efLH').value=f.lh==null?'':f.lh;
-  document.getElementById('efLS').value=f.ls==null?'':f.ls;
-  document.getElementById('efSX').value=f.sx==null?100:f.sx;
-  setItalic(!!f.it);
-  setColor(f.color||'#1c1c1c');
-  document.getElementById('epop-backdrop').style.display='block';
-  document.getElementById('epop').style.display='block';
-  setTimeout(()=>document.getElementById('einput').focus(),40);
+let tfEditIndex=null,tfDir='buy';
+function tfSetDir(d){
+  tfDir=d;
+  document.getElementById('tfBuyBtn').classList.toggle('on',d==='buy');
+  document.getElementById('tfSellBtn').classList.toggle('on',d==='sell');
+  tfUpdatePreview();
 }
-
-let pendingColor='#1c1c1c',pendingItalic=false;
-function setColor(hex){
-  pendingColor=hex;
-  document.getElementById('ehex').value=hex;
-  try{document.getElementById('ecolorpick').value=hex;}catch(e){}
+function nowStamp(){
+  const d=new Date();
+  const p=n=>String(n).padStart(2,'0');
+  return `${d.getFullYear()}.${p(d.getMonth()+1)}.${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
 }
-function onHexInput(v){
-  if(/^#[0-9a-fA-F]{6}$/.test(v)){pendingColor=v;try{document.getElementById('ecolorpick').value=v;}catch(e){}}
-  else{pendingColor=v;}
+function openTradeForm(dir,editIndex){
+  tfEditIndex=(typeof editIndex==='number')?editIndex:null;
+  if(tfEditIndex!==null){
+    const t=cp().trades[tfEditIndex];
+    tfSetDir(t.dir);
+    document.getElementById('tfSym').value=t.sym;
+    document.getElementById('tfLot').value=t.lot;
+    document.getElementById('tfOpen').value=t.open;
+    document.getElementById('tfClose').value=t.close;
+    document.getElementById('tfTime').value=t.time;
+  }else{
+    tfSetDir(dir);
+    document.getElementById('tfSym').value='XAUUSDc';
+    document.getElementById('tfLot').value=GS.defaultLot;
+    document.getElementById('tfOpen').value='';
+    document.getElementById('tfClose').value='';
+    document.getElementById('tfTime').value=nowStamp();
+  }
+  tfUpdatePreview();
+  document.getElementById('tfBackdrop').style.display='block';
+  document.getElementById('tfPanel').style.display='block';
 }
-function onColorPick(v){setColor(v);}
-function quickColor(hex){setColor(hex);}
-function setItalic(b){pendingItalic=b;document.getElementById('efitalicbtn').classList.toggle('on',b);}
-function toggleItalic(){setItalic(!pendingItalic);}
-function stepSize(d){const inp=document.getElementById('efsize');let v=parseFloat(inp.value)||15;v=Math.max(6,Math.min(60,v+d));inp.value=v;}
-
-function readPanelStyle(){
-  return {
-    color: /^#[0-9a-fA-F]{6}$/.test(pendingColor)?pendingColor:'#1c1c1c',
-    fs: parseFloat(document.getElementById('efsize').value)||15,
-    fw: parseInt(document.getElementById('efWeight').value)||400,
-    it: pendingItalic,
-    ff: document.getElementById('efFont').value||'',
-    ls: document.getElementById('efLS').value===''?null:parseFloat(document.getElementById('efLS').value),
-    sx: document.getElementById('efSX').value===''?100:parseFloat(document.getElementById('efSX').value),
-    lh: document.getElementById('efLH').value===''?null:parseFloat(document.getElementById('efLH').value),
+function tfUpdatePreview(){
+  const lot=parseNum(document.getElementById('tfLot').value)||0;
+  const open=parseNum(document.getElementById('tfOpen').value)||0;
+  const close=parseNum(document.getElementById('tfClose').value)||0;
+  const pnl=calcPnl(tfDir,lot,open,close);
+  const color=pnl<0?GS.negColor:GS.posColor;
+  document.getElementById('tfPreview').innerHTML=`Hasil otomatis: <b style="color:${color}">${escapeHtml(formatMoney(pnl,2,true))}</b>`;
+}
+function closeTradeForm(){document.getElementById('tfBackdrop').style.display='none';document.getElementById('tfPanel').style.display='none';tfEditIndex=null;}
+function tfSubmit(){
+  const trade={
+    sym:document.getElementById('tfSym').value.trim()||'XAUUSDc',
+    dir:tfDir,
+    lot:parseNum(document.getElementById('tfLot').value)||0.01,
+    open:parseNum(document.getElementById('tfOpen').value)||0,
+    close:parseNum(document.getElementById('tfClose').value)||0,
+    time:document.getElementById('tfTime').value.trim()||nowStamp(),
   };
+  if(tfEditIndex!==null){
+    cp().trades[tfEditIndex]=trade;
+  }else{
+    cp().trades.unshift(trade); /* transaksi terbaru selalu di atas */
+  }
+  renderTrades();closeTradeForm();saveProject();
 }
-function applyEp(){
-  if(!curPath)return;
-  const t=document.getElementById('einput').value;
-  const sty=readPanelStyle();
-  setField(curPath,F(t,sty.color,sty.fs,sty.fw,sty.it,{ff:sty.ff,ls:sty.ls,sx:sty.sx,lh:sty.lh}));
-  renderSummary();renderTrades();closeEp();saveProject();
-}
-function clearEp(){
-  if(!curPath)return;
-  const sty=readPanelStyle();
-  setField(curPath,F('',sty.color,sty.fs,sty.fw,sty.it,{ff:sty.ff,ls:sty.ls,sx:sty.sx,lh:sty.lh}));
-  renderSummary();renderTrades();closeEp();saveProject();
-}
-function resetStyleOnly(){
-  if(!curPath)return;
-  const type=fieldTypeOf(curPath);
-  const def=FIELD_DEFAULTS[type]||FIELD_DEFAULTS.sym;
-  const cur=getField(curPath);
-  setField(curPath,F(cur.t,def.color,def.fs,def.fw,def.it,{ff:def.ff,ls:def.ls,sx:def.sx,lh:def.lh}));
-  renderSummary();renderTrades();
-  editField(curPath); /* refresh panel dengan nilai baru */
-}
-function closeEp(){document.getElementById('epop').style.display='none';document.getElementById('epop-backdrop').style.display='none';curPath=null;}
-
-document.addEventListener('keydown',e=>{if(e.key==='Escape')closeEp();if(e.key==='Enter'&&e.target.id==='einput')applyEp();});
+function delT(i){cp().trades.splice(i,1);renderTrades();saveProject();}
+function copyT(i){cp().trades.splice(i+1,0,JSON.parse(JSON.stringify(cp().trades[i])));renderTrades();saveProject();}
 
 /* ══════════════════════════════════════════════
-   TAMBAH / HAPUS / DUPLIKAT BARIS TRANSAKSI
-   (baris baru selalu masuk ke urutan paling atas)
+   MINI EDIT — simbol teks & nilai ringkasan
 ═══════════════════════════════════════════════ */
-function addTrade(){
-  cp().tdata.unshift({
-    sym:F('XAUUSDc','#1c1c1c',15,700), dir:F('buy 0.01','#0a84ff',15,400),
-    price:F('4 000.000  →  4 000.000','#1a1a1a',13.5,500),
-    date:F('2026.06.30 12:00:00','#8e8e93',10.5,400),
-    pnl:F('0.00','#1c1c1c',15,700),
-  });
-  renderTrades();saveProject();
+let meTarget=null;
+function openSymEdit(i){
+  meTarget={type:'sym',i};
+  document.getElementById('meLabel').textContent='Edit Simbol';
+  document.getElementById('meInput').value=cp().trades[i].sym;
+  document.getElementById('meBackdrop').style.display='block';
+  document.getElementById('mePanel').style.display='block';
+  setTimeout(()=>document.getElementById('meInput').focus(),40);
 }
-function delT(i){cp().tdata.splice(i,1);renderTrades();saveProject();}
-function copyT(i){cp().tdata.splice(i+1,0,JSON.parse(JSON.stringify(cp().tdata[i])));renderTrades();saveProject();}
+function openMiniValueEdit(key){
+  meTarget={type:'summary',key};
+  const row=SUMMARY_ROWS.find(r=>r.key===key);
+  document.getElementById('meLabel').textContent='Edit '+row.label.replace(':','');
+  document.getElementById('meInput').value=cp().summaryData[key];
+  document.getElementById('meBackdrop').style.display='block';
+  document.getElementById('mePanel').style.display='block';
+  setTimeout(()=>document.getElementById('meInput').focus(),40);
+}
+function closeMiniEdit(){document.getElementById('meBackdrop').style.display='none';document.getElementById('mePanel').style.display='none';meTarget=null;}
+function meSubmit(){
+  if(!meTarget)return;
+  const v=document.getElementById('meInput').value;
+  if(meTarget.type==='sym'){cp().trades[meTarget.i].sym=v.trim()||'XAUUSDc';renderTrades();}
+  else{cp().summaryData[meTarget.key]=parseNum(v);renderSummary();}
+  closeMiniEdit();saveProject();
+}
+
+/* ══════════════════════════════════════════════
+   PANEL GAYA GLOBAL
+═══════════════════════════════════════════════ */
+function buildGsBody(){
+  const wrap=document.getElementById('gsBody');
+  wrap.innerHTML=STYLE_FIELDS.map(f=>`
+    <div class="epsec">${f.label}</div>
+    <div class="${f.hasColor?'grid4':'grid3'}">
+      <div><span class="fieldlbl">Ukuran</span><input class="numinp" id="gs-${f.key}-fs" type="number" step="0.5"></div>
+      <div><span class="fieldlbl">Tebal</span><select class="numinp" id="gs-${f.key}-fw" style="padding:6px 2px;">
+        <option value="300">Ringan</option><option value="400">Reguler</option><option value="500">Sedang</option>
+        <option value="600">Semi Tebal</option><option value="700">Tebal</option><option value="800">Ekstra Tebal</option>
+      </select></div>
+      <div><span class="fieldlbl">Lebar %</span><input class="numinp" id="gs-${f.key}-sx" type="number" step="1"></div>
+      ${f.hasColor?`<div><span class="fieldlbl">Warna</span><input class="numinp" id="gs-${f.key}-color" type="text" style="text-transform:uppercase;font-family:monospace;"></div>`:''}
+    </div>
+    ${!f.hasColor?`<div class="hexrow" style="margin-top:6px;"><span class="fieldlbl" style="margin:0;">Warna untung/rugi ikut pengaturan di bawah ↓</span></div>`:''}
+  `).join('')+`
+    <div class="epsec">Warna Untung / Rugi (Buy &amp; Hasil Positif / Sell &amp; Hasil Negatif)</div>
+    <div class="grid2">
+      <div><span class="fieldlbl">Untung / Buy</span><div class="hexrow"><input type="color" id="gsPosPick" oninput="document.getElementById('gsPosHex').value=this.value"><input class="fld" id="gsPosHex" type="text" style="font-family:monospace;text-transform:uppercase;"></div></div>
+      <div><span class="fieldlbl">Rugi / Sell</span><div class="hexrow"><input type="color" id="gsNegPick" oninput="document.getElementById('gsNegHex').value=this.value"><input class="fld" id="gsNegHex" type="text" style="font-family:monospace;text-transform:uppercase;"></div></div>
+    </div>
+  `;
+}
+function openGsPanel(){
+  STYLE_FIELDS.forEach(f=>{
+    const st=GS[f.key];
+    document.getElementById(`gs-${f.key}-fs`).value=st.fs;
+    document.getElementById(`gs-${f.key}-fw`).value=st.fw;
+    document.getElementById(`gs-${f.key}-sx`).value=st.sx;
+    if(f.hasColor) document.getElementById(`gs-${f.key}-color`).value=st.color;
+  });
+  document.getElementById('gsPosHex').value=GS.posColor;
+  document.getElementById('gsPosPick').value=GS.posColor;
+  document.getElementById('gsNegHex').value=GS.negColor;
+  document.getElementById('gsNegPick').value=GS.negColor;
+  document.getElementById('gsRightPad').value=GS.rightPad;
+  document.getElementById('gsBackdrop').style.display='block';
+  document.getElementById('gsPanel').style.display='block';
+}
+function closeGsPanel(){document.getElementById('gsBackdrop').style.display='none';document.getElementById('gsPanel').style.display='none';}
+function validHex(v,fallback){return /^#[0-9a-fA-F]{6}$/.test(v)?v:fallback;}
+function gsSubmit(){
+  STYLE_FIELDS.forEach(f=>{
+    const st=GS[f.key];
+    st.fs=parseFloat(document.getElementById(`gs-${f.key}-fs`).value)||st.fs;
+    st.fw=parseInt(document.getElementById(`gs-${f.key}-fw`).value)||st.fw;
+    st.sx=parseFloat(document.getElementById(`gs-${f.key}-sx`).value);
+    if(isNaN(st.sx)) st.sx=100;
+    if(f.hasColor) st.color=validHex(document.getElementById(`gs-${f.key}-color`).value,st.color);
+  });
+  GS.posColor=validHex(document.getElementById('gsPosHex').value,GS.posColor);
+  GS.negColor=validHex(document.getElementById('gsNegHex').value,GS.negColor);
+  GS.rightPad=parseFloat(document.getElementById('gsRightPad').value);
+  if(isNaN(GS.rightPad)) GS.rightPad=16;
+  applyRightPad();saveGS();renderSummary();renderTrades();closeGsPanel();
+}
+function gsResetDefault(){
+  if(!confirm('Reset semua gaya global ke default?'))return;
+  GS=defaultGlobalStyle();
+  applyRightPad();saveGS();renderSummary();renderTrades();
+  openGsPanel();
+}
+
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'){closeTradeForm();closeMiniEdit();closeGsPanel();}
+  if(e.key==='Enter'&&e.target.id==='meInput')meSubmit();
+});
 
 /* ══════════════════════════════════════════════
    DOWNLOAD HD
 ═══════════════════════════════════════════════ */
 let lastURL=null;
 async function doDownload(){
-  closeEp();
-  const btn=document.getElementById('dlbtn');const o=btn.innerHTML;btn.innerHTML='<span class="spin"></span>';btn.disabled=true;
   document.body.classList.add('cap');
+  const btn=document.getElementById('dlbtn');const o=btn.innerHTML;btn.innerHTML='<span class="spin"></span>';btn.disabled=true;
   try{
-    if(document.fonts && document.fonts.ready) await document.fonts.ready;
+    if(document.fonts&&document.fonts.ready) await document.fonts.ready;
     const cvs=await html2canvas(document.getElementById('photowrap'),{scale:3,backgroundColor:'#ffffff',useCORS:true,logging:false});
     lastURL=cvs.toDataURL('image/png');
     document.getElementById('mimg').src=lastURL;
@@ -496,26 +618,23 @@ function saveImg(){if(!lastURL)return;const a=document.createElement('a');a.href
 ═══════════════════════════════════════════════ */
 let _projectLoaded=false;
 function saveProject(){
-  /* semua pemanggil adalah aksi diskrit (klik/OK), bukan tiap-keystroke,
-     jadi disimpan langsung (sinkron) supaya project terakhir pasti
-     tersimpan walau halaman langsung ditutup setelah aksi */
   if(!_projectLoaded)return;
   localStorage.setItem(STORE_KEY,JSON.stringify(store));
 }
 function resetProject(){
   if(!confirm('Reset project "'+cp().name+'" ke contoh awal? Tindakan ini tidak bisa dibatalkan.'))return;
   const name=cp().name;
-  store.projects[store.activeId]={name, ...defaultTemplate()};
+  store.projects[store.activeId]={name,...defaultTemplate()};
   renderSummary();renderTrades();saveProject();
 }
-
-initStore();
-
-/* jaring pengaman: pastikan tersimpan walau ditutup tanpa sempat trigger saveProject() */
 function forceSave(){if(_projectLoaded)localStorage.setItem(STORE_KEY,JSON.stringify(store));}
 window.addEventListener('pagehide',forceSave);
 window.addEventListener('beforeunload',forceSave);
 document.addEventListener('visibilitychange',()=>{if(document.hidden)forceSave();});
+
+loadGS();
+buildGsBody();
+initStore();
 </script>
 </body>
 </html>
