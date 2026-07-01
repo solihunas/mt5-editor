@@ -4,13 +4,22 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <title>MT5 Riwayat — Demo Edukasi Anti-Penipuan</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,700&display=swap" rel="stylesheet" crossorigin="anonymous">
+<!-- Font 'Roboto Condensed' dibundel LOKAL (bukan Google Fonts CDN) supaya
+     halaman & tombol unduh tidak pernah tertahan gara-gara jaringan lambat/
+     diblokir ke server luar — ini akar masalah jeda belasan detik yang
+     sempat terjadi sebelumnya. @font-face didefinisikan di bawah. -->
 <!-- html2canvas dibundel lokal (bukan CDN) supaya tombol unduh tidak bergantung
      koneksi ke server luar — mengurangi kemungkinan gagal unduh -->
 <script src="assets/html2canvas.min.js"></script>
 <style>
+@font-face{font-family:'Roboto Condensed';font-style:normal;font-weight:300;font-display:swap;src:url('assets/fonts/roboto-condensed-latin-300-normal.woff2') format('woff2');}
+@font-face{font-family:'Roboto Condensed';font-style:normal;font-weight:400;font-display:swap;src:url('assets/fonts/roboto-condensed-latin-400-normal.woff2') format('woff2');}
+@font-face{font-family:'Roboto Condensed';font-style:normal;font-weight:500;font-display:swap;src:url('assets/fonts/roboto-condensed-latin-500-normal.woff2') format('woff2');}
+@font-face{font-family:'Roboto Condensed';font-style:normal;font-weight:600;font-display:swap;src:url('assets/fonts/roboto-condensed-latin-600-normal.woff2') format('woff2');}
+@font-face{font-family:'Roboto Condensed';font-style:normal;font-weight:700;font-display:swap;src:url('assets/fonts/roboto-condensed-latin-700-normal.woff2') format('woff2');}
+@font-face{font-family:'Roboto Condensed';font-style:normal;font-weight:800;font-display:swap;src:url('assets/fonts/roboto-condensed-latin-800-normal.woff2') format('woff2');}
+@font-face{font-family:'Roboto Condensed';font-style:italic;font-weight:400;font-display:swap;src:url('assets/fonts/roboto-condensed-latin-400-italic.woff2') format('woff2');}
+@font-face{font-family:'Roboto Condensed';font-style:italic;font-weight:700;font-display:swap;src:url('assets/fonts/roboto-condensed-latin-700-italic.woff2') format('woff2');}
 :root{--right-pad:16px;}
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;
   font-family:'Roboto Condensed',-apple-system,'Roboto','Segoe UI',Arial,sans-serif;
@@ -51,13 +60,15 @@ html,body{background:radial-gradient(ellipse at top left,#1a0830 0%,#08000f 55%,
 .summary{background:#fff;}
 .srow{display:flex;align-items:flex-end;padding:3px 0 2px 16px;border-bottom:1px solid #f0f0f0;line-height:18px;}
 .slbl{white-space:nowrap;flex-shrink:0;font-size:15px;font-weight:700;color:#1c1c1c;}
-.sdot{flex:1;border-bottom:1.5px dotted #cbcbcb;margin:0 6px 4px;}
+/* titik-titik bulat & renggang seperti aplikasi asli (border-dotted bawaan
+   browser terlalu kecil & rapat) */
+.sdot{flex:1;height:4px;margin:0 6px 6px;align-self:flex-end;background-image:radial-gradient(circle,#c9c9cd 1.5px,transparent 1.6px);background-repeat:repeat-x;background-position:left bottom;background-size:11px 4px;}
 .sval{white-space:nowrap;padding-right:var(--right-pad);cursor:pointer;}
 .sval.sval-ro{cursor:default;}
 body:not(.cap) .sval:not(.sval-ro):hover{outline:1.5px dashed rgba(10,132,255,.5);outline-offset:1px;}
 
 .trow{display:flex;align-items:stretch;border-bottom:1px solid #f2f2f2;background:#fff;position:relative;}
-.tbar{width:4px;flex-shrink:0;}.tbar.lo{background:#E87545;}.tbar.pr{background:#34C759;}.tbar.no{background:transparent;}
+.tbar{width:4px;flex-shrink:0;}.tbar.lo{background:#E0322E;}.tbar.pr{background:#34C759;}.tbar.no{background:transparent;}
 .tc{flex:1;padding:6px 0 5px 10px;display:flex;justify-content:space-between;align-items:center;}
 .tleft{min-width:0;}
 .tsl{display:flex;align-items:baseline;line-height:20px;white-space:nowrap;}
@@ -127,6 +138,8 @@ input[type=number]{-moz-appearance:textfield;}
 body.screenshotmode #ctrlbar,body.screenshotmode #projectbar,body.screenshotmode .hint{display:none!important;}
 #exitCleanBtn{position:fixed;bottom:16px;right:16px;z-index:950;background:#0a84ff;color:#fff;border:none;border-radius:24px;padding:12px 18px;font-size:12.5px;font-weight:700;box-shadow:0 8px 24px rgba(0,0,0,.5);display:none;cursor:pointer;}
 body.screenshotmode #exitCleanBtn{display:block;}
+/* mode preview murni: TIDAK ada tombol apapun, cuma tombol back HP yang bisa keluar */
+body.previewmode #exitCleanBtn{display:none!important;}
 .spin{display:inline-block;width:13px;height:13px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:sp .7s linear infinite;vertical-align:-2px;margin-right:5px;}
 @keyframes sp{to{transform:rotate(360deg);}}
 </style>
@@ -134,14 +147,14 @@ body.screenshotmode #exitCleanBtn{display:block;}
 <body>
 
 <div id="ctrlbar">
-  <button class="ctrl dl" id="dlbtn" onclick="doDownload()">⬇ HD</button>
+  <button class="ctrl dl" id="dlbtn" onclick="openDlChoice()">⬇ HD</button>
   <button class="ctrl gs" onclick="openGsPanel()">⚙ Gaya Global</button>
   <button class="ctrl rs" onclick="resetProject()" title="Reset project aktif ke contoh awal">↻ Reset</button>
 </div>
 
 <div id="projectbar"></div>
 
-<div class="hint">Header/status bar/navigasi = <b>foto asli</b>. Font/ukuran/ketebalan/lebar/warna diatur <b>global</b> lewat "⚙ Gaya Global". Tambah transaksi lewat tombol Buy/Sell — hasil &amp; warna dihitung otomatis. <b>Saldo = Deposito + Keuntungan</b> (otomatis, tidak diketik langsung). Kalau tombol unduh gagal, tampilan otomatis dirapikan penuh untuk screenshot manual.</div>
+<div class="hint">Header/status bar/navigasi = <b>foto asli</b>. Font/ukuran/ketebalan/lebar/warna diatur <b>global</b> lewat "⚙ Gaya Global". Tambah transaksi lewat tombol Buy/Sell — hasil &amp; warna dihitung otomatis. <b>Saldo = Deposito + Keuntungan</b> (otomatis). Tombol "⬇ HD" kini punya 2 opsi: Download instan, atau <b>Preview</b> layar penuh (bisa discroll, cocok untuk screen record) — keluar dari Preview pakai tombol back HP.</div>
 
 <div id="photowrap">
   <img src="assets/riwayat-top.jpg" alt="Header Riwayat MT5">
@@ -203,6 +216,16 @@ body.screenshotmode #exitCleanBtn{display:block;}
   <div class="mtit">Preview HD</div>
   <div class="mwrap"><img id="mimg"></div>
   <div class="mbtns"><button class="mbtn msave" onclick="saveImg()">⬇ Simpan</button><button class="mbtn mclose" onclick="document.getElementById('modal').style.display='none'">✕ Tutup</button></div>
+</div>
+
+<!-- PILIHAN: download instan atau mode preview (untuk screen record) -->
+<div class="ov-backdrop" id="dlBackdrop" onclick="closeDlChoice()"></div>
+<div class="ov-panel" id="dlChoicePanel" style="max-width:300px;">
+  <div class="eplbl">Pilih Aksi</div>
+  <button class="epok" style="width:100%;margin-bottom:9px;padding:12px 4px;" onclick="closeDlChoice();doDownload();">⬇ Download Instan (PNG)</button>
+  <button class="epok" style="width:100%;padding:12px 4px;background:#7a3fd8;" onclick="closeDlChoice();enterPreviewMode();">👁 Preview (bisa discroll — untuk screen record)</button>
+  <div style="font-size:11px;color:#8e8e93;text-align:center;margin-top:8px;line-height:1.5;">Saat Preview, semua tombol disembunyikan. Tekan tombol <b>back</b> di HP untuk keluar.</div>
+  <button class="epcancel" style="width:100%;margin-top:10px;" onclick="closeDlChoice()">Batal</button>
 </div>
 
 <!-- tombol darurat: kalau unduh HD gagal, tampilan sudah bersih siap discreenshot manual -->
@@ -647,7 +670,7 @@ function gsResetDefault(){
 }
 
 document.addEventListener('keydown',e=>{
-  if(e.key==='Escape'){closeTradeForm();closeMiniEdit();closeGsPanel();}
+  if(e.key==='Escape'){closeTradeForm();closeMiniEdit();closeGsPanel();closeDlChoice();}
   if(e.key==='Enter'&&e.target.id==='meInput')meSubmit();
 });
 
@@ -667,6 +690,32 @@ function exitCleanMode(){
   document.getElementById('photowrap').classList.remove('exportmode');
 }
 function timeoutAfter(ms,label){return new Promise((_,rej)=>setTimeout(()=>rej(new Error(label||'timeout')),ms));}
+
+function openDlChoice(){document.getElementById('dlBackdrop').style.display='block';document.getElementById('dlChoicePanel').style.display='block';}
+function closeDlChoice(){document.getElementById('dlBackdrop').style.display='none';document.getElementById('dlChoicePanel').style.display='none';}
+
+/* ══════════════════════════════════════════════
+   MODE PREVIEW — untuk screen record: semua tombol disembunyikan
+   (TIDAK ada tombol keluar di layar), daftar tetap bisa discroll persis
+   seperti mode edit (header/footer paten). Satu-satunya jalan keluar
+   adalah tombol back HP, ditangani lewat history.pushState + popstate
+   supaya back TIDAK meninggalkan halaman, cukup menutup mode preview.
+═══════════════════════════════════════════════ */
+let _previewActive=false;
+function enterPreviewMode(){
+  _previewActive=true;
+  history.pushState({mt5Preview:true},'','');
+  document.body.classList.add('cap','screenshotmode','previewmode');
+  /* sengaja TIDAK exportmode — biar tetap scrollable seperti mode edit */
+}
+function exitPreviewMode(){
+  if(!_previewActive)return;
+  _previewActive=false;
+  document.body.classList.remove('cap','screenshotmode','previewmode');
+}
+window.addEventListener('popstate',()=>{
+  if(_previewActive) exitPreviewMode();
+});
 async function doDownload(){
   enterCleanMode(); /* langsung rapikan tampilan duluan — kalau proses di bawah
                         lambat/gagal (mis. font/CDN diblokir jaringan), layar
@@ -711,9 +760,27 @@ window.addEventListener('pagehide',forceSave);
 window.addEventListener('beforeunload',forceSave);
 document.addEventListener('visibilitychange',()=>{if(document.hidden)forceSave();});
 
-loadGS();
-buildGsBody();
-initStore();
+/* Muat dulu bobot font yang benar-benar dipakai SEBELUM render pertama,
+   supaya applyStretchBoxes() langsung mengukur dengan metrik font final
+   (bukan font pengganti sementara) — ini menghilangkan akar masalah
+   tanggal/hasil trade "tidak rata kanan" pada percobaan sebelumnya, yang
+   hanya mengandalkan render-ulang SESUDAH render pertama selesai.
+   Dibatasi waktu tunggu supaya tidak nge-hang kalau jaringan lambat. */
+async function boot(){
+  try{
+    if(document.fonts&&document.fonts.load){
+      await Promise.race([
+        Promise.all([300,400,500,700,800].map(w=>document.fonts.load(`${w} 16px 'Roboto Condensed'`))),
+        new Promise(r=>setTimeout(r,2500)),
+      ]);
+    }
+  }catch(e){}
+  loadGS();
+  buildGsBody();
+  initStore();
+  applyFontFallback();
+}
+boot();
 </script>
 </body>
 </html>
