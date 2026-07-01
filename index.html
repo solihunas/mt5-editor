@@ -64,7 +64,7 @@ html,body{background:radial-gradient(ellipse at top left,#1a0830 0%,#08000f 55%,
 .slbl{white-space:nowrap;flex-shrink:0;font-size:15px;font-weight:700;color:#1c1c1c;}
 /* titik-titik bulat & renggang seperti aplikasi asli (border-dotted bawaan
    browser terlalu kecil & rapat) */
-.sdot{flex:1;height:4px;margin:0 6px 1px;align-self:flex-end;background-image:radial-gradient(circle,rgba(150,150,155,.45) 1.5px,transparent 1.6px);background-repeat:repeat-x;background-position:left bottom;background-size:11px 4px;}
+.sdot{flex:1;height:4px;margin:0 6px 3px;align-self:flex-end;background-image:radial-gradient(circle,rgba(150,150,155,.28) 1.5px,transparent 1.6px);background-repeat:repeat-x;background-position:left bottom;background-size:11px 4px;}
 .sval{white-space:nowrap;padding-right:var(--right-pad);cursor:pointer;}
 .sval.sval-ro{cursor:default;}
 body:not(.cap) .sval:not(.sval-ro):hover{outline:1.5px dashed rgba(10,132,255,.5);outline-offset:1px;}
@@ -190,6 +190,15 @@ body.previewmode #exitCleanBtn{display:none!important;}
     <div><span class="fieldlbl">Harga Close</span><input id="tfClose" class="fld" type="text" inputmode="decimal" oninput="tfUpdatePreview()"></div>
   </div>
   <div style="margin-top:8px;"><span class="fieldlbl">Waktu (YYYY.MM.DD HH:MM:SS) — ketik angka saja, titik &amp; titik dua otomatis</span><input id="tfTime" class="fld" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="off" oninput="tfTimeInput(this)"></div>
+  <div style="margin-top:10px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;">
+      <span class="fieldlbl" style="margin:0;">Hasil (PnL)</span>
+      <label style="display:flex;align-items:center;gap:5px;font-size:11px;color:#555;font-weight:600;cursor:pointer;">
+        <input type="checkbox" id="tfPnlManual" onchange="tfPnlManualToggle()"> Edit manual (mis. untuk BTC, rumus beda dgn XAU)
+      </label>
+    </div>
+    <input id="tfPnlValue" class="fld" type="text" inputmode="decimal" style="margin-top:5px;" oninput="tfUpdatePreview()" disabled>
+  </div>
   <div class="previewline" id="tfPreview">Hasil: <b>0.00</b></div>
   <div class="epbrow"><button class="epok" onclick="tfSubmit()">Simpan</button><button class="epcancel" onclick="closeTradeForm()">Batal</button></div>
 </div>
@@ -474,11 +483,16 @@ function renderSummary(){
   applyStretchBoxes(c);
 }
 
+/* pnlOverride terisi -> pakai nilai manual (mis. untuk BTC yang rumusnya
+   beda dari XAU); kalau tidak, hitung otomatis seperti biasa */
+function getPnl(t){
+  return (t.pnlOverride!=null && !isNaN(t.pnlOverride)) ? t.pnlOverride : calcPnl(t.dir,t.lot,t.open,t.close);
+}
 function renderTrades(){
   const c=document.getElementById('tlist');
   const trades=cp().trades;
   c.innerHTML=trades.map((t,i)=>{
-    const pnl=calcPnl(t.dir,t.lot,t.open,t.close);
+    const pnl=getPnl(t);
     const bar=pnl>0?'pr':(pnl<0?'lo':'no');
     const dirColor=t.dir==='buy'?GS.posColor:GS.negColor;
     const pnlColor=pnl<0?GS.negColor:GS.posColor;
@@ -528,6 +542,9 @@ function tfTimeInput(el){
 }
 function openTradeForm(dir,editIndex){
   tfEditIndex=(typeof editIndex==='number')?editIndex:null;
+  const hasOverride=tfEditIndex!==null && cp().trades[tfEditIndex].pnlOverride!=null;
+  document.getElementById('tfPnlManual').checked=hasOverride;
+  document.getElementById('tfPnlValue').disabled=!hasOverride;
   if(tfEditIndex!==null){
     const t=cp().trades[tfEditIndex];
     tfSetDir(t.dir);
@@ -536,6 +553,7 @@ function openTradeForm(dir,editIndex){
     document.getElementById('tfOpen').value=t.open;
     document.getElementById('tfClose').value=t.close;
     document.getElementById('tfTime').value=t.time;
+    if(hasOverride) document.getElementById('tfPnlValue').value=t.pnlOverride;
   }else{
     tfSetDir(dir);
     document.getElementById('tfSym').value='XAUUSDc';
@@ -548,16 +566,33 @@ function openTradeForm(dir,editIndex){
   document.getElementById('tfBackdrop').style.display='block';
   document.getElementById('tfPanel').style.display='block';
 }
+/* toggle "Edit manual" — kalau dinyalakan, hasil PnL bisa diketik bebas
+   (perlu untuk instrumen selain XAU, mis. BTC, yang rumus kontraknya beda) */
+function tfPnlManualToggle(){
+  const manual=document.getElementById('tfPnlManual').checked;
+  const inp=document.getElementById('tfPnlValue');
+  inp.disabled=!manual;
+  if(manual) inp.focus();
+  tfUpdatePreview();
+}
 function tfUpdatePreview(){
   const lot=parseNum(document.getElementById('tfLot').value)||0;
   const open=parseNum(document.getElementById('tfOpen').value)||0;
   const close=parseNum(document.getElementById('tfClose').value)||0;
-  const pnl=calcPnl(tfDir,lot,open,close);
+  const manual=document.getElementById('tfPnlManual').checked;
+  let pnl;
+  if(manual){
+    pnl=parseNum(document.getElementById('tfPnlValue').value)||0;
+  }else{
+    pnl=calcPnl(tfDir,lot,open,close);
+    document.getElementById('tfPnlValue').value=pnl.toFixed(2);
+  }
   const color=pnl<0?GS.negColor:GS.posColor;
-  document.getElementById('tfPreview').innerHTML=`Hasil otomatis: <b style="color:${color}">${escapeHtml(formatMoney(pnl,2,true))}</b>`;
+  document.getElementById('tfPreview').innerHTML=`Hasil ${manual?'manual':'otomatis'}: <b style="color:${color}">${escapeHtml(formatMoney(pnl,2,true))}</b>`;
 }
 function closeTradeForm(){document.getElementById('tfBackdrop').style.display='none';document.getElementById('tfPanel').style.display='none';tfEditIndex=null;}
 function tfSubmit(){
+  const manual=document.getElementById('tfPnlManual').checked;
   const trade={
     sym:document.getElementById('tfSym').value.trim()||'XAUUSDc',
     dir:tfDir,
@@ -565,6 +600,7 @@ function tfSubmit(){
     open:parseNum(document.getElementById('tfOpen').value)||0,
     close:parseNum(document.getElementById('tfClose').value)||0,
     time:document.getElementById('tfTime').value.trim()||nowStamp(),
+    pnlOverride: manual ? (parseNum(document.getElementById('tfPnlValue').value)||0) : null,
   };
   if(tfEditIndex!==null){
     cp().trades[tfEditIndex]=trade;
