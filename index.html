@@ -136,12 +136,9 @@ input[type=number]{-moz-appearance:textfield;}
 #modal .msave{background:linear-gradient(135deg,#30d158,#20a040);color:#fff;}
 #modal .mclose{background:rgba(60,20,90,0.8);color:#c8a0ff;border:1px solid rgba(140,60,255,0.3);}
 
-/* ── mode bersih: cadangan kalau tombol unduh gagal, tinggal screenshot manual ── */
-body.screenshotmode #ctrlbar,body.screenshotmode #projectbar,body.screenshotmode .hint{display:none!important;}
-#exitCleanBtn{position:fixed;bottom:16px;right:16px;z-index:950;background:#0a84ff;color:#fff;border:none;border-radius:24px;padding:12px 18px;font-size:12.5px;font-weight:700;box-shadow:0 8px 24px rgba(0,0,0,.5);display:none;cursor:pointer;}
-body.screenshotmode #exitCleanBtn{display:block;}
-/* mode preview murni: TIDAK ada tombol apapun, cuma tombol back HP yang bisa keluar */
-body.previewmode #exitCleanBtn{display:none!important;}
+/* mode preview murni: TIDAK ada tombol apapun (ctrlbar/project bar/hint/
+   tombol edit baris disembunyikan), cuma tombol back HP yang bisa keluar */
+body.previewmode #ctrlbar,body.previewmode #projectbar,body.previewmode .hint{display:none!important;}
 .spin{display:inline-block;width:13px;height:13px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:sp .7s linear infinite;vertical-align:-2px;margin-right:5px;}
 @keyframes sp{to{transform:rotate(360deg);}}
 </style>
@@ -239,8 +236,6 @@ body.previewmode #exitCleanBtn{display:none!important;}
   <button class="epcancel" style="width:100%;margin-top:10px;" onclick="closeDlChoice()">Batal</button>
 </div>
 
-<!-- tombol darurat: kalau unduh HD gagal, tampilan sudah bersih siap discreenshot manual -->
-<button id="exitCleanBtn" onclick="exitCleanMode()">☰ Tampilkan Kontrol</button>
 
 <script>
 /* ══════════════════════════════════════════════
@@ -716,17 +711,6 @@ document.addEventListener('keydown',e=>{
    DOWNLOAD HD
 ═══════════════════════════════════════════════ */
 let lastURL=null;
-/* mode bersih: sembunyikan ctrlbar/project bar/hint + tombol edit per baris,
-   supaya kalau proses unduh gagal (mis. diblokir browser), tampilan yang
-   tersisa di layar sudah rapi & penuh — tinggal discreenshot manual */
-function enterCleanMode(){
-  document.body.classList.add('cap','screenshotmode');
-  document.getElementById('photowrap').classList.add('exportmode'); /* lepas batas tinggi supaya SEMUA baris kelihatan, bukan cuma yg lagi discroll */
-}
-function exitCleanMode(){
-  document.body.classList.remove('cap','screenshotmode');
-  document.getElementById('photowrap').classList.remove('exportmode');
-}
 function timeoutAfter(ms,label){return new Promise((_,rej)=>setTimeout(()=>rej(new Error(label||'timeout')),ms));}
 
 function openDlChoice(){document.getElementById('dlBackdrop').style.display='block';document.getElementById('dlChoicePanel').style.display='block';}
@@ -743,21 +727,23 @@ let _previewActive=false;
 function enterPreviewMode(){
   _previewActive=true;
   history.pushState({mt5Preview:true},'','');
-  document.body.classList.add('cap','screenshotmode','previewmode');
+  document.body.classList.add('cap','previewmode');
   /* sengaja TIDAK exportmode — biar tetap scrollable seperti mode edit */
 }
 function exitPreviewMode(){
   if(!_previewActive)return;
   _previewActive=false;
-  document.body.classList.remove('cap','screenshotmode','previewmode');
+  document.body.classList.remove('cap','previewmode');
 }
 window.addEventListener('popstate',()=>{
   if(_previewActive) exitPreviewMode();
 });
+
+/* Download instan: tangkap gambar lalu langsung kembali ke tampilan edit
+   normal — tidak ada mode/tombol tambahan yang tersisa di layar. */
 async function doDownload(){
-  enterCleanMode(); /* langsung rapikan tampilan duluan — kalau proses di bawah
-                        lambat/gagal (mis. font/CDN diblokir jaringan), layar
-                        sudah siap discreenshot manual tanpa menunggu */
+  document.body.classList.add('cap');
+  document.getElementById('photowrap').classList.add('exportmode'); /* lepas batas tinggi supaya SEMUA baris ikut ter-capture */
   const btn=document.getElementById('dlbtn');const o=btn.innerHTML;btn.innerHTML='<span class="spin"></span>';btn.disabled=true;
   try{
     if(document.fonts&&document.fonts.ready){
@@ -772,10 +758,10 @@ async function doDownload(){
     lastURL=cvs.toDataURL('image/png');
     document.getElementById('mimg').src=lastURL;
     document.getElementById('modal').style.display='flex';
-  }catch(e){alert('Unduh otomatis gagal atau terlalu lama: '+e.message+'\n\nTampilan sudah dirapikan penuh (mode bersih) — silakan screenshot manual, atau ketuk "☰ Tampilkan Kontrol" di pojok kanan bawah untuk kembali.');}
+  }catch(e){alert('Unduh gagal: '+e.message);}
+  document.body.classList.remove('cap');
+  document.getElementById('photowrap').classList.remove('exportmode');
   btn.innerHTML=o;btn.disabled=false;
-  /* sengaja TIDAK exitCleanMode() di sini — biar tetap bersih & penuh
-     sebagai cadangan screenshot manual sampai user menekan tombol kembali */
 }
 function saveImg(){if(!lastURL)return;const a=document.createElement('a');a.href=lastURL;a.download='mt5-riwayat-demo-HD.png';a.click();}
 
