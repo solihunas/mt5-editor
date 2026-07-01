@@ -49,7 +49,7 @@ html,body{background:radial-gradient(ellipse at top left,#1a0830 0%,#08000f 55%,
    paten/fixed, hanya area tengah (ringkasan+daftar transaksi) yang discroll —
    persis seperti aplikasi MT5 aslinya. Tinggi dikunci mengikuti rasio foto
    asli (aspect-ratio) supaya selalu setinggi "1 layar hp". */
-#photowrap{position:relative;width:406.667px;aspect-ratio:1220/2712;background:#fff;display:flex;flex-direction:column;overflow:hidden;}
+#photowrap{position:relative;width:406.667px;aspect-ratio:1220/2454;background:#fff;display:flex;flex-direction:column;overflow:hidden;}
 #photowrap>img{display:block;width:100%;height:auto;flex-shrink:0;user-select:none;-webkit-user-drag:none;pointer-events:none;}
 #htmlZone{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;}
 /* mode ekspor (dipakai sesaat sebelum html2canvas): lepas batas tinggi supaya
@@ -179,7 +179,7 @@ body.previewmode #ctrlbar,body.previewmode #projectbar,body.previewmode .hint{di
     <button class="dirbtn sell" id="tfSellBtn" onclick="tfSetDir('sell')">SELL</button>
   </div>
   <div class="grid2">
-    <div><span class="fieldlbl">Simbol</span><input id="tfSym" class="fld" type="text"></div>
+    <div><span class="fieldlbl">Simbol</span><select id="tfSym" class="fld"><option value="XAUUSDc">XAUUSDc</option><option value="BTCUSDc">BTCUSDc</option></select></div>
     <div><span class="fieldlbl">Lot</span><input id="tfLot" class="fld" type="number" step="0.01" oninput="tfUpdatePreview()"></div>
   </div>
   <div class="grid2" style="margin-top:8px;">
@@ -312,7 +312,9 @@ function formatMoney(value,decimals,forceSign){
   const sign=neg?'-':(forceSign?'+':'');
   return sign+intPart+(decimals>0?'.'+parts[1]:'');
 }
-function formatPriceNum(value){return formatMoney(value,3,false);}
+/* BTCUSDc dipakai 2 digit desimal, simbol lain (XAUUSDc dkk) 3 digit */
+function priceDecimals(sym){return /BTC/i.test(sym||'')?2:3;}
+function formatPriceNum(value,sym){return formatMoney(value,priceDecimals(sym),false);}
 
 function calcPnl(dir,lot,open,close){
   const diff=dir==='buy'?(close-open):(open-close);
@@ -493,7 +495,7 @@ function renderTrades(){
     const pnlColor=pnl<0?GS.negColor:GS.posColor;
     const symSpan=spanTag(t.sym,GS.sym,false,`class="symtxt" onclick="openSymEdit(${i})"`);
     const dirSpan=spanTag((t.dir==='buy'?'buy':'sell')+' '+Number(t.lot).toFixed(2),Object.assign({},GS.dir,{color:dirColor}),false);
-    const priceSpan=spanTag(formatPriceNum(t.open)+'  →  '+formatPriceNum(t.close),GS.price,false);
+    const priceSpan=spanTag(formatPriceNum(t.open,t.sym)+'  →  '+formatPriceNum(t.close,t.sym),GS.price,false);
     const dateSpan=spanTag(t.time,GS.date,true);
     const pnlSpan=spanTag(formatMoney(pnl,2,true),Object.assign({},GS.pnl,{color:pnlColor}),true);
     return `<div class="trow"><div class="tbar ${bar}"></div><div class="tc"><div class="tleft"><div class="tsl">${symSpan}<span class="tcomma">,</span>${dirSpan}</div><div class="tprices">${priceSpan}</div></div><div class="tright"><div class="tdate">${dateSpan}</div><div class="tpnl">${pnlSpan}</div></div></div><div class="rowbtns"><button class="editbtn" onclick="openTradeForm('${t.dir}',${i})">✎</button><button class="copybtn" onclick="copyT(${i})">⧉</button><button class="delbtn" onclick="delT(${i})">✕</button></div></div>`;
