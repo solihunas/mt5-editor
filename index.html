@@ -6,8 +6,10 @@
 <title>MT5 Riwayat — Demo Edukasi Anti-Penipuan</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,700&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,700&display=swap" rel="stylesheet" crossorigin="anonymous">
+<!-- html2canvas dibundel lokal (bukan CDN) supaya tombol unduh tidak bergantung
+     koneksi ke server luar — mengurangi kemungkinan gagal unduh -->
+<script src="assets/html2canvas.min.js"></script>
 <style>
 :root{--right-pad:16px;}
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;
@@ -42,7 +44,8 @@ html,body{background:radial-gradient(ellipse at top left,#1a0830 0%,#08000f 55%,
 .slbl{white-space:nowrap;flex-shrink:0;font-size:15px;font-weight:700;color:#1c1c1c;}
 .sdot{flex:1;border-bottom:1.5px dotted #cbcbcb;margin:0 6px 4px;}
 .sval{white-space:nowrap;padding-right:var(--right-pad);cursor:pointer;}
-body:not(.cap) .sval:hover{outline:1.5px dashed rgba(10,132,255,.5);outline-offset:1px;}
+.sval.sval-ro{cursor:default;}
+body:not(.cap) .sval:not(.sval-ro):hover{outline:1.5px dashed rgba(10,132,255,.5);outline-offset:1px;}
 
 .trow{display:flex;align-items:stretch;border-bottom:1px solid #f2f2f2;background:#fff;position:relative;}
 .tbar{width:4px;flex-shrink:0;}.tbar.lo{background:#E87545;}.tbar.pr{background:#34C759;}.tbar.no{background:transparent;}
@@ -102,14 +105,19 @@ input[type=number]{-moz-appearance:textfield;}
 .epcancel{flex:1;background:#f2f2f7;color:#1c1c1c;border:none;border-radius:9px;padding:10px 4px;font-size:12.5px;font-weight:600;cursor:pointer;}
 .epghost{width:100%;margin-top:8px;background:#fff8ea;color:#b8860b;border:1px solid #f0e0b8;border-radius:9px;padding:8px 4px;font-size:11.5px;font-weight:600;cursor:pointer;}
 
-#modal{position:fixed;inset:0;background:rgba(0,0,0,.92);backdrop-filter:blur(8px);z-index:1000;display:none;flex-direction:column;align-items:center;justify-content:center;padding:16px;}
-#modal .mtit{color:#d0b0ff;font-size:14px;margin-bottom:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;}
-#modal .mwrap{max-width:100%;max-height:66vh;overflow:auto;border-radius:10px;box-shadow:0 12px 50px rgba(100,30,200,.4);border:1px solid rgba(140,60,255,0.3);}
-#modal img{display:block;max-width:100%;}
-#modal .mbtns{display:flex;gap:10px;margin-top:14px;}
+#modal{position:fixed;inset:0;background:rgba(0,0,0,.92);backdrop-filter:blur(8px);z-index:1000;display:none;flex-direction:column;align-items:center;justify-content:center;padding:10px;}
+#modal .mtit{color:#d0b0ff;font-size:13px;margin-bottom:8px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;flex-shrink:0;}
+#modal .mwrap{max-width:100%;max-height:calc(100vh - 120px);overflow:auto;border-radius:10px;box-shadow:0 12px 50px rgba(100,30,200,.4);border:1px solid rgba(140,60,255,0.3);display:flex;}
+#modal img{display:block;max-width:100%;max-height:calc(100vh - 120px);width:auto;height:auto;object-fit:contain;margin:auto;}
+#modal .mbtns{display:flex;gap:10px;margin-top:12px;flex-shrink:0;}
 #modal .mbtn{border:none;border-radius:10px;padding:12px 26px;font-size:14px;font-weight:700;cursor:pointer;}
 #modal .msave{background:linear-gradient(135deg,#30d158,#20a040);color:#fff;}
 #modal .mclose{background:rgba(60,20,90,0.8);color:#c8a0ff;border:1px solid rgba(140,60,255,0.3);}
+
+/* ── mode bersih: cadangan kalau tombol unduh gagal, tinggal screenshot manual ── */
+body.screenshotmode #ctrlbar,body.screenshotmode #projectbar,body.screenshotmode .hint{display:none!important;}
+#exitCleanBtn{position:fixed;bottom:16px;right:16px;z-index:950;background:#0a84ff;color:#fff;border:none;border-radius:24px;padding:12px 18px;font-size:12.5px;font-weight:700;box-shadow:0 8px 24px rgba(0,0,0,.5);display:none;cursor:pointer;}
+body.screenshotmode #exitCleanBtn{display:block;}
 .spin{display:inline-block;width:13px;height:13px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:sp .7s linear infinite;vertical-align:-2px;margin-right:5px;}
 @keyframes sp{to{transform:rotate(360deg);}}
 </style>
@@ -124,7 +132,7 @@ input[type=number]{-moz-appearance:textfield;}
 
 <div id="projectbar"></div>
 
-<div class="hint">Header/status bar/navigasi = <b>foto asli</b>. Font/ukuran/ketebalan/lebar/warna diatur <b>global</b> lewat "⚙ Gaya Global" (berlaku ke semua baris). Tambah transaksi lewat tombol Buy/Sell — hasil &amp; warna dihitung otomatis. Semua tersimpan otomatis per project.</div>
+<div class="hint">Header/status bar/navigasi = <b>foto asli</b>. Font/ukuran/ketebalan/lebar/warna diatur <b>global</b> lewat "⚙ Gaya Global". Tambah transaksi lewat tombol Buy/Sell — hasil &amp; warna dihitung otomatis. <b>Saldo = Deposito + Keuntungan</b> (otomatis, tidak diketik langsung). Kalau tombol unduh gagal, tampilan otomatis dirapikan penuh untuk screenshot manual.</div>
 
 <div id="photowrap">
   <img src="assets/riwayat-top.jpg" alt="Header Riwayat MT5">
@@ -157,7 +165,7 @@ input[type=number]{-moz-appearance:textfield;}
     <div><span class="fieldlbl">Harga Open</span><input id="tfOpen" class="fld" type="text" inputmode="decimal" oninput="tfUpdatePreview()"></div>
     <div><span class="fieldlbl">Harga Close</span><input id="tfClose" class="fld" type="text" inputmode="decimal" oninput="tfUpdatePreview()"></div>
   </div>
-  <div style="margin-top:8px;"><span class="fieldlbl">Waktu (YYYY.MM.DD HH:MM:SS)</span><input id="tfTime" class="fld" type="text"></div>
+  <div style="margin-top:8px;"><span class="fieldlbl">Waktu (YYYY.MM.DD HH:MM:SS) — ketik angka saja, titik &amp; titik dua otomatis</span><input id="tfTime" class="fld" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="off" oninput="tfTimeInput(this)"></div>
   <div class="previewline" id="tfPreview">Hasil: <b>0.00</b></div>
   <div class="epbrow"><button class="epok" onclick="tfSubmit()">Simpan</button><button class="epcancel" onclick="closeTradeForm()">Batal</button></div>
 </div>
@@ -188,6 +196,9 @@ input[type=number]{-moz-appearance:textfield;}
   <div class="mbtns"><button class="mbtn msave" onclick="saveImg()">⬇ Simpan</button><button class="mbtn mclose" onclick="document.getElementById('modal').style.display='none'">✕ Tutup</button></div>
 </div>
 
+<!-- tombol darurat: kalau unduh HD gagal, tampilan sudah bersih siap discreenshot manual -->
+<button id="exitCleanBtn" onclick="exitCleanMode()">☰ Tampilkan Kontrol</button>
+
 <script>
 /* ══════════════════════════════════════════════
    FONT FALLBACK
@@ -198,9 +209,21 @@ function applyFontFallback(){
     if(!ok) document.getElementById('htmlZone').classList.add('font-fallback');
   }catch(e){}
 }
-if(document.fonts&&document.fonts.ready) document.fonts.ready.then(applyFontFallback).catch(applyFontFallback);
-else window.addEventListener('load',applyFontFallback);
-setTimeout(applyFontFallback,1200);
+/* PENTING: lebar kotak elemen ber-"stretch" dihitung dari offsetWidth saat
+   render pertama. Kalau font Google (Roboto Condensed) BELUM selesai
+   dimuat saat itu, ukuran yang terukur memakai font pengganti (lebih
+   lebar), sehingga kotak yang sudah dikunci jadi salah begitu font asli
+   akhirnya muncul — inilah penyebab tanggal/hasil trade terlihat tidak
+   rata kanan dengan Keuntungan dkk. Render ulang begitu font benar-benar
+   siap supaya lebar kotak dihitung ulang dengan metrik font yang benar. */
+function reflowAfterFontsReady(){
+  applyFontFallback();
+  if(typeof renderSummary==='function') renderSummary();
+  if(typeof renderTrades==='function') renderTrades();
+}
+if(document.fonts&&document.fonts.ready) document.fonts.ready.then(reflowAfterFontsReady).catch(applyFontFallback);
+else window.addEventListener('load',reflowAfterFontsReady);
+setTimeout(reflowAfterFontsReady,1200);
 
 /* ══════════════════════════════════════════════
    GAYA GLOBAL (bukan per-history) — tersimpan terpisah,
@@ -368,12 +391,14 @@ function deleteProject(id,event){
    RENDER RINGKASAN & DAFTAR TRANSAKSI
    (gaya SELALU dari GS — global, bukan per-baris)
 ═══════════════════════════════════════════════ */
+/* Deposito & Keuntungan = input manual. Saldo = HASIL (Deposito + Keuntungan),
+   dihitung otomatis dan tidak bisa diketik langsung. */
 const SUMMARY_ROWS=[
- {key:'keuntungan',label:'Keuntungan:',signed:true},
- {key:'deposito',  label:'Deposito',   signed:false},
- {key:'swap',      label:'Swap:',      signed:false},
- {key:'komisi',    label:'Komisi:',    signed:false},
- {key:'saldo',     label:'Saldo:',     signed:false},
+ {key:'keuntungan',label:'Keuntungan:',signed:true, editable:true},
+ {key:'deposito',  label:'Deposito',   signed:false,editable:true},
+ {key:'swap',      label:'Swap:',      signed:false,editable:true},
+ {key:'komisi',    label:'Komisi:',    signed:false,editable:true},
+ {key:'saldo',     label:'Saldo:',     signed:false,editable:false},
 ];
 /* span dengan "lebar huruf" (stretch) memakai transform:scaleX, yang HANYA
    mengubah tampilan, bukan kotak layout — kalau dibiarkan, kotak yang tidak
@@ -401,12 +426,15 @@ function applyStretchBoxes(root){
 function renderSummary(){
   const c=document.getElementById('summaryList');
   const d=cp().summaryData;
+  /* Saldo = Deposito + Keuntungan, selalu dihitung ulang (bukan nilai tersimpan) */
+  d.saldo=(d.deposito||0)+(d.keuntungan||0);
   c.innerHTML=SUMMARY_ROWS.map(r=>{
     const raw=d[r.key]||0;
     const color=r.key==='keuntungan'?(raw<0?GS.negColor:(raw>0?GS.posColor:GS.val.color)):GS.val.color;
     const st=Object.assign({},GS.val,{color});
     const txt=formatMoney(raw,2,r.signed);
-    const span=spanTag(txt,st,true,`class="sval" onclick="openMiniValueEdit('${r.key}')"`);
+    const click=r.editable?` onclick="openMiniValueEdit('${r.key}')"`:'';
+    const span=spanTag(txt,st,true,`class="sval${r.editable?'':' sval-ro'}"${click}`);
     return `<div class="srow"><span class="slbl">${r.label}</span><span class="sdot"></span>${span}</div>`;
   }).join('');
   applyStretchBoxes(c);
@@ -444,6 +472,25 @@ function nowStamp(){
   const d=new Date();
   const p=n=>String(n).padStart(2,'0');
   return `${d.getFullYear()}.${p(d.getMonth()+1)}.${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
+}
+/* format otomatis "YYYY.MM.DD HH:MM:SS" — user cukup ketik angka,
+   titik/titik-dua disisipkan sendiri (keyboard yang muncul juga
+   angka saja lewat inputmode="numeric") */
+function formatTimeDigits(digits){
+  digits=digits.slice(0,14);
+  const lens=[4,2,2,2,2,2], seps=['.','.',' ',':',':'];
+  let out='',idx=0;
+  for(let i=0;i<lens.length;i++){
+    if(digits.length<=idx) break;
+    const chunk=digits.slice(idx,idx+lens[i]);
+    out+=chunk; idx+=lens[i];
+    if(chunk.length===lens[i] && i<lens.length-1 && digits.length>idx) out+=seps[i];
+  }
+  return out;
+}
+function tfTimeInput(el){
+  const digits=el.value.replace(/\D/g,'');
+  el.value=formatTimeDigits(digits);
 }
 function openTradeForm(dir,editIndex){
   tfEditIndex=(typeof editIndex==='number')?editIndex:null;
@@ -599,17 +646,34 @@ document.addEventListener('keydown',e=>{
    DOWNLOAD HD
 ═══════════════════════════════════════════════ */
 let lastURL=null;
+/* mode bersih: sembunyikan ctrlbar/project bar/hint + tombol edit per baris,
+   supaya kalau proses unduh gagal (mis. diblokir browser), tampilan yang
+   tersisa di layar sudah rapi & penuh — tinggal discreenshot manual */
+function enterCleanMode(){document.body.classList.add('cap','screenshotmode');}
+function exitCleanMode(){document.body.classList.remove('cap','screenshotmode');}
+function timeoutAfter(ms,label){return new Promise((_,rej)=>setTimeout(()=>rej(new Error(label||'timeout')),ms));}
 async function doDownload(){
-  document.body.classList.add('cap');
+  enterCleanMode(); /* langsung rapikan tampilan duluan — kalau proses di bawah
+                        lambat/gagal (mis. font/CDN diblokir jaringan), layar
+                        sudah siap discreenshot manual tanpa menunggu */
   const btn=document.getElementById('dlbtn');const o=btn.innerHTML;btn.innerHTML='<span class="spin"></span>';btn.disabled=true;
   try{
-    if(document.fonts&&document.fonts.ready) await document.fonts.ready;
-    const cvs=await html2canvas(document.getElementById('photowrap'),{scale:3,backgroundColor:'#ffffff',useCORS:true,logging:false});
+    if(document.fonts&&document.fonts.ready){
+      await Promise.race([document.fonts.ready,timeoutAfter(4000)]).catch(()=>{});
+    }
+    /* render ulang supaya lebar kotak "lebar huruf" pasti pakai metrik font final */
+    renderSummary();renderTrades();
+    const cvs=await Promise.race([
+      html2canvas(document.getElementById('photowrap'),{scale:3,backgroundColor:'#ffffff',useCORS:true,logging:false}),
+      timeoutAfter(8000,'Proses unduh terlalu lama (kemungkinan jaringan lambat/diblokir).'),
+    ]);
     lastURL=cvs.toDataURL('image/png');
     document.getElementById('mimg').src=lastURL;
     document.getElementById('modal').style.display='flex';
-  }catch(e){alert('Error: '+e.message);}
-  document.body.classList.remove('cap');btn.innerHTML=o;btn.disabled=false;
+  }catch(e){alert('Unduh otomatis gagal atau terlalu lama: '+e.message+'\n\nTampilan sudah dirapikan penuh (mode bersih) — silakan screenshot manual, atau ketuk "☰ Tampilkan Kontrol" di pojok kanan bawah untuk kembali.');}
+  btn.innerHTML=o;btn.disabled=false;
+  /* sengaja TIDAK exitCleanMode() di sini — biar tetap bersih & penuh
+     sebagai cadangan screenshot manual sampai user menekan tombol kembali */
 }
 function saveImg(){if(!lastURL)return;const a=document.createElement('a');a.href=lastURL;a.download='mt5-riwayat-demo-HD.png';a.click();}
 
