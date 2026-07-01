@@ -57,12 +57,14 @@ html,body{background:radial-gradient(ellipse at top left,#1a0830 0%,#08000f 55%,
 #photowrap.exportmode{height:auto;aspect-ratio:auto;overflow:visible;}
 #photowrap.exportmode #htmlZone{overflow:visible;}
 
-.summary{background:#fff;}
-.srow{display:flex;align-items:flex-end;padding:3px 0 2px 16px;border-bottom:1px solid #f0f0f0;line-height:18px;}
+/* garis pembatas HANYA di bawah Saldo (sebelum daftar transaksi), bukan di
+   antara tiap baris ringkasan — sesuai aplikasi asli */
+.summary{background:#fff;border-bottom:1px solid #f0f0f0;}
+.srow{display:flex;align-items:flex-end;padding:3px 0 2px 16px;line-height:18px;}
 .slbl{white-space:nowrap;flex-shrink:0;font-size:15px;font-weight:700;color:#1c1c1c;}
 /* titik-titik bulat & renggang seperti aplikasi asli (border-dotted bawaan
    browser terlalu kecil & rapat) */
-.sdot{flex:1;height:4px;margin:0 6px 6px;align-self:flex-end;background-image:radial-gradient(circle,#c9c9cd 1.5px,transparent 1.6px);background-repeat:repeat-x;background-position:left bottom;background-size:11px 4px;}
+.sdot{flex:1;height:4px;margin:0 6px 1px;align-self:flex-end;background-image:radial-gradient(circle,rgba(150,150,155,.45) 1.5px,transparent 1.6px);background-repeat:repeat-x;background-position:left bottom;background-size:11px 4px;}
 .sval{white-space:nowrap;padding-right:var(--right-pad);cursor:pointer;}
 .sval.sval-ro{cursor:default;}
 body:not(.cap) .sval:not(.sval-ro):hover{outline:1.5px dashed rgba(10,132,255,.5);outline-offset:1px;}
