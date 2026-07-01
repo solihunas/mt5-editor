@@ -36,8 +36,17 @@ html,body{background:radial-gradient(ellipse at top left,#1a0830 0%,#08000f 55%,
 .hint{color:#9a85c0;font-size:11px;padding:8px 12px;text-align:center;max-width:420px;background:rgba(5,0,15,.6);line-height:1.5;}
 .hint b{color:#d0b0ff;}
 
-#photowrap{position:relative;width:406.667px;background:#fff;}
-#photowrap>img{display:block;width:100%;height:auto;user-select:none;-webkit-user-drag:none;pointer-events:none;}
+/* photowrap = "layar hp": header (status bar+judul+tab) & footer (nav bawah)
+   paten/fixed, hanya area tengah (ringkasan+daftar transaksi) yang discroll —
+   persis seperti aplikasi MT5 aslinya. Tinggi dikunci mengikuti rasio foto
+   asli (aspect-ratio) supaya selalu setinggi "1 layar hp". */
+#photowrap{position:relative;width:406.667px;aspect-ratio:1220/2712;background:#fff;display:flex;flex-direction:column;overflow:hidden;}
+#photowrap>img{display:block;width:100%;height:auto;flex-shrink:0;user-select:none;-webkit-user-drag:none;pointer-events:none;}
+#htmlZone{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+/* mode ekspor (dipakai sesaat sebelum html2canvas): lepas batas tinggi supaya
+   SELURUH daftar transaksi ikut ter-capture, bukan cuma yang lagi kelihatan */
+#photowrap.exportmode{height:auto;aspect-ratio:auto;overflow:visible;}
+#photowrap.exportmode #htmlZone{overflow:visible;}
 
 .summary{background:#fff;}
 .srow{display:flex;align-items:flex-end;padding:3px 0 2px 16px;border-bottom:1px solid #f0f0f0;line-height:18px;}
@@ -649,8 +658,14 @@ let lastURL=null;
 /* mode bersih: sembunyikan ctrlbar/project bar/hint + tombol edit per baris,
    supaya kalau proses unduh gagal (mis. diblokir browser), tampilan yang
    tersisa di layar sudah rapi & penuh — tinggal discreenshot manual */
-function enterCleanMode(){document.body.classList.add('cap','screenshotmode');}
-function exitCleanMode(){document.body.classList.remove('cap','screenshotmode');}
+function enterCleanMode(){
+  document.body.classList.add('cap','screenshotmode');
+  document.getElementById('photowrap').classList.add('exportmode'); /* lepas batas tinggi supaya SEMUA baris kelihatan, bukan cuma yg lagi discroll */
+}
+function exitCleanMode(){
+  document.body.classList.remove('cap','screenshotmode');
+  document.getElementById('photowrap').classList.remove('exportmode');
+}
 function timeoutAfter(ms,label){return new Promise((_,rej)=>setTimeout(()=>rej(new Error(label||'timeout')),ms));}
 async function doDownload(){
   enterCleanMode(); /* langsung rapikan tampilan duluan — kalau proses di bawah
