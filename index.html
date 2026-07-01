@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>MT5 Riwayat Editor</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;font-family:-apple-system,'Roboto','Segoe UI',Arial,sans-serif;}
+html,body{background:radial-gradient(ellipse at top left,#1a0830 0%,#08000f 55%,#000000 100%);display:flex;flex-direction:column;align-items:center;min-height:100vh;}
+
+#ctrlbar{width:100%;max-width:420px;background:rgba(8,0,20,0.9);display:flex;gap:8px;padding:8px 10px;border-bottom:1px solid rgba(140,60,255,0.2);}
+.ctrl{border:1px solid rgba(140,60,255,0.25);border-radius:8px;padding:9px 14px;font-size:12.5px;font-weight:700;cursor:pointer;color:#9a85c0;background:rgba(20,5,40,0.8);text-align:center;transition:.15s;}
+.ctrl:active{filter:brightness(1.3);}
+.ctrl.dl{background:rgba(40,140,90,0.4);border-color:rgba(60,200,120,0.4);color:#6de8a0;}
+.ctrl.rs{margin-left:auto;background:rgba(50,15,25,0.6);border-color:rgba(180,60,80,0.3);color:#e09098;}
+.hint{color:#4a3060;font-size:11px;padding:6px 8px;text-align:center;max-width:420px;background:rgba(5,0,15,.6);}
+
+#screen{width:390px;background:#fff;position:relative;overflow:hidden;}
+
+.sb{display:flex;justify-content:space-between;align-items:center;padding:13px 18px 6px;background:#fff;}
+.sb-l{display:flex;align-items:center;gap:7px;}
+.sb-time{font-size:15px;font-weight:600;color:#000;}
+.sb-r{display:flex;align-items:center;gap:6px;}
+
+.abr{padding:2px 16px 0;background:#fff;}
+.abtop{display:flex;align-items:center;justify-content:space-between;padding:5px 0;}
+.abtg .abtitle{font-size:21px;font-weight:700;color:#1c1c1c;line-height:1.12;}
+.abtg .absub{font-size:13.5px;color:#8e8e93;line-height:1.25;}
+.abh{display:flex;align-items:center;gap:17px;}
+.tabs{display:flex;margin-top:3px;}
+.tab{flex:1;text-align:center;padding:9px 0 8px;font-size:14px;font-weight:600;letter-spacing:.5px;color:#8e8e93;border-bottom:2.5px solid transparent;cursor:pointer;}
+.tab.on{color:#0a84ff;border-bottom:2.5px solid #0a84ff;}
+
+.summary{background:#fff;}
+.srow{display:flex;align-items:flex-end;padding:10px 16px 9px;border-bottom:1px solid #f0f0f0;}
+.slbl{font-size:15px;font-weight:700;color:#1c1c1c;white-space:nowrap;flex-shrink:0;}
+.sdot{flex:1;border-bottom:1.5px dotted #cbcbcb;margin:0 6px 4px;}
+.sval{font-size:15px;font-weight:700;white-space:nowrap;}
+
+.trow{display:flex;align-items:stretch;border-bottom:1px solid #f2f2f2;background:#fff;position:relative;}
+.tbar{width:4px;flex-shrink:0;}.tbar.lo{background:#E87545;}.tbar.pr{background:#34C759;}
+.tc{flex:1;padding:9px 14px 8px 10px;display:flex;justify-content:space-between;align-items:center;}
+.tsl{display:flex;align-items:baseline;}
+.tsym{font-size:15px;font-weight:700;color:#1c1c1c;}
+.tcomma{font-size:15px;font-weight:700;color:#1c1c1c;}
+.tdir{font-size:15px;font-weight:400;margin-left:5px;}
+.tprices{font-size:13px;color:#8e8e93;margin-top:3px;}
+.tarr{color:#b0b0b0;margin:0 5px;}
+.tright{text-align:right;}
+.tdate{font-size:11px;color:#8e8e93;line-height:1.5;}
+.tpnl{font-size:15px;font-weight:700;line-height:1.5;}
+.rowbtns{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:flex;gap:6px;z-index:5;}
+.delbtn,.copybtn{background:#f0f0f3;border:1px solid #dcdcdc;color:#9b9b9b;font-size:11px;font-weight:700;cursor:pointer;border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center;}
+.delbtn:active{background:#ff3b30;color:#fff;border-color:#ff3b30;}
+.copybtn:active{background:#0a84ff;color:#fff;border-color:#0a84ff;}
+.addbtn{display:block;width:calc(100% - 32px);margin:11px 16px 12px;padding:11px;border:1.5px dashed #c8c8cc;background:#fff;color:#0a84ff;font-size:14px;font-weight:500;border-radius:8px;cursor:pointer;text-align:center;}
+
+.cc0{color:#1c1c1c!important;}.cc1{color:#0a84ff!important;}.cc2{color:#e0322e!important;}.cc3{color:#8e8e93!important;}
+body:not(.cap) .ed{cursor:pointer;}
+body:not(.cap) .ed:hover{background:rgba(10,132,255,.08);border-radius:3px;}
+
+.bnav{display:flex;background:#fbfbfb;border-top:1px solid #e0e0e0;padding:6px 0 6px;}
+.ni{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;}
+.ni .nic{height:30px;display:flex;align-items:center;justify-content:center;}
+.ni .pill{background:#e3f0ff;border-radius:14px;padding:3px 16px;}
+.ni .circ{background:#e3f0ff;border-radius:50%;width:34px;height:34px;display:flex;align-items:center;justify-content:center;}
+.ni .nlbl{font-size:10.5px;color:#8e8e93;}
+.ni.on .nlbl{color:#0a84ff;font-weight:500;}
+
+.andnav{display:flex;align-items:center;justify-content:space-around;padding:13px 0 11px;background:#fff;border-top:1px solid #f2f2f2;}
+.andnav svg{opacity:.55;}
+
+#epop{position:fixed;z-index:900;background:#fff;border-radius:14px;padding:14px 16px;box-shadow:0 10px 40px rgba(0,0,0,.3);min-width:235px;max-width:300px;display:none;border:1px solid #e8e8e8;}
+#epop .eplbl{font-size:11px;color:#8e8e93;margin-bottom:7px;font-weight:600;letter-spacing:.4px;text-transform:uppercase;}
+#einput{width:100%;border:1.5px solid #0a84ff;border-radius:9px;padding:8px 11px;font-size:15px;color:#1c1c1c;outline:none;margin-bottom:12px;}
+.swrow{display:flex;gap:11px;margin-bottom:13px;align-items:center;}
+.swrow .swlbl{font-size:11px;color:#8e8e93;font-weight:500;width:40px;}
+.sw{width:28px;height:28px;border-radius:50%;cursor:pointer;border:3px solid transparent;transition:transform .15s;flex-shrink:0;}
+.sw:active{transform:scale(1.25);}
+.sw.sel{border-color:#000;transform:scale(1.2);}
+.sw0{background:#1c1c1c;}.sw1{background:#0a84ff;}.sw2{background:#e0322e;}.sw3{background:#8e8e93;}
+.epbrow{display:flex;gap:8px;}
+.epok{flex:1;background:#0a84ff;color:#fff;border:none;border-radius:9px;padding:9px;font-size:13px;font-weight:700;cursor:pointer;}
+.epcancel{flex:1;background:#f2f2f7;color:#1c1c1c;border:none;border-radius:9px;padding:9px;font-size:13px;font-weight:600;cursor:pointer;}
+
+#modal{position:fixed;inset:0;background:rgba(0,0,0,.92);backdrop-filter:blur(8px);z-index:1000;display:none;flex-direction:column;align-items:center;justify-content:center;padding:16px;}
+#modal .mtit{color:#d0b0ff;font-size:14px;margin-bottom:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;}
+#modal .mwrap{max-width:100%;max-height:66vh;overflow:auto;border-radius:10px;box-shadow:0 12px 50px rgba(100,30,200,.4);border:1px solid rgba(140,60,255,0.3);}
+#modal img{display:block;max-width:100%;}
+#modal .mbtns{display:flex;gap:10px;margin-top:14px;}
+#modal .mbtn{border:none;border-radius:10px;padding:12px 26px;font-size:14px;font-weight:700;cursor:pointer;}
+#modal .msave{background:linear-gradient(135deg,#30d158,#20a040);color:#fff;}
+#modal .mclose{background:rgba(60,20,90,0.8);color:#c8a0ff;border:1px solid rgba(140,60,255,0.3);}
+.spin{display:inline-block;width:13px;height:13px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:sp .7s linear infinite;vertical-align:-2px;margin-right:5px;}
+@keyframes sp{to{transform:rotate(360deg);}}
+
+body.cap .rowbtns,body.cap .addbtn{display:none!important;}
+</style>
+</head>
+<body>
+
+<div id="ctrlbar">
+  <button class="ctrl dl" id="dlbtn" onclick="doDownload()">⬇ HD</button>
+  <button class="ctrl rs" onclick="resetProject()" title="Hapus data tersimpan & mulai baru">↻ Baru</button>
+</div>
+<div class="hint">Ketuk teks/angka → edit nilai + warna. ✕ = hapus baris (hilang saat download).</div>
+
+<div id="screen">
+  <div class="sb">
+    <div class="sb-l"><span class="sb-time ed cc0" onclick="ep(this)" data-c="0">8:51</span></div>
+    <div class="sb-r">
+      <svg width="14" height="12" viewBox="0 0 14 12" fill="none" stroke="#000" stroke-width="1.2"><path d="M4 6a2.5 2.5 0 1 1 2.5 2.5M10 6a2.5 2.5 0 1 1-2.5-2.5"/></svg>
+      <svg width="20" height="12" viewBox="0 0 20 12"><text y="7" font-size="6.5" font-weight="700" fill="#000">4G+</text><text y="12" font-size="5" fill="#000">↑↓</text></svg>
+      <svg width="19" height="13" viewBox="0 0 19 13"><rect x="0" y="8.5" width="3.2" height="4.5" rx=".7" fill="#000"/><rect x="5.2" y="5.5" width="3.2" height="7.5" rx=".7" fill="#000"/><rect x="10.4" y="2.5" width="3.2" height="10.5" rx=".7" fill="#000"/><rect x="15.6" y="0" width="3.2" height="13" rx=".7" fill="#000"/></svg>
+      <svg width="25" height="13" viewBox="0 0 25 13"><rect x="0" y="1" width="21" height="11" rx="2.2" stroke="#000" stroke-width="1.2" fill="none"/><rect x="21.5" y="4" width="2" height="5" rx="1" fill="#000"/><rect x="1.5" y="2.5" width="18" height="8" rx="1" fill="#000"/><text x="10.5" y="10" text-anchor="middle" font-size="6.5" font-weight="700" fill="#fff" class="ed" onclick="event.stopPropagation();ep(this)" data-c="3">92</text></svg>
+    </div>
+  </div>
+  <div class="abr">
+    <div class="abtop">
+      <div style="display:flex;align-items:center;gap:13px;">
+        <svg width="22" height="16" viewBox="0 0 22 16"><rect y="0" width="22" height="2.4" rx="1.2" fill="#3a3a3a"/><rect y="6.8" width="22" height="2.4" rx="1.2" fill="#3a3a3a"/><rect y="13.6" width="22" height="2.4" rx="1.2" fill="#3a3a3a"/></svg>
+        <div class="abtg"><div class="abtitle ed cc0" onclick="ep(this)" data-c="0">Riwayat</div><div class="absub ed cc3" onclick="ep(this)" data-c="3">Semua simbol</div></div>
+      </div>
+      <div class="abh">
+        <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="#555" stroke-width="1.7"><path d="M4 11a7 7 0 1 0 1.7-4.6"/><path d="M3.5 3.5v3.5H7"/></svg>
+        <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="#555" stroke-width="1.7"><path d="M7 4v14M7 4l-2.5 2.5M7 4l2.5 2.5"/><path d="M15 18V4M15 18l-2.5-2.5M15 18l2.5-2.5"/></svg>
+        <div style="position:relative;"><svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="#555" stroke-width="1.7"><rect x="2.5" y="4" width="17" height="15" rx="2"/><path d="M7 2v4M15 2v4M2.5 9h17"/></svg><div style="position:absolute;top:-3px;right:-4px;background:#555;color:#fff;border-radius:50%;width:13px;height:13px;font-size:8px;font-weight:700;display:flex;align-items:center;justify-content:center;">3</div></div>
+      </div>
+    </div>
+    <div class="tabs"><div class="tab on">POSISI</div><div class="tab">ORDER</div><div class="tab">DEAL</div></div>
+  </div>
+  <div class="summary">
+    <div class="srow"><span class="slbl ed cc0" onclick="ep(this)" data-c="0">Keuntungan:</span><span class="sdot"></span><span class="sval ed cc2" onclick="ep(this)" data-c="2">-24.80</span></div>
+    <div class="srow"><span class="slbl ed cc0" onclick="ep(this)" data-c="0">Deposito</span><span class="sdot"></span><span class="sval ed cc0" onclick="ep(this)" data-c="0">100.00</span></div>
+    <div class="srow"><span class="slbl ed cc0" onclick="ep(this)" data-c="0">Swap:</span><span class="sdot"></span><span class="sval ed cc0" onclick="ep(this)" data-c="0">0.00</span></div>
+    <div class="srow"><span class="slbl ed cc0" onclick="ep(this)" data-c="0">Komisi:</span><span class="sdot"></span><span class="sval ed cc0" onclick="ep(this)" data-c="0">0.00</span></div>
+    <div class="srow"><span class="slbl ed cc0" onclick="ep(this)" data-c="0">Saldo:</span><span class="sdot"></span><span class="sval ed cc0" onclick="ep(this)" data-c="0">75.20</span></div>
+  </div>
+  <div id="tlist"></div>
+  <button class="addbtn" onclick="addTrade()">+ Tambah baris trade</button>
+
+  <div class="bnav">
+    <div class="ni"><div class="nic"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#8e8e93" stroke-width="2"><path d="M7 5v14M7 5L4 8M7 5l3 3"/><path d="M17 19V5M17 19l-3-3M17 19l3-3"/></svg></div><span class="nlbl">Quote</span></div>
+    <div class="ni"><div class="nic"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#8e8e93" stroke-width="1.7"><line x1="7" y1="4" x2="7" y2="20"/><rect x="5" y="8" width="4" height="7" rx="1" fill="#8e8e93" stroke="none"/><line x1="16" y1="4" x2="16" y2="20"/><rect x="14" y="6" width="4" height="9" rx="1" fill="#8e8e93" stroke="none"/></svg></div><span class="nlbl">Chart</span></div>
+    <div class="ni"><div class="nic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#8e8e93" stroke-width="2"><path d="M4 16l4-4 3 2 5-7" stroke-linecap="round" stroke-linejoin="round"/><circle cx="4" cy="16" r="1.6" fill="#8e8e93" stroke="none"/><circle cx="8" cy="12" r="1.6" fill="#8e8e93" stroke="none"/><circle cx="11" cy="14" r="1.6" fill="#8e8e93" stroke="none"/><circle cx="16" cy="7" r="1.6" fill="#8e8e93" stroke="none"/></svg></div><span class="nlbl">Trade</span></div>
+    <div class="ni on"><div class="nic"><div class="circ"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0a84ff" stroke-width="1.9"><path d="M12 7v5l3.5 2"/><path d="M4 12a8 8 0 1 0 2-5.3"/><path d="M4 3.5V7h3.5"/></svg></div></div><span class="nlbl">Riwayat</span></div>
+    <div class="ni"><div class="nic"><svg width="24" height="24" viewBox="0 0 26 24" fill="none" stroke="#8e8e93" stroke-width="1.6"><path d="M3 4h13v9H8l-3 3z" stroke-linejoin="round"/><path d="M10 7h11v9l-3-3h-2" stroke-linejoin="round" fill="#fff"/></svg></div><span class="nlbl">Pesan</span></div>
+  </div>
+  <div class="andnav">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="#3a3a3a"><rect x="1" y="1" width="14" height="14" rx="2.5"/></svg>
+    <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="#3a3a3a" stroke-width="1.6"><circle cx="9" cy="9" r="7"/></svg>
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="#3a3a3a"><path d="M11 2 L4 8 L11 14 Z"/></svg>
+  </div>
+</div>
+
+<!-- EDIT POPUP -->
+<div id="epop">
+  <div class="eplbl">Edit nilai</div>
+  <input id="einput" type="text" placeholder="Ketik nilai baru...">
+  <div class="swrow"><span class="swlbl">Warna:</span>
+    <div class="sw sw0 sel" data-ci="0" onclick="pickColor(0)"></div>
+    <div class="sw sw1" data-ci="1" onclick="pickColor(1)"></div>
+    <div class="sw sw2" data-ci="2" onclick="pickColor(2)"></div>
+    <div class="sw sw3" data-ci="3" onclick="pickColor(3)"></div>
+  </div>
+  <div class="epbrow"><button class="epok" onclick="applyEp()">OK</button><button class="epcancel" onclick="closeEp()">Batal</button></div>
+</div>
+
+<!-- MODAL -->
+<div id="modal">
+  <div class="mtit">Preview HD</div>
+  <div class="mwrap"><img id="mimg"></div>
+  <div class="mbtns"><button class="mbtn msave" onclick="saveImg()">⬇ Simpan</button><button class="mbtn mclose" onclick="document.getElementById('modal').style.display='none'">✕ Tutup</button></div>
+</div>
+
+<script>
+const CLS=['cc0','cc1','cc2','cc3'];
+let tdata=[
+ {sym:'XAUUSDc',dir:'buy',lot:'0.01',ep:'4 026.005',xp:'4 036.038',dt:'2026.06.30 08:00:39',pnl:'10.00',pc:1,dc:1},
+ {sym:'XAUUSDc',dir:'sell',lot:'0.01',ep:'4 038.027',xp:'4 043.033',dt:'2026.06.29 12:02:29',pnl:'-5.00',pc:2,dc:2},
+ {sym:'XAUUSDc',dir:'buy',lot:'0.01',ep:'4 017.189',xp:'4 028.001',dt:'2026.06.26 01:01:13',pnl:'10.80',pc:1,dc:1},
+ {sym:'XAUUSDc',dir:'sell',lot:'0.01',ep:'3 970.908',xp:'3 975.875',dt:'2026.06.25 03:45:03',pnl:'-5.00',pc:2,dc:2},
+ {sym:'XAUUSDc',dir:'sell',lot:'0.01',ep:'4 041.824',xp:'4 047.019',dt:'2026.06.24 11:50:19',pnl:'-5.20',pc:2,dc:2},
+ {sym:'XAUUSDc',dir:'buy',lot:'0.01',ep:'4 086.568',xp:'4 081.631',dt:'2026.06.24 07:31:50',pnl:'-5.00',pc:2,dc:1},
+ {sym:'XAUUSDc',dir:'sell',lot:'0.01',ep:'4 061.851',xp:'4 067.084',dt:'2026.06.24 04:58:02',pnl:'-5.20',pc:2,dc:2},
+ {sym:'XAUUSDc',dir:'sell',lot:'0.01',ep:'4 120.058',xp:'4 125.095',dt:'2026.06.23 11:57:43',pnl:'-5.00',pc:2,dc:2},
+ {sym:'XAUUSDc',dir:'sell',lot:'0.01',ep:'4 180.989',xp:'4 186.041',dt:'2026.06.23 00:31:01',pnl:'-5.00',pc:2,dc:2},
+ {sym:'XAUUSDc',dir:'sell',lot:'0.01',ep:'4 194.895',xp:'4 185.113',dt:'2026.06.22 13:30:03',pnl:'9.80',pc:1,dc:2},
+];
+
+function renderTrades(){
+  const c=document.getElementById('tlist');c.innerHTML='';
+  tdata.forEach((d,i)=>{
+    const bar=d.pc===1?'pr':'lo';
+    c.innerHTML+=`<div class="trow"><div class="tbar ${bar}"></div><div class="tc"><div><div class="tsl"><span class="tsym ed cc0" onclick="epT(this,${i},'sym',0)">${d.sym}</span><span class="tcomma">,</span><span class="tdir ed ${CLS[d.dc]}" onclick="epT(this,${i},'dir',${d.dc})">${d.dir} ${d.lot}</span></div><div class="tprices"><span class="ed cc3" onclick="epT(this,${i},'ep',3)">${d.ep}</span><span class="tarr">→</span><span class="ed cc3" onclick="epT(this,${i},'xp',3)">${d.xp}</span></div></div><div class="tright"><div class="tdate ed cc3" onclick="epT(this,${i},'dt',3)">${d.dt}</div><div class="tpnl ed ${CLS[d.pc]}" onclick="epT(this,${i},'pnl',${d.pc})">${d.pnl}</div></div></div><div class="rowbtns"><button class="delbtn" onclick="delT(${i})">✕</button><button class="copybtn" onclick="copyT(${i})">⧉</button></div></div>`;
+  });
+}
+function delT(i){tdata.splice(i,1);renderTrades();saveProject();}
+function addTrade(){tdata.unshift({sym:'XAUUSDc',dir:'buy',lot:'0.01',ep:'4 000.000',xp:'4 000.000',dt:'2026.06.30 12:00:00',pnl:'0.00',pc:0,dc:1});renderTrades();saveProject();}
+function copyT(i){tdata.splice(i+1,0,{...tdata[i]});renderTrades();saveProject();}
+
+function epT(el,i,f,ci){
+  openPop(el,ci,(t,nci)=>{
+    const d=tdata[i];
+    if(f==='dir'){const p=t.trim().split(/\s+/);d.dir=p[0]||d.dir;d.lot=p[1]||d.lot;d.dc=nci;}
+    else if(f==='pnl'){d.pnl=t;d.pc=nci;}
+    else d[f]=t;
+    renderTrades();saveProject();
+  });
+}
+
+let curEl=null,pendingC=0,pendingCb=null;
+function ep(el){openPop(el,parseInt(el.getAttribute('data-c')||'0'),(t,ci)=>{el.textContent=t;setC(el,ci);el.setAttribute('data-c',ci);saveProject();});}
+function openPop(el,ci,cb){
+  curEl=el;pendingC=ci;pendingCb=cb;
+  const pop=document.getElementById('epop');
+  document.getElementById('einput').value=el.textContent.trim();
+  hlSw(ci);pop.style.display='block';
+  const r=el.getBoundingClientRect();const pw=245;
+  let top=r.bottom+window.scrollY+6,left=r.left+window.scrollX;
+  if(left+pw>window.innerWidth-8)left=window.innerWidth-pw-8;
+  if(left<8)left=8;
+  pop.style.top=top+'px';pop.style.left=left+'px';
+  setTimeout(()=>document.getElementById('einput').focus(),40);
+}
+function pickColor(ci){pendingC=ci;hlSw(ci);}
+function hlSw(ci){document.querySelectorAll('#epop .sw').forEach(s=>s.classList.toggle('sel',parseInt(s.dataset.ci)===ci));}
+function applyEp(){if(pendingCb)pendingCb(document.getElementById('einput').value,pendingC);closeEp();}
+function closeEp(){document.getElementById('epop').style.display='none';curEl=null;pendingCb=null;}
+function setC(el,ci){CLS.forEach(c=>el.classList.remove(c));el.classList.add(CLS[ci]);}
+
+document.addEventListener('click',e=>{const pop=document.getElementById('epop');if(pop.style.display==='block'&&!pop.contains(e.target)&&e.target!==curEl&&!(curEl&&curEl.contains(e.target)))closeEp();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeEp();if(e.key==='Enter'&&document.getElementById('epop').style.display==='block')applyEp();});
+
+/* Download HD */
+let lastURL=null;
+async function doDownload(){
+  closeEp();
+  const btn=document.getElementById('dlbtn');const o=btn.innerHTML;btn.innerHTML='<span class="spin"></span>';btn.disabled=true;
+  document.body.classList.add('cap');
+  try{
+    const cvs=await html2canvas(document.getElementById('screen'),{scale:3,backgroundColor:'#ffffff',useCORS:true,logging:false});
+    lastURL=cvs.toDataURL('image/png');
+    document.getElementById('mimg').src=lastURL;
+    document.getElementById('modal').style.display='flex';
+  }catch(e){alert('Error: '+e.message);}
+  document.body.classList.remove('cap');btn.innerHTML=o;btn.disabled=false;
+}
+function saveImg(){if(!lastURL)return;const a=document.createElement('a');a.href=lastURL;a.download='mt5-riwayat-HD.png';a.click();}
+
+/* Simpan/muat project sederhana ke localStorage */
+const PROJ_KEY='mt5_riwayat_project_v1';
+let _projectLoaded=false,_saveTimer=null;
+function saveProject(){
+  if(!_projectLoaded)return;
+  clearTimeout(_saveTimer);
+  _saveTimer=setTimeout(()=>{
+    const header=[];
+    document.querySelectorAll('#screen .sb, #screen .abr, #screen .summary').forEach(sec=>{
+      sec.querySelectorAll('.ed').forEach(el=>header.push({t:el.textContent,c:el.className}));
+    });
+    localStorage.setItem(PROJ_KEY,JSON.stringify({header,tdata}));
+  },300);
+}
+function loadProject(){
+  let data=null;
+  try{data=JSON.parse(localStorage.getItem(PROJ_KEY)||'null');}catch(e){}
+  if(!data){_projectLoaded=true;return;}
+  if(Array.isArray(data.tdata)&&data.tdata.length)tdata=data.tdata;
+  renderTrades();
+  if(Array.isArray(data.header)){
+    const els=[];
+    document.querySelectorAll('#screen .sb, #screen .abr, #screen .summary').forEach(sec=>{
+      sec.querySelectorAll('.ed').forEach(el=>els.push(el));
+    });
+    data.header.forEach((h,i)=>{if(els[i]){els[i].textContent=h.t;els[i].className=h.c;}});
+  }
+  _projectLoaded=true;
+}
+function resetProject(){
+  if(!confirm('Hapus data tersimpan & mulai baru? Tindakan ini tidak bisa dibatalkan.'))return;
+  localStorage.removeItem(PROJ_KEY);
+  location.reload();
+}
+
+renderTrades();
+loadProject();
+_projectLoaded=true;
+</script>
+</body>
+</html>
