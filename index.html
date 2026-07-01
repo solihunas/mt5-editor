@@ -17,35 +17,56 @@ html,body{background:radial-gradient(ellipse at top left,#1a0830 0%,#08000f 55%,
 .hint{color:#9a85c0;font-size:11px;padding:8px 12px;text-align:center;max-width:420px;background:rgba(5,0,15,.6);line-height:1.5;}
 .hint b{color:#d0b0ff;}
 
-#photowrap{position:relative;width:406px;background:#fff;}
-#photowrap img{display:block;width:100%;height:auto;user-select:none;-webkit-user-drag:none;pointer-events:none;}
+#photowrap{position:relative;width:406.667px;background:#fff;}
+#photowrap>img{display:block;width:100%;height:auto;user-select:none;-webkit-user-drag:none;pointer-events:none;}
 
-.mbox{position:absolute;background:#fff;display:flex;align-items:center;overflow:hidden;outline:1px dashed rgba(10,132,255,.4);outline-offset:-1px;}
-.mbox.right{justify-content:flex-end;}
-.mbox.left{justify-content:flex-start;}
-.mtxt{width:100%;overflow:hidden;white-space:nowrap;cursor:pointer;text-overflow:clip;}
-.mtxt.f-sval{font-size:15px;font-weight:700;padding-right:2px;}
-.mtxt.f-price{font-size:12.5px;font-weight:400;padding-left:2px;}
-.mtxt.f-date{font-size:10.5px;font-weight:400;padding-right:2px;}
-.mtxt.f-pnl{font-size:15px;font-weight:700;padding-right:2px;}
+/* ── ringkasan (data-driven, sama seperti versi HTML sebelumnya) ── */
+.summary{background:#fff;}
+.srow{display:flex;align-items:flex-end;padding:3px 16px 2px 16px;border-bottom:1px solid #f0f0f0;line-height:18px;}
+.slbl{white-space:nowrap;flex-shrink:0;}
+.sdot{flex:1;border-bottom:1.5px dotted #cbcbcb;margin:0 6px 4px;}
+.sval{white-space:nowrap;}
 
-.cc0{color:#1c1c1c!important;}.cc1{color:#0a84ff!important;}.cc2{color:#e0322e!important;}.cc3{color:#8e8e93!important;}
-body:not(.cap) .mtxt:hover{background:rgba(10,132,255,.1);}
-body.cap .mbox{outline:none!important;}
+/* ── daftar transaksi ── */
+.trow{display:flex;align-items:stretch;border-bottom:1px solid #f2f2f2;background:#fff;position:relative;}
+.tbar{width:4px;flex-shrink:0;}.tbar.lo{background:#E87545;}.tbar.pr{background:#34C759;}.tbar.no{background:transparent;}
+.tc{flex:1;padding:6px 14px 5px 10px;display:flex;justify-content:space-between;align-items:center;}
+.tsl{display:flex;align-items:baseline;line-height:20px;}
+.tcomma{margin-right:5px;font-weight:700;color:#1c1c1c;}
+.tprices{margin-top:2px;line-height:16px;}
+.tright{text-align:right;}
+.tdate{line-height:20px;}
+.tpnl{line-height:16px;margin-top:2px;}
+.rowbtns{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:flex;gap:6px;z-index:5;}
+.delbtn,.copybtn{background:#f0f0f3;border:1px solid #dcdcdc;color:#9b9b9b;font-size:11px;font-weight:700;cursor:pointer;border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center;}
+.delbtn:active{background:#ff3b30;color:#fff;border-color:#ff3b30;}
+.copybtn:active{background:#0a84ff;color:#fff;border-color:#0a84ff;}
+.addbtn{display:block;width:calc(100% - 32px);margin:11px 16px 12px;padding:11px;border:1.5px dashed #c8c8cc;background:#fff;color:#0a84ff;font-size:14px;font-weight:500;border-radius:8px;cursor:pointer;text-align:center;}
 
-#epop{position:fixed;z-index:900;background:#fff;border-radius:14px;padding:14px 16px;box-shadow:0 10px 40px rgba(0,0,0,.3);min-width:235px;max-width:300px;display:none;border:1px solid #e8e8e8;}
+.cc0{color:#1c1c1c;}.cc1{color:#0a84ff;}.cc2{color:#e0322e;}.cc3{color:#8e8e93;}
+body:not(.cap) .ed{cursor:pointer;}
+body:not(.cap) .ed:hover{background:rgba(10,132,255,.1);border-radius:3px;}
+body.cap .rowbtns,body.cap .addbtn{display:none!important;}
+
+#epop{position:fixed;z-index:900;background:#fff;border-radius:14px;padding:14px 16px;box-shadow:0 10px 40px rgba(0,0,0,.3);min-width:250px;max-width:305px;display:none;border:1px solid #e8e8e8;}
 #epop .eplbl{font-size:11px;color:#8e8e93;margin-bottom:7px;font-weight:600;letter-spacing:.4px;text-transform:uppercase;}
-#einput{width:100%;border:1.5px solid #0a84ff;border-radius:9px;padding:8px 11px;font-size:15px;color:#1c1c1c;outline:none;margin-bottom:12px;}
-.swrow{display:flex;gap:11px;margin-bottom:13px;align-items:center;}
+#einput{width:100%;border:1.5px solid #0a84ff;border-radius:9px;padding:8px 11px;font-size:15px;color:#1c1c1c;outline:none;margin-bottom:10px;}
+.styrow{display:flex;gap:10px;align-items:center;margin-bottom:11px;}
+.styrow .swlbl{font-size:11px;color:#8e8e93;font-weight:500;flex-shrink:0;}
+#efsize{width:52px;border:1px solid #d8d8dc;border-radius:7px;padding:5px 6px;font-size:13px;text-align:center;}
+.styrow .stepbtn{width:24px;height:24px;border:1px solid #d8d8dc;background:#f5f5f7;border-radius:6px;font-size:14px;font-weight:700;cursor:pointer;color:#333;}
+.togglebtn{border:1.5px solid #d8d8dc;background:#f5f5f7;color:#555;border-radius:7px;padding:5px 10px;font-size:12px;font-weight:700;cursor:pointer;}
+.togglebtn.on{background:#0a84ff;border-color:#0a84ff;color:#fff;}
+.swrow{display:flex;gap:11px;margin-bottom:12px;align-items:center;}
 .swrow .swlbl{font-size:11px;color:#8e8e93;font-weight:500;width:40px;}
-.sw{width:28px;height:28px;border-radius:50%;cursor:pointer;border:3px solid transparent;transition:transform .15s;flex-shrink:0;}
+.sw{width:26px;height:26px;border-radius:50%;cursor:pointer;border:3px solid transparent;transition:transform .15s;flex-shrink:0;}
 .sw:active{transform:scale(1.25);}
 .sw.sel{border-color:#000;transform:scale(1.2);}
 .sw0{background:#1c1c1c;}.sw1{background:#0a84ff;}.sw2{background:#e0322e;}.sw3{background:#8e8e93;}
-.epbrow{display:flex;gap:8px;}
-.epok{flex:1;background:#0a84ff;color:#fff;border:none;border-radius:9px;padding:9px;font-size:13px;font-weight:700;cursor:pointer;}
-.epcancel{flex:1;background:#f2f2f7;color:#1c1c1c;border:none;border-radius:9px;padding:9px;font-size:13px;font-weight:600;cursor:pointer;}
-.epclear{flex:1;background:#fff0f0;color:#e0322e;border:1px solid #f0c8c8;border-radius:9px;padding:9px;font-size:13px;font-weight:600;cursor:pointer;}
+.epbrow{display:flex;gap:7px;}
+.epok{flex:1;background:#0a84ff;color:#fff;border:none;border-radius:9px;padding:9px 4px;font-size:12.5px;font-weight:700;cursor:pointer;}
+.epcancel{flex:1;background:#f2f2f7;color:#1c1c1c;border:none;border-radius:9px;padding:9px 4px;font-size:12.5px;font-weight:600;cursor:pointer;}
+.epclear{flex:1;background:#fff0f0;color:#e0322e;border:1px solid #f0c8c8;border-radius:9px;padding:9px 4px;font-size:12.5px;font-weight:600;cursor:pointer;}
 
 #modal{position:fixed;inset:0;background:rgba(0,0,0,.92);backdrop-filter:blur(8px);z-index:1000;display:none;flex-direction:column;align-items:center;justify-content:center;padding:16px;}
 #modal .mtit{color:#d0b0ff;font-size:14px;margin-bottom:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;}
@@ -65,17 +86,32 @@ body.cap .mbox{outline:none!important;}
   <button class="ctrl dl" id="dlbtn" onclick="doDownload()">⬇ HD</button>
   <button class="ctrl rs" onclick="resetProject()" title="Hapus data tersimpan & mulai baru">↻ Baru</button>
 </div>
-<div class="hint">Foto asli riwayat MT5 — semua <b>nominal ditutup putih</b>. Ketuk kotak putih (garis putus biru) untuk isi contoh nilai demo. Tujuan: edukasi supaya tidak mudah tertipu screenshot profit palsu.</div>
+<div class="hint">Header/status bar/navigasi = <b>foto asli</b> (tidak berubah). Ringkasan & daftar transaksi <b>bisa diedit bebas</b>: ketuk teks → ubah nilai, warna, ukuran font &amp; gaya. Bisa tambah/hapus/duplikat baris transaksi. Tujuan: edukasi anti screenshot profit palsu.</div>
 
 <div id="photowrap">
-  <img src="assets/riwayat-real.jpg" alt="Riwayat MT5">
-  <!-- overlay boxes digenerate oleh JS -->
+  <img src="assets/riwayat-top.jpg" alt="Header Riwayat MT5">
+
+  <div class="summary" id="summaryList"></div>
+
+  <div id="tlist"></div>
+  <button class="addbtn" onclick="addTrade()">+ Tambah baris transaksi</button>
+
+  <img src="assets/riwayat-bottom.jpg" alt="Navigasi MT5">
 </div>
 
 <!-- EDIT POPUP -->
 <div id="epop">
-  <div class="eplbl">Isi nilai demo</div>
+  <div class="eplbl">Edit nilai</div>
   <input id="einput" type="text" placeholder="Ketik nilai...">
+  <div class="styrow">
+    <span class="swlbl">Ukuran:</span>
+    <button class="stepbtn" onclick="stepSize(-1)">−</button>
+    <input id="efsize" type="number" min="6" max="48" step="0.5">
+    <button class="stepbtn" onclick="stepSize(1)">＋</button>
+    <span class="swlbl">px</span>
+    <button class="togglebtn" id="efboldbtn" onclick="toggleBold()">B</button>
+    <button class="togglebtn" id="efitalicbtn" onclick="toggleItalic()" style="font-style:italic;">I</button>
+  </div>
   <div class="swrow"><span class="swlbl">Warna:</span>
     <div class="sw sw0 sel" data-ci="0" onclick="pickColor(0)"></div>
     <div class="sw sw1" data-ci="1" onclick="pickColor(1)"></div>
@@ -93,84 +129,121 @@ body.cap .mbox{outline:none!important;}
 </div>
 
 <script>
-/* Dimensi foto asli (px) — semua koordinat kotak dihitung relatif terhadap ini */
-const IMG_W=1220, IMG_H=2712;
-function pct(v,total){return (v/total*100)+'%';}
-
-/* Kotak ringkasan (Keuntungan/Deposito/Swap/Komisi/Saldo) — sisi kanan tetap
-   di tepi asli (1185), sisi kiri dilebarkan ke area titik-titik kosong supaya
-   nilai demo yang lebih panjang dari aslinya tidak terpotong */
-const SUM_L=750, SUM_W=435;
-const summaryBoxes=[
- {id:'keuntungan',left:SUM_L,top:455,width:SUM_W,height:50,font:'f-sval',dc:2},
- {id:'deposito',  left:SUM_L,top:530,width:SUM_W,height:50,font:'f-sval',dc:0},
- {id:'swap',      left:SUM_L,top:605,width:SUM_W,height:50,font:'f-sval',dc:0},
- {id:'komisi',    left:SUM_L,top:680,width:SUM_W,height:50,font:'f-sval',dc:0},
- {id:'saldo',     left:SUM_L,top:755,width:SUM_W,height:50,font:'f-sval',dc:0},
-];
-
-/* top-y (price line & date/pnl line) untuk 10 baris transaksi, diukur langsung dari foto asli */
-const rowTops=[
- [918,870],[1068,1020],[1206,1158],[1353,1305],[1503,1455],
- [1648,1600],[1798,1750],[1926,1878],[2076,2028],[2226,2178],
-];
-/* lebar kotak dilonggarkan ke area kosong sekitarnya agar nilai demo yang
-   lebih panjang tidak terpotong, tanpa menimpa teks lain di foto */
-const PRICE_L=8, PRICE_W=630, DATE_L=500, DATE_W=685, PNL_L=650, PNL_W=535, ROW_H=46;
-
-const rowBoxes=[];
-rowTops.forEach((t,i)=>{
-  const [priceTop,dateTop]=t;
-  rowBoxes.push({id:'price'+i,left:PRICE_L,top:priceTop-6,width:PRICE_W,height:ROW_H,font:'f-price',dc:3,align:'left'});
-  rowBoxes.push({id:'date'+i, left:DATE_L, top:dateTop-6, width:DATE_W, height:ROW_H,font:'f-date', dc:3,align:'right'});
-  rowBoxes.push({id:'pnl'+i,  left:PNL_L,  top:priceTop-6,width:PNL_W,  height:ROW_H,font:'f-pnl',  dc:1,align:'right'});
-});
-
 const CLS=['cc0','cc1','cc2','cc3'];
-const allBoxes=[...summaryBoxes,...rowBoxes];
+/* field default: {t:teks, c:warna(0-3), fs:ukuran px, fw:bold(bool), it:italic(bool)} */
+function F(t,c,fs,fw,it){return {t,c,fs,fw:!!fw,it:!!it};}
 
-function renderBoxes(){
-  const wrap=document.getElementById('photowrap');
-  allBoxes.forEach(b=>{
-    const align=b.align||'right';
-    const div=document.createElement('div');
-    div.className='mbox '+align;
-    div.style.left=pct(b.left,IMG_W);
-    div.style.top=pct(b.top,IMG_H);
-    div.style.width=pct(b.width,IMG_W);
-    div.style.height=pct(b.height,IMG_H);
-    div.innerHTML=`<span class="mtxt ${b.font} ed ${CLS[b.dc]}" id="box-${b.id}" data-c="${b.dc}" onclick="ep(this)"></span>`;
-    wrap.appendChild(div);
-  });
+let summaryData=[
+ {id:'keuntungan',lbl:F('Keuntungan:',0,15,700),val:F('-24.80',2,15,700)},
+ {id:'deposito',  lbl:F('Deposito',0,15,700),   val:F('100.00',0,15,700)},
+ {id:'swap',      lbl:F('Swap:',0,15,700),      val:F('0.00',0,15,700)},
+ {id:'komisi',    lbl:F('Komisi:',0,15,700),    val:F('0.00',0,15,700)},
+ {id:'saldo',     lbl:F('Saldo:',0,15,700),     val:F('75.20',0,15,700)},
+];
+
+let tdata=[
+ {sym:F('XAUUSDc',0,15,700), dir:F('buy 0.01',1,15,400),  price:F('4 026.005  →  4 036.038',3,12.5,400), date:F('2026.06.30 08:00:39',3,10.5,400), pnl:F('10.00',1,15,700)},
+ {sym:F('XAUUSDc',0,15,700), dir:F('sell 0.01',2,15,400), price:F('4 038.027  →  4 043.033',3,12.5,400), date:F('2026.06.29 12:02:29',3,10.5,400), pnl:F('-5.00',2,15,700)},
+ {sym:F('XAUUSDc',0,15,700), dir:F('buy 0.01',1,15,400),  price:F('4 017.189  →  4 028.001',3,12.5,400), date:F('2026.06.26 01:01:13',3,10.5,400), pnl:F('10.80',1,15,700)},
+ {sym:F('XAUUSDc',0,15,700), dir:F('sell 0.01',2,15,400), price:F('3 970.908  →  3 975.875',3,12.5,400), date:F('2026.06.25 03:45:03',3,10.5,400), pnl:F('-5.00',2,15,700)},
+ {sym:F('XAUUSDc',0,15,700), dir:F('sell 0.01',2,15,400), price:F('4 041.824  →  4 047.019',3,12.5,400), date:F('2026.06.24 11:50:19',3,10.5,400), pnl:F('-5.20',2,15,700)},
+ {sym:F('XAUUSDc',0,15,700), dir:F('buy 0.01',1,15,400),  price:F('4 086.568  →  4 081.631',3,12.5,400), date:F('2026.06.24 07:31:50',3,10.5,400), pnl:F('-5.00',2,15,700)},
+ {sym:F('XAUUSDc',0,15,700), dir:F('sell 0.01',2,15,400), price:F('4 061.851  →  4 067.084',3,12.5,400), date:F('2026.06.24 04:58:02',3,10.5,400), pnl:F('-5.20',2,15,700)},
+ {sym:F('XAUUSDc',0,15,700), dir:F('sell 0.01',2,15,400), price:F('4 120.058  →  4 125.095',3,12.5,400), date:F('2026.06.23 11:57:43',3,10.5,400), pnl:F('-5.00',2,15,700)},
+ {sym:F('XAUUSDc',0,15,700), dir:F('sell 0.01',2,15,400), price:F('4 180.989  →  4 186.041',3,12.5,400), date:F('2026.06.23 00:31:01',3,10.5,400), pnl:F('-5.00',2,15,700)},
+ {sym:F('XAUUSDc',0,15,700), dir:F('sell 0.01',2,15,400), price:F('4 194.895  →  4 185.113',3,12.5,400), date:F('2026.06.22 13:30:03',3,10.5,400), pnl:F('9.80',1,15,700)},
+];
+
+function fieldStyle(f){
+  return `font-size:${f.fs}px;font-weight:${f.fw?700:400};font-style:${f.it?'italic':'normal'};`;
+}
+function fieldSpan(f,path,extraClass){
+  return `<span class="ed ${CLS[f.c]} ${extraClass||''}" style="${fieldStyle(f)}" data-path="${path}" onclick="editField('${path}')">${escapeHtml(f.t)}</span>`;
+}
+function escapeHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+function renderSummary(){
+  const c=document.getElementById('summaryList');
+  c.innerHTML=summaryData.map((s,i)=>`<div class="srow">${fieldSpan(s.lbl,'summary.'+i+'.lbl','slbl')}<span class="sdot"></span>${fieldSpan(s.val,'summary.'+i+'.val','sval')}</div>`).join('');
 }
 
-let curEl=null,pendingC=0,pendingCb=null;
-function ep(el){
-  openPop(el,parseInt(el.getAttribute('data-c')||'0'),(t,ci)=>{
-    el.textContent=t;setC(el,ci);el.setAttribute('data-c',ci);saveProject();
-  });
+function renderTrades(){
+  const c=document.getElementById('tlist');
+  c.innerHTML=tdata.map((d,i)=>{
+    const bar=d.pnl.c===1?'pr':(d.pnl.c===2?'lo':'no');
+    return `<div class="trow"><div class="tbar ${bar}"></div><div class="tc"><div><div class="tsl">${fieldSpan(d.sym,i+'.sym')}<span class="tcomma">,</span>${fieldSpan(d.dir,i+'.dir')}</div><div class="tprices">${fieldSpan(d.price,i+'.price')}</div></div><div class="tright"><div class="tdate">${fieldSpan(d.date,i+'.date')}</div><div class="tpnl">${fieldSpan(d.pnl,i+'.pnl')}</div></div></div><div class="rowbtns"><button class="delbtn" onclick="delT(${i})">✕</button><button class="copybtn" onclick="copyT(${i})">⧉</button></div></div>`;
+  }).join('');
 }
-function openPop(el,ci,cb){
-  curEl=el;pendingC=ci;pendingCb=cb;
+
+function getField(path){
+  if(path.startsWith('summary.')){const [,i,which]=path.split('.');return summaryData[+i][which];}
+  const [i,which]=path.split('.');return tdata[+i][which];
+}
+function setField(path,newF){
+  if(path.startsWith('summary.')){const [,i,which]=path.split('.');summaryData[+i][which]=newF;}
+  else{const [i,which]=path.split('.');tdata[+i][which]=newF;}
+}
+
+let curPath=null;
+function editField(path){
+  const f=getField(path);
+  curPath=path;
+  document.getElementById('einput').value=f.t;
+  document.getElementById('efsize').value=f.fs;
+  pendingC=f.c;hlSw(f.c);
+  setBold(f.fw===700||f.fw===true);
+  setItalic(!!f.it);
   const pop=document.getElementById('epop');
-  document.getElementById('einput').value=el.textContent.trim();
-  hlSw(ci);pop.style.display='block';
-  const r=el.getBoundingClientRect();const pw=245;
+  pop.style.display='block';
+  const el=document.querySelector(`[data-path="${path}"]`);
+  const r=el.getBoundingClientRect();const pw=280;
   let top=r.bottom+window.scrollY+6,left=r.left+window.scrollX;
   if(left+pw>window.innerWidth-8)left=window.innerWidth-pw-8;
   if(left<8)left=8;
+  if(top+330>window.innerHeight+window.scrollY) top=r.top+window.scrollY-336;
   pop.style.top=top+'px';pop.style.left=left+'px';
   setTimeout(()=>document.getElementById('einput').focus(),40);
 }
+
+let pendingC=0,pendingBold=false,pendingItalic=false;
 function pickColor(ci){pendingC=ci;hlSw(ci);}
 function hlSw(ci){document.querySelectorAll('#epop .sw').forEach(s=>s.classList.toggle('sel',parseInt(s.dataset.ci)===ci));}
-function applyEp(){if(pendingCb)pendingCb(document.getElementById('einput').value,pendingC);closeEp();}
-function clearEp(){if(pendingCb)pendingCb('',pendingC);closeEp();}
-function closeEp(){document.getElementById('epop').style.display='none';curEl=null;pendingCb=null;}
-function setC(el,ci){CLS.forEach(c=>el.classList.remove(c));el.classList.add(CLS[ci]);}
+function setBold(b){pendingBold=b;document.getElementById('efboldbtn').classList.toggle('on',b);}
+function setItalic(b){pendingItalic=b;document.getElementById('efitalicbtn').classList.toggle('on',b);}
+function toggleBold(){setBold(!pendingBold);}
+function toggleItalic(){setItalic(!pendingItalic);}
+function stepSize(d){const inp=document.getElementById('efsize');let v=parseFloat(inp.value)||15;v=Math.max(6,Math.min(48,v+d));inp.value=v;}
 
-document.addEventListener('click',e=>{const pop=document.getElementById('epop');if(pop.style.display==='block'&&!pop.contains(e.target)&&e.target!==curEl&&!(curEl&&curEl.contains(e.target)))closeEp();});
-document.addEventListener('keydown',e=>{if(e.key==='Escape')closeEp();if(e.key==='Enter'&&document.getElementById('epop').style.display==='block')applyEp();});
+function applyEp(){
+  if(!curPath)return;
+  const t=document.getElementById('einput').value;
+  const fs=parseFloat(document.getElementById('efsize').value)||15;
+  setField(curPath,F(t,pendingC,fs,pendingBold,pendingItalic));
+  renderSummary();renderTrades();closeEp();saveProject();
+}
+function clearEp(){
+  if(!curPath)return;
+  const fs=parseFloat(document.getElementById('efsize').value)||15;
+  setField(curPath,F('',pendingC,fs,pendingBold,pendingItalic));
+  renderSummary();renderTrades();closeEp();saveProject();
+}
+function closeEp(){document.getElementById('epop').style.display='none';curPath=null;}
+
+document.addEventListener('click',e=>{const pop=document.getElementById('epop');if(pop.style.display==='block'&&!pop.contains(e.target)&&!e.target.closest('.ed'))closeEp();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeEp();if(e.key==='Enter'&&e.target.id==='einput')applyEp();});
+
+/* tambah / hapus / duplikat baris transaksi */
+function addTrade(){
+  tdata.unshift({
+    sym:F('XAUUSDc',0,15,700), dir:F('buy 0.01',1,15,400),
+    price:F('4 000.000  →  4 000.000',3,12.5,400),
+    date:F('2026.06.30 12:00:00',3,10.5,400),
+    pnl:F('0.00',0,15,700),
+  });
+  renderTrades();saveProject();
+}
+function delT(i){tdata.splice(i,1);renderTrades();saveProject();}
+function copyT(i){tdata.splice(i+1,0,JSON.parse(JSON.stringify(tdata[i])));renderTrades();saveProject();}
 
 /* Download HD */
 let lastURL=null;
@@ -179,7 +252,7 @@ async function doDownload(){
   const btn=document.getElementById('dlbtn');const o=btn.innerHTML;btn.innerHTML='<span class="spin"></span>';btn.disabled=true;
   document.body.classList.add('cap');
   try{
-    const cvs=await html2canvas(document.getElementById('photowrap'),{scale:2,backgroundColor:'#ffffff',useCORS:true,logging:false});
+    const cvs=await html2canvas(document.getElementById('photowrap'),{scale:3,backgroundColor:'#ffffff',useCORS:true,logging:false});
     lastURL=cvs.toDataURL('image/png');
     document.getElementById('mimg').src=lastURL;
     document.getElementById('modal').style.display='flex';
@@ -188,37 +261,29 @@ async function doDownload(){
 }
 function saveImg(){if(!lastURL)return;const a=document.createElement('a');a.href=lastURL;a.download='mt5-riwayat-demo-HD.png';a.click();}
 
-/* Simpan/muat isian ke localStorage supaya tidak hilang saat reload */
-const PROJ_KEY='mt5_riwayat_photo_v1';
+/* simpan / muat ke localStorage */
+const PROJ_KEY='mt5_riwayat_editable_v2';
 let _projectLoaded=false,_saveTimer=null;
 function saveProject(){
   if(!_projectLoaded)return;
   clearTimeout(_saveTimer);
   _saveTimer=setTimeout(()=>{
-    const data={};
-    allBoxes.forEach(b=>{const el=document.getElementById('box-'+b.id);data[b.id]={t:el.textContent,c:el.getAttribute('data-c')};});
-    localStorage.setItem(PROJ_KEY,JSON.stringify(data));
+    localStorage.setItem(PROJ_KEY,JSON.stringify({summaryData,tdata}));
   },300);
 }
 function loadProject(){
   let data=null;
   try{data=JSON.parse(localStorage.getItem(PROJ_KEY)||'null');}catch(e){}
-  if(data){
-    allBoxes.forEach(b=>{
-      const el=document.getElementById('box-'+b.id);
-      const v=data[b.id];
-      if(v){el.textContent=v.t;setC(el,parseInt(v.c));el.setAttribute('data-c',v.c);}
-    });
-  }
+  if(data&&data.summaryData&&data.tdata){summaryData=data.summaryData;tdata=data.tdata;}
+  renderSummary();renderTrades();
   _projectLoaded=true;
 }
 function resetProject(){
-  if(!confirm('Hapus semua isian demo & mulai baru? Tindakan ini tidak bisa dibatalkan.'))return;
+  if(!confirm('Hapus semua perubahan & mulai baru dari contoh awal? Tindakan ini tidak bisa dibatalkan.'))return;
   localStorage.removeItem(PROJ_KEY);
   location.reload();
 }
 
-renderBoxes();
 loadProject();
 </script>
 </body>
