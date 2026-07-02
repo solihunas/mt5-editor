@@ -152,11 +152,14 @@ body.previewmode #ctrlbar,body.previewmode #projectbar,body.previewmode .hint{di
 /* ══ LIVE TRADE ══ */
 #ltCtrlbar{width:100%;max-width:420px;background:rgba(8,0,20,0.9);display:flex;gap:6px;padding:8px 10px;border-bottom:1px solid rgba(140,60,255,0.2);}
 .ctrl.ltplay{background:rgba(40,140,90,0.4);border-color:rgba(60,200,120,0.4);color:#6de8a0;}
-#ltPhotowrap{position:relative;width:360px;background:#000;display:flex;flex-direction:column;}
-#ltPhotowrap>img{display:block;width:100%;height:auto;user-select:none;-webkit-user-drag:none;pointer-events:none;}
+/* sama seperti Riwayat: header (Trade/Saldo/Posisi) & footer (nav bawah)
+   paten, cuma daftar posisi (#ltPosList) yang discroll di dalamnya —
+   supaya footer TIDAK ikut naik/turun walau ada banyak posisi terbuka */
+#ltPhotowrap{position:relative;width:360px;aspect-ratio:1080/2229;background:#000;display:flex;flex-direction:column;overflow:hidden;}
+#ltPhotowrap>img{display:block;width:100%;height:auto;flex-shrink:0;user-select:none;-webkit-user-drag:none;pointer-events:none;}
 #ltDynTop{position:absolute;top:0;left:0;width:100%;height:0;pointer-events:none;}
 .lt-f{position:absolute;white-space:nowrap;font-family:'Roboto Condensed',sans-serif;}
-#ltPosList{background:#000;min-height:4px;}
+#ltPosList{background:#000;flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;}
 .ltrow{padding:10px 14px 9px;border-bottom:1px solid #1c1c1e;}
 .lttop{white-space:nowrap;}
 .ltbottom{display:flex;justify-content:space-between;align-items:baseline;margin-top:3px;}
@@ -326,7 +329,11 @@ body.ltplaymode #ltCtrlbar,body.ltplaymode .hint,body.ltplaymode #ltCycleWrap,bo
     <div><span class="fieldlbl">Harga Open</span><input id="ltfOpen" class="fld" type="text" inputmode="decimal" oninput="ltfUpdatePreview()"></div>
     <div><span class="fieldlbl">Harga Close</span><input id="ltfClose" class="fld" type="text" inputmode="decimal" oninput="ltfUpdatePreview()"></div>
   </div>
-  <div style="margin-top:8px;"><span class="fieldlbl">Durasi berjalan saat Play (detik)</span><input id="ltfDuration" class="fld" type="number" step="1" min="1"></div>
+  <div class="grid2" style="margin-top:8px;">
+    <div><span class="fieldlbl">Durasi berjalan saat Play (detik)</span><input id="ltfDuration" class="fld" type="number" step="1" min="1"></div>
+    <div><span class="fieldlbl">Max Floating (opsional)</span><input id="ltfMaxFloat" class="fld" type="text" inputmode="decimal" placeholder="mis. 3 998.000"></div>
+  </div>
+  <div style="font-size:10.5px;color:#8e8e93;margin-top:4px;line-height:1.4;">Max Floating = titik harga terjauh yang sempat disentuh (floating rugi dulu) sebelum akhirnya ditutup di Harga Close — bikin animasinya realistis. Kosongkan kalau tidak perlu.</div>
   <div class="previewline" id="ltfPreview">Hasil per layer: <b>0.00</b></div>
   <div class="epbrow"><button class="epok" onclick="ltfSubmit()">Simpan</button><button class="epcancel" onclick="ltCloseCycleForm()">Batal</button></div>
 </div>
@@ -1069,6 +1076,7 @@ function ltOpenCycleForm(editIndex){
     document.getElementById('ltfOpen').value=cy.open;
     document.getElementById('ltfClose').value=cy.close;
     document.getElementById('ltfDuration').value=cy.duration;
+    document.getElementById('ltfMaxFloat').value=cy.maxFloat!=null?cy.maxFloat:'';
   }else{
     ltfSetDir('sell');
     document.getElementById('ltfLayers').value=1;
@@ -1076,6 +1084,7 @@ function ltOpenCycleForm(editIndex){
     document.getElementById('ltfOpen').value='';
     document.getElementById('ltfClose').value='';
     document.getElementById('ltfDuration').value=6;
+    document.getElementById('ltfMaxFloat').value='';
   }
   ltfUpdatePreview();
   document.getElementById('ltfBackdrop').style.display='block';
@@ -1091,6 +1100,7 @@ function ltfUpdatePreview(){
   document.getElementById('ltfPreview').innerHTML=`Hasil per layer: <b style="color:${color}">${escapeHtml(formatMoney(pnl,2,true))}</b>`;
 }
 function ltfSubmit(){
+  const mfRaw=document.getElementById('ltfMaxFloat').value.trim();
   const cycle={
     dir:ltfDir,
     layers:Math.max(1,parseInt(document.getElementById('ltfLayers').value)||1),
@@ -1098,6 +1108,7 @@ function ltfSubmit(){
     open:parseNum(document.getElementById('ltfOpen').value)||0,
     close:parseNum(document.getElementById('ltfClose').value)||0,
     duration:Math.max(1,parseInt(document.getElementById('ltfDuration').value)||6),
+    maxFloat: mfRaw===''?null:parseNum(mfRaw),
   };
   if(ltfEditIndex!==null) lt.cycles[ltfEditIndex]=cycle;
   else lt.cycles.push(cycle);
@@ -1199,6 +1210,21 @@ function ltBrownianBridge(O,C,steps){
   return out;
 }
 
+/* jalur harga TUNGGAL untuk 1 siklus — dipakai bersama oleh semua layer
+   (current price harus sama untuk semua posisi, itu 1 harga pasar).
+   Kalau maxFloat diisi, harga disimpangkan dulu ke titik itu (floating
+   rugi dulu, realistis) baru menuju Harga Close di akhir durasi. */
+function ltBuildPricePath(cy,steps){
+  if(cy.maxFloat!=null && !isNaN(cy.maxFloat)){
+    const stepsA=Math.max(4,Math.round(steps*0.4));
+    const stepsB=Math.max(4,steps-stepsA+1);
+    const a=ltBrownianBridge(cy.open,cy.maxFloat,stepsA);
+    const b=ltBrownianBridge(cy.maxFloat,cy.close,stepsB);
+    return a.concat(b.slice(1));
+  }
+  return ltBrownianBridge(cy.open,cy.close,steps);
+}
+
 let _ltPlayActive=false;
 async function ltPlayLoop(){
   let realized=0;
@@ -1206,23 +1232,28 @@ async function ltPlayLoop(){
     for(let ci=0; ci<lt.cycles.length; ci++){
       if(!_ltPlayActive) return;
       const cy=lt.cycles[ci];
+      /* tiap layer "open" di harga sedikit berbeda (toleransi ±1 poin),
+         persis seperti entry simultan yang tidak pernah 100% identik */
       const layers=[];
-      for(let i=0;i<cy.layers;i++) layers.push({dir:cy.dir,lot:cy.lot,open:cy.open,close:cy.close,cur:cy.open});
+      for(let i=0;i<cy.layers;i++){
+        const jitter=(Math.random()*2-1)*1.0;
+        layers.push({dir:cy.dir,lot:cy.lot,open:cy.open+jitter});
+      }
       const STEPS=Math.max(10,Math.min(40,cy.duration*4));
-      const paths=layers.map(()=>ltBrownianBridge(cy.open,cy.close,STEPS));
-      const stepMs=Math.max(120,(cy.duration*1000)/STEPS);
-      for(let s=0;s<STEPS;s++){
+      const path=ltBuildPricePath(cy,STEPS);
+      const stepMs=Math.max(120,(cy.duration*1000)/path.length);
+      for(let s=0;s<path.length;s++){
         if(!_ltPlayActive) return;
-        layers.forEach((L,idx)=>{L.cur=paths[idx][s];});
-        const rows=layers.map(L=>({dir:L.dir,lot:L.lot,open:L.open,close:L.close,cur:L.cur,pnl:ltCalcPnl(L.dir,L.lot,L.open,L.cur)}));
+        const cur=path[s];
+        const rows=layers.map(L=>({dir:L.dir,lot:L.lot,open:L.open,close:cy.close,cur,pnl:ltCalcPnl(L.dir,L.lot,L.open,cur)}));
         const floating=rows.reduce((sum,r)=>sum+r.pnl,0);
         ltRenderPositionRows(rows);
         ltRenderTopValues(floating,realized);
         await ltSleep(stepMs);
       }
       if(!_ltPlayActive) return;
-      // finalisasi tepat di harga close, tahan sebentar sebelum ditutup
-      const finalRows=layers.map(L=>({dir:L.dir,lot:L.lot,open:L.open,close:L.close,cur:L.close,pnl:ltCalcPnl(L.dir,L.lot,L.open,L.close)}));
+      // finalisasi tepat di harga close (current price = close), tahan sebentar sebelum ditutup
+      const finalRows=layers.map(L=>({dir:L.dir,lot:L.lot,open:L.open,close:cy.close,cur:cy.close,pnl:ltCalcPnl(L.dir,L.lot,L.open,cy.close)}));
       const finalFloating=finalRows.reduce((s,r)=>s+r.pnl,0);
       ltRenderPositionRows(finalRows);
       ltRenderTopValues(finalFloating,realized);
@@ -1231,7 +1262,7 @@ async function ltPlayLoop(){
       realized+=finalFloating;
       ltRenderPositionRows([]);
       ltRenderTopValues(0,realized);
-      await ltSleep(700);
+      await ltSleep(2000+Math.random()*2000); /* jeda close->open berikutnya: 2-4 detik acak */
     }
   }
 }
