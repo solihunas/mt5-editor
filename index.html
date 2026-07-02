@@ -178,7 +178,7 @@ body.previewmode #ctrlbar,body.previewmode #projectbar,body.previewmode .hint{di
 #ltPhotowrap.theme-white .ltrow{border-bottom-color:#e5e5ea;}
 .ltrow-left{flex:1 1 auto;min-width:0;}
 .lttop{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.ltprice{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:3px;}
+.ltprice{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .ltrow-pnl{flex:0 0 auto;text-align:right;white-space:nowrap;}
 .themetoggle{display:flex;gap:8px;margin-bottom:4px;}
 .themebtn{flex:1;padding:9px;border-radius:9px;border:1.5px solid #d8d8dc;background:#f7f7f9;color:#888;font-weight:700;cursor:pointer;font-size:12.5px;}
@@ -192,6 +192,17 @@ body.ltplaymode .lt-watermark{display:block;}
    putih nyaris tak kelihatan) — balik warnanya jadi gelap translusen */
 #ltPhotowrap.theme-white .lt-watermark{color:rgba(20,20,20,.38);border-color:rgba(20,20,20,.38);text-shadow:0 2px 8px rgba(255,255,255,.85);}
 body.ltplaymode #ltCtrlbar,body.ltplaymode .hint,body.ltplaymode #ltCycleWrap,body.ltplaymode #appSwitch{display:none!important;}
+/* mode Play: perbesar "layar hp" mockup sampai memenuhi layar penuh —
+   mentok atas-bawah ATAU kiri-kanan (mana yang lebih dulu kena), bukan
+   tetap kecil 360px seperti mode edit, supaya hasil rekaman layar terlihat
+   penuh persis merekam HP asli, tanpa area kosong di pinggir */
+/* body adalah flex-item dari html (align-items:center) yang normalnya
+   menyusut mengikuti lebar konten (max-width 420px punya UI) — kalau
+   dibiarkan, gradient ungu html akan mengintip di sisi kiri/kanan saat
+   mockup diperbesar penuh layar. align-self:stretch memaksa body
+   selebar viewport supaya latar hitamnya benar2 menutup semuanya. */
+body.ltplaymode{justify-content:center;overflow:hidden;background:#000;align-self:stretch;}
+body.ltplaymode #ltPhotowrap{width:min(100vw,calc(100vh * 1080 / 2229));max-width:none;}
 
 #ltCycleWrap{width:360px;background:#161618;border-radius:10px;margin:14px 0 20px;overflow:hidden;}
 .ltcyc-head{display:flex;align-items:center;justify-content:space-between;padding:12px 12px 8px;color:#e8e8ea;font-size:12.5px;font-weight:700;letter-spacing:.3px;text-transform:uppercase;}
@@ -965,7 +976,7 @@ function ltDefaultGS(){
     pnl:  {fs:15,fw:700,sx:100},
     val:  {fs:15,fw:700,sx:100,color:'#ffffff'},
     posColor:'#0a84ff', negColor:'#ff453a',
-    theme:'dark', pnlColWidth:34, rowPadY:6, showMargin:true,
+    theme:'dark', pnlColWidth:34, rowPadY:6, showMargin:true, lineGap:1,
   };
 }
 let lt=ltDefault();
@@ -1022,13 +1033,14 @@ function ltRenderPositionRows(rows){
   const c=document.getElementById('ltPosList');
   const pad=Math.min(20,Math.max(2,ltGS.rowPadY!=null?ltGS.rowPadY:6));
   const pnlW=Math.min(60,Math.max(15,ltGS.pnlColWidth||34));
+  const lineGap=Math.min(16,Math.max(0,ltGS.lineGap!=null?ltGS.lineGap:1));
   c.innerHTML=rows.map(r=>{
     const dirColor=r.dir==='buy'?ltGS.posColor:ltGS.negColor;
     const pnlColor=r.pnl<0?ltGS.negColor:ltGS.posColor;
     const dirTxt=(r.dir==='buy'?'buy':'sell')+' '+Number(r.lot).toFixed(2);
     const priceTxt=formatPriceNum(r.open,lt.sym)+' → '+formatPriceNum(r.cur!=null?r.cur:r.close,lt.sym);
     const pnlTxt=formatMoney(r.pnl,2,false);
-    return `<div class="ltrow" style="padding:${pad}px 14px;"><div class="ltrow-left"><div class="lttop"><span style="${ltFieldCss(ltGS.sym)}">${escapeHtml(lt.sym||'XAUUSDc')},</span> <span style="${ltFieldCss(ltGS.dir,dirColor)}">${escapeHtml(dirTxt)}</span></div><div class="ltprice"><span style="${ltFieldCss(ltGS.price)}">${escapeHtml(priceTxt)}</span></div></div><span class="ltrow-pnl" style="${ltFieldCss(ltGS.pnl,pnlColor)};flex-basis:${pnlW}%;">${escapeHtml(pnlTxt)}</span></div>`;
+    return `<div class="ltrow" style="padding:${pad}px 14px;"><div class="ltrow-left"><div class="lttop"><span style="${ltFieldCss(ltGS.sym)}">${escapeHtml(lt.sym||'XAUUSDc')},</span> <span style="${ltFieldCss(ltGS.dir,dirColor)}">${escapeHtml(dirTxt)}</span></div><div class="ltprice" style="margin-top:${lineGap}px;"><span style="${ltFieldCss(ltGS.price)}">${escapeHtml(priceTxt)}</span></div></div><span class="ltrow-pnl" style="${ltFieldCss(ltGS.pnl,pnlColor)};flex-basis:${pnlW}%;">${escapeHtml(pnlTxt)}</span></div>`;
   }).join('');
 }
 function ltRenderBalanceRows(saldo,equity,marginTotal,marginBebas,levelMargin){
@@ -1046,9 +1058,11 @@ function ltRenderTopValues(floating,realized,marginTotal){
   const equity=saldo+floating;
   const marginBebas=equity-marginTotal; /* margin dikunci dari posisi terbuka */
   const levelMargin=marginTotal>0?(equity/marginTotal*100):0;
-  const neutralColor=(LT_THEMES[ltGS.theme||'dark']||LT_THEMES.dark).textDefaultColor;
-  const topColor=floating<0?ltGS.negColor:(floating>0?ltGS.posColor:neutralColor);
-  document.getElementById('ltTopPnl').innerHTML=`<span style="${ltFieldCss(ltGS.pnl,topColor)}">${escapeHtml(formatMoney(floating,2,true))} USC</span>`;
+  const topColor=floating<0?ltGS.negColor:ltGS.posColor;
+  /* MT5 asli: baris PnL di bawah "Trade" KOSONG total (bukan "0.00 USC")
+     kalau tidak ada posisi terbuka/floating persis 0 — bukan cuma warnanya
+     yang dinetralkan */
+  document.getElementById('ltTopPnl').innerHTML=Math.abs(floating)<0.005?'':`<span style="${ltFieldCss(ltGS.pnl,topColor)}">${escapeHtml(formatMoney(floating,2,true))} USC</span>`;
   ltRenderBalanceRows(saldo,equity,marginTotal,marginBebas,levelMargin);
   ltPositionDynSpans();
 }
@@ -1058,13 +1072,13 @@ const LT_THEMES={
   dark:{
     topImg:'assets/livetrade-chrome.jpg', posisiImg:'assets/livetrade-posisi.jpg', botImg:'assets/livetrade-bottom.jpg',
     topW:1080, topH:165,
-    boxes:{ ltTopPnl:{l:105,t:80,w:320,h:46,align:'left'} },
+    boxes:{ ltTopPnl:{l:114,t:80,w:320,h:46,align:'left'} },
     textDefaultColor:'#ffffff',
   },
   white:{
     topImg:'assets/livetrade-chrome-white.jpg', posisiImg:'assets/livetrade-posisi-white.jpg', botImg:'assets/livetrade-bottom-white.jpg',
     topW:1220, topH:195,
-    boxes:{ ltTopPnl:{l:95,t:88,w:245,h:70,align:'left'} },
+    boxes:{ ltTopPnl:{l:121,t:88,w:245,h:70,align:'left'} },
     textDefaultColor:'#1c1c1e',
   },
 };
@@ -1180,11 +1194,12 @@ function ltBuildGsBody(){
     </div>
     <div style="font-size:10.5px;color:#8e8e93;margin-bottom:10px;line-height:1.4;">Ganti latar header/navigasi ke versi terang sesuai screenshot Anda. Warna teks Simbol & Saldo/Equity/Margin otomatis disesuaikan biar tetap kebaca (masih bisa diubah manual di bawah).</div>
     <div class="epsec">Baris Posisi Terbuka</div>
-    <div class="grid2">
+    <div class="grid3">
       <div><span class="fieldlbl">Lebar kolom PnL (%)</span><input class="numinp" id="ltgsPnlColWidth" type="number" step="1" min="15" max="60"></div>
       <div><span class="fieldlbl">Tinggi baris (padding, px)</span><input class="numinp" id="ltgsRowPadY" type="number" step="1" min="2" max="20"></div>
+      <div><span class="fieldlbl">Jarak simbol → harga (px)</span><input class="numinp" id="ltgsLineGap" type="number" step="1" min="0" max="16"></div>
     </div>
-    <div style="font-size:10.5px;color:#8e8e93;margin-bottom:10px;">Kolom harga Open → Current/Close otomatis mengisi sisa lebar. Kecilkan padding biar baris lebih tipis/ceper seperti aslinya.</div>
+    <div style="font-size:10.5px;color:#8e8e93;margin-bottom:10px;">Kolom harga Open → Current/Close otomatis mengisi sisa lebar. Kecilkan padding/jarak biar baris lebih tipis/ceper seperti aslinya.</div>
     <div class="epsec">Margin</div>
     <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:#333;font-weight:600;cursor:pointer;margin-bottom:10px;">
       <input type="checkbox" id="ltgsShowMargin"> Tampilkan baris "Margin:" &amp; "Level Margin (%):"
@@ -1232,6 +1247,7 @@ function ltOpenGsPanel(){
   ltgsTheme=ltGS.theme||'dark';
   document.getElementById('ltgsPnlColWidth').value=ltGS.pnlColWidth||34;
   document.getElementById('ltgsRowPadY').value=ltGS.rowPadY!=null?ltGS.rowPadY:6;
+  document.getElementById('ltgsLineGap').value=ltGS.lineGap!=null?ltGS.lineGap:1;
   document.getElementById('ltgsShowMargin').checked=ltGS.showMargin!==false;
   LT_STYLE_FIELDS.forEach(f=>{
     const st=ltGS[f.key];
@@ -1265,6 +1281,8 @@ function ltGsSubmit(){
   ltGS.pnlColWidth=isNaN(pw)?34:Math.min(60,Math.max(15,pw));
   const rp=parseFloat(document.getElementById('ltgsRowPadY').value);
   ltGS.rowPadY=isNaN(rp)?6:Math.min(20,Math.max(2,rp));
+  const lg=parseFloat(document.getElementById('ltgsLineGap').value);
+  ltGS.lineGap=isNaN(lg)?1:Math.min(16,Math.max(0,lg));
   ltGS.showMargin=document.getElementById('ltgsShowMargin').checked;
   ltApplyTheme(ltGS.theme);
   ltRenderAll();ltSave();ltCloseGsPanel();
