@@ -156,18 +156,29 @@ body.previewmode #ctrlbar,body.previewmode #projectbar,body.previewmode .hint{di
    paten, cuma daftar posisi (#ltPosList) yang discroll di dalamnya —
    supaya footer TIDAK ikut naik/turun walau ada banyak posisi terbuka */
 #ltPhotowrap{position:relative;width:360px;aspect-ratio:1080/2229;background:#000;display:flex;flex-direction:column;overflow:hidden;}
+#ltPhotowrap.theme-white{background:#fff;}
 #ltPhotowrap>img{display:block;width:100%;height:auto;flex-shrink:0;user-select:none;-webkit-user-drag:none;pointer-events:none;}
 #ltDynTop{position:absolute;top:0;left:0;width:100%;height:0;pointer-events:none;}
 .lt-f{position:absolute;white-space:nowrap;font-family:'Roboto Condensed',sans-serif;}
 #ltPosList{background:#000;flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+#ltPhotowrap.theme-white #ltPosList{background:#fff;}
 .ltrow{padding:10px 14px 9px;border-bottom:1px solid #1c1c1e;}
+#ltPhotowrap.theme-white .ltrow{border-bottom-color:#e5e5ea;}
 .lttop{white-space:nowrap;}
-.ltbottom{display:flex;justify-content:space-between;align-items:baseline;margin-top:3px;}
+/* align-items:center (bukan baseline) supaya PnL kanan tetap center kalibrasi
+   vertikal terhadap baris walau ukuran font harga & PnL beda jauh */
+.ltbottom{display:flex;justify-content:space-between;align-items:center;margin-top:3px;}
+.themetoggle{display:flex;gap:8px;margin-bottom:4px;}
+.themebtn{flex:1;padding:9px;border-radius:9px;border:1.5px solid #d8d8dc;background:#f7f7f9;color:#888;font-weight:700;cursor:pointer;font-size:12.5px;}
+.themebtn.on{background:#333;border-color:#333;color:#fff;}
 
 /* watermark permanen saat Play — TIDAK boleh dihilangkan/disembunyikan */
 .lt-watermark{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) rotate(-16deg);display:none;text-align:center;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.4);border:2px solid rgba(255,255,255,.4);border-radius:10px;padding:12px 22px;font-size:16px;line-height:1.4;pointer-events:none;z-index:90;text-shadow:0 2px 8px rgba(0,0,0,.7);}
 .lt-watermark span{display:block;font-size:10px;letter-spacing:1px;font-weight:600;margin-top:3px;}
 body.ltplaymode .lt-watermark{display:block;}
+/* watermark WAJIB tetap jelas terbaca di tema terang juga (putih lawan
+   putih nyaris tak kelihatan) — balik warnanya jadi gelap translusen */
+#ltPhotowrap.theme-white .lt-watermark{color:rgba(20,20,20,.38);border-color:rgba(20,20,20,.38);text-shadow:0 2px 8px rgba(255,255,255,.85);}
 body.ltplaymode #ltCtrlbar,body.ltplaymode .hint,body.ltplaymode #ltCycleWrap,body.ltplaymode #appSwitch{display:none!important;}
 
 #ltCycleWrap{width:360px;background:#161618;border-radius:10px;margin:14px 0 20px;overflow:hidden;}
@@ -291,7 +302,7 @@ body.ltplaymode #ltCtrlbar,body.ltplaymode .hint,body.ltplaymode #ltCycleWrap,bo
 <div class="hint">Header/navigasi = <b>foto asli</b> (dipotong dari screenshot Trade Anda). Kelola siklus buka/tutup posisi di bawah kanvas. Tombol <b>▶ Play</b> memutar animasi tick berjalan lalu menutup sesuai skrip — mode Play akan menampilkan <b>watermark "VIDEO EDITAN"</b> permanen dan menyembunyikan semua tombol; tekan tombol <b>back</b> HP untuk kembali ke mode edit.</div>
 
 <div id="ltPhotowrap">
-  <img src="assets/livetrade-top.jpg" alt="Header Trade MT5" onload="window.ltPositionDynSpans&&ltPositionDynSpans()">
+  <img id="ltTopImg" src="assets/livetrade-top.jpg" alt="Header Trade MT5" onload="window.ltPositionDynSpans&&ltPositionDynSpans()">
   <div id="ltDynTop">
     <span class="lt-f" id="ltTopPnl" data-role="pnl"></span>
     <span class="lt-f" id="ltSaldo" data-role="val"></span>
@@ -299,7 +310,7 @@ body.ltplaymode #ltCtrlbar,body.ltplaymode .hint,body.ltplaymode #ltCycleWrap,bo
     <span class="lt-f" id="ltMargin" data-role="val"></span>
   </div>
   <div id="ltPosList"></div>
-  <img src="assets/livetrade-bottom.jpg" alt="Navigasi MT5">
+  <img id="ltBotImg" src="assets/livetrade-bottom.jpg" alt="Navigasi MT5">
   <div class="lt-watermark" id="ltWatermark">VIDEO EDITAN<br><span>bukan akun asli</span></div>
 </div>
 
@@ -943,6 +954,7 @@ function ltDefaultGS(){
     pnl:  {fs:15,fw:700,sx:100},
     val:  {fs:15,fw:700,sx:100,color:'#ffffff'},
     posColor:'#0a84ff', negColor:'#ff453a',
+    theme:'dark', pnlColWidth:34,
   };
 }
 let lt=ltDefault();
@@ -999,14 +1011,16 @@ function ltRenderPositionRows(rows){
     const dirTxt=(r.dir==='buy'?'buy':'sell')+' '+Number(r.lot).toFixed(2);
     const priceTxt=formatPriceNum(r.open,lt.sym)+' → '+formatPriceNum(r.cur!=null?r.cur:r.close,lt.sym);
     const pnlTxt=formatMoney(r.pnl,2,false);
-    return `<div class="ltrow"><div class="lttop"><span style="${ltFieldCss(ltGS.sym)}">${escapeHtml(lt.sym||'XAUUSDc')},</span> <span style="${ltFieldCss(ltGS.dir,dirColor)}">${escapeHtml(dirTxt)}</span></div><div class="ltbottom"><span style="${ltFieldCss(ltGS.price)}">${escapeHtml(priceTxt)}</span><span style="${ltFieldCss(ltGS.pnl,pnlColor)}">${escapeHtml(pnlTxt)}</span></div></div>`;
+    const pnlW=Math.min(60,Math.max(15,ltGS.pnlColWidth||34));
+    return `<div class="ltrow"><div class="lttop"><span style="${ltFieldCss(ltGS.sym)}">${escapeHtml(lt.sym||'XAUUSDc')},</span> <span style="${ltFieldCss(ltGS.dir,dirColor)}">${escapeHtml(dirTxt)}</span></div><div class="ltbottom"><span style="${ltFieldCss(ltGS.price)};flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(priceTxt)}</span><span style="${ltFieldCss(ltGS.pnl,pnlColor)};flex:0 0 ${pnlW}%;text-align:right;">${escapeHtml(pnlTxt)}</span></div></div>`;
   }).join('');
 }
 function ltRenderTopValues(floating,realized){
   const saldo=lt.deposit+realized;
   const equity=saldo+floating;
   const marginBebas=equity; /* leverage 1:unlimited -> tidak ada margin terkunci */
-  const topColor=floating<0?ltGS.negColor:(floating>0?ltGS.posColor:'#ffffff');
+  const neutralColor=(LT_THEMES[ltGS.theme||'dark']||LT_THEMES.dark).textDefaultColor;
+  const topColor=floating<0?ltGS.negColor:(floating>0?ltGS.posColor:neutralColor);
   const valSty=(v)=>`${ltFieldCss(ltGS.val)}`;
   document.getElementById('ltTopPnl').innerHTML=`<span style="${ltFieldCss(ltGS.pnl,topColor)}">${escapeHtml(formatMoney(floating,2,true))} USC</span>`;
   document.getElementById('ltSaldo').innerHTML=`<span style="${valSty()}">${escapeHtml(formatMoney(saldo,2,false))}</span>`;
@@ -1014,26 +1028,50 @@ function ltRenderTopValues(floating,realized){
   document.getElementById('ltMargin').innerHTML=`<span style="${valSty()}">${escapeHtml(formatMoney(marginBebas,2,false))}</span>`;
   ltPositionDynSpans();
 }
-/* posisikan 4 field dinamis persis di atas kotak hitam yang sudah dimasking
-   di foto (koordinat diukur dari foto asli 1080x462) */
-const LT_TOP_H=462, LT_TOP_W=1080;
-const LT_DYN_BOXES={
-  ltTopPnl:  {l:105,t:80, w:320,h:46, align:'left'},
-  ltSaldo:   {l:855,t:191,w:200,h:40, align:'right'},
-  ltEquity:  {l:855,t:249,w:200,h:40, align:'right'},
-  ltMargin:  {l:855,t:306,w:200,h:40, align:'right'},
+/* dua tema tampilan (foto asli, sudah dimasking di 4 titik nilai dinamis) —
+   koordinat kotak diukur dari foto asli tiap tema (ukuran beda2 per device) */
+const LT_THEMES={
+  dark:{
+    topImg:'assets/livetrade-top.jpg', botImg:'assets/livetrade-bottom.jpg',
+    topW:1080, topH:462,
+    boxes:{
+      ltTopPnl:  {l:105,t:80, w:320,h:46, align:'left'},
+      ltSaldo:   {l:855,t:191,w:200,h:40, align:'right'},
+      ltEquity:  {l:855,t:249,w:200,h:40, align:'right'},
+      ltMargin:  {l:855,t:306,w:200,h:40, align:'right'},
+    },
+    textDefaultColor:'#ffffff',
+  },
+  white:{
+    topImg:'assets/livetrade-top-white.jpg', botImg:'assets/livetrade-bottom-white.jpg',
+    topW:1220, topH:548,
+    boxes:{
+      ltTopPnl:  {l:95, t:88, w:245,h:70, align:'left'},
+      ltSaldo:   {l:1020,t:212,w:180,h:70, align:'right'},
+      ltEquity:  {l:1020,t:287,w:180,h:70, align:'right'},
+      ltMargin:  {l:1020,t:362,w:180,h:70, align:'right'},
+    },
+    textDefaultColor:'#1c1c1e',
+  },
 };
+function ltApplyTheme(theme){
+  const cfg=LT_THEMES[theme]||LT_THEMES.dark;
+  document.getElementById('ltTopImg').src=cfg.topImg;
+  document.getElementById('ltBotImg').src=cfg.botImg;
+  document.getElementById('ltPhotowrap').classList.toggle('theme-white',theme==='white');
+  setTimeout(ltPositionDynSpans,30); /* jaga2 kalau onload gambar sudah lewat/cache */
+}
 function ltPositionDynSpans(){
-  const dynTop=document.getElementById('ltDynTop');
+  const cfg=LT_THEMES[ltGS.theme||'dark']||LT_THEMES.dark;
   const topImgH=document.querySelector('#ltPhotowrap>img').offsetHeight||0;
-  Object.keys(LT_DYN_BOXES).forEach(id=>{
-    const b=LT_DYN_BOXES[id];
+  Object.keys(cfg.boxes).forEach(id=>{
+    const b=cfg.boxes[id];
     const el=document.getElementById(id);
     el.style.position='absolute';
-    el.style.left=(b.l/LT_TOP_W*100)+'%';
-    el.style.top=(topImgH*(b.t/LT_TOP_H))+'px';
-    el.style.width=(b.w/LT_TOP_W*100)+'%';
-    el.style.height=(topImgH*(b.h/LT_TOP_H))+'px';
+    el.style.left=(b.l/cfg.topW*100)+'%';
+    el.style.top=(topImgH*(b.t/cfg.topH))+'px';
+    el.style.width=(b.w/cfg.topW*100)+'%';
+    el.style.height=(topImgH*(b.h/cfg.topH))+'px';
     el.style.display='flex';
     el.style.alignItems='center';
     el.style.justifyContent=b.align==='right'?'flex-end':'flex-start';
@@ -1041,6 +1079,7 @@ function ltPositionDynSpans(){
 }
 function ltRenderAll(){
   document.getElementById('ltDeposit').value=lt.deposit;
+  ltApplyTheme(ltGS.theme||'dark');
   ltRenderCycleList();
   ltRenderCanvasStatic();
 }
@@ -1118,7 +1157,19 @@ function ltfSubmit(){
 /* ── panel gaya font live trade ── */
 function ltBuildGsBody(){
   const wrap=document.getElementById('ltgsBody');
-  wrap.innerHTML=LT_STYLE_FIELDS.map(f=>`
+  wrap.innerHTML=`
+    <div class="epsec">Tema Tampilan</div>
+    <div class="themetoggle">
+      <button type="button" class="themebtn" id="ltThemeDarkBtn" onclick="ltGsSetTheme('dark')">🌙 Gelap</button>
+      <button type="button" class="themebtn" id="ltThemeWhiteBtn" onclick="ltGsSetTheme('white')">☀ Terang (putih)</button>
+    </div>
+    <div style="font-size:10.5px;color:#8e8e93;margin-bottom:10px;line-height:1.4;">Ganti latar header/navigasi ke versi terang sesuai screenshot Anda. Warna teks Simbol & Saldo/Equity/Margin otomatis disesuaikan biar tetap kebaca (masih bisa diubah manual di bawah).</div>
+    <div class="epsec">Lebar Kolom PnL (posisi terbuka)</div>
+    <div class="grid2">
+      <div><span class="fieldlbl">Lebar PnL (%)</span><input class="numinp" id="ltgsPnlColWidth" type="number" step="1" min="15" max="60"></div>
+    </div>
+    <div style="font-size:10.5px;color:#8e8e93;margin-bottom:10px;">Sisanya (kiri) otomatis dipakai kolom harga Open → Current/Close. Perbesar % kalau angka PnL terpotong.</div>
+  `+LT_STYLE_FIELDS.map(f=>`
     <div class="epsec">${f.label}</div>
     <div class="${f.hasColor?'grid4':'grid3'}">
       <div><span class="fieldlbl">Ukuran</span><input class="numinp" id="ltgs-${f.key}-fs" type="number" step="0.5"></div>
@@ -1137,7 +1188,28 @@ function ltBuildGsBody(){
     </div>
   `;
 }
+let ltgsTheme='dark';
+function ltGsRenderThemeBtns(){
+  document.getElementById('ltThemeDarkBtn').classList.toggle('on',ltgsTheme==='dark');
+  document.getElementById('ltThemeWhiteBtn').classList.toggle('on',ltgsTheme==='white');
+}
+function ltGsSetTheme(t){
+  ltgsTheme=t;
+  /* teks Simbol & Saldo/Equity/Margin otomatis dibalik ke default tema baru,
+     TAPI cuma kalau user belum pernah mengubahnya secara manual dari default
+     tema sebelumnya (biar warna custom tidak ketiban) */
+  const cfg=LT_THEMES[t];
+  ['sym','val'].forEach(key=>{
+    const inp=document.getElementById(`ltgs-${key}-color`);
+    if(!inp) return;
+    const cur=(inp.value||'').toLowerCase();
+    if(cur==='#ffffff'||cur==='#1c1c1e'||cur==='') inp.value=cfg.textDefaultColor;
+  });
+  ltGsRenderThemeBtns();
+}
 function ltOpenGsPanel(){
+  ltgsTheme=ltGS.theme||'dark';
+  document.getElementById('ltgsPnlColWidth').value=ltGS.pnlColWidth||34;
   LT_STYLE_FIELDS.forEach(f=>{
     const st=ltGS[f.key];
     document.getElementById(`ltgs-${f.key}-fs`).value=st.fs;
@@ -1145,6 +1217,7 @@ function ltOpenGsPanel(){
     document.getElementById(`ltgs-${f.key}-sx`).value=st.sx;
     if(f.hasColor) document.getElementById(`ltgs-${f.key}-color`).value=st.color;
   });
+  ltGsRenderThemeBtns();
   document.getElementById('ltgsPosHex').value=ltGS.posColor;
   document.getElementById('ltgsPosPick').value=ltGS.posColor;
   document.getElementById('ltgsNegHex').value=ltGS.negColor;
@@ -1164,6 +1237,10 @@ function ltGsSubmit(){
   });
   ltGS.posColor=validHex(document.getElementById('ltgsPosHex').value,ltGS.posColor);
   ltGS.negColor=validHex(document.getElementById('ltgsNegHex').value,ltGS.negColor);
+  ltGS.theme=ltgsTheme;
+  const pw=parseFloat(document.getElementById('ltgsPnlColWidth').value);
+  ltGS.pnlColWidth=isNaN(pw)?34:Math.min(60,Math.max(15,pw));
+  ltApplyTheme(ltGS.theme);
   ltRenderAll();ltSave();ltCloseGsPanel();
 }
 function ltGsResetDefault(){
@@ -1232,17 +1309,31 @@ async function ltPlayLoop(){
     for(let ci=0; ci<lt.cycles.length; ci++){
       if(!_ltPlayActive) return;
       const cy=lt.cycles[ci];
-      /* tiap layer "open" di harga sedikit berbeda (toleransi ±1 poin),
-         persis seperti entry simultan yang tidak pernah 100% identik */
-      const layers=[];
-      for(let i=0;i<cy.layers;i++){
-        const jitter=(Math.random()*2-1)*1.0;
-        layers.push({dir:cy.dir,lot:cy.lot,open:cy.open+jitter});
-      }
       const STEPS=Math.max(10,Math.min(40,cy.duration*4));
       const path=ltBuildPricePath(cy,STEPS);
       const stepMs=Math.max(120,(cy.duration*1000)/path.length);
-      for(let s=0;s<path.length;s++){
+      /* layer masuk satu per satu (bukan instan) — jeda cepat 150-400ms
+         antar layer, persis seperti entry manual/EA yang tidak pernah
+         benar2 simultan. Selama masuk bertahap, harga jalan sudah mulai
+         bergerak (dipetik dari path yang SAMA yang dipakai fase running),
+         jadi current price tetap 1 harga pasar yang identik untuk semua
+         layer yang SUDAH terbuka di titik waktu manapun — bukan jalur acak
+         terpisah per layer. */
+      const layers=[];
+      for(let i=0;i<cy.layers;i++){
+        if(!_ltPlayActive) return;
+        const jitter=(Math.random()*2-1)*1.0; // toleransi open ±1 poin
+        layers.push({dir:cy.dir,lot:cy.lot,open:cy.open+jitter});
+        const cur=path[Math.min(i,path.length-1)];
+        const rows=layers.map(L=>({dir:L.dir,lot:L.lot,open:L.open,close:cy.close,cur,pnl:ltCalcPnl(L.dir,L.lot,L.open,cur)}));
+        const floating=rows.reduce((sum,r)=>sum+r.pnl,0);
+        ltRenderPositionRows(rows);
+        ltRenderTopValues(floating,realized);
+        if(i<cy.layers-1) await ltSleep(150+Math.random()*250);
+      }
+      if(!_ltPlayActive) return;
+      const startStep=Math.min(cy.layers-1,path.length-1)+1;
+      for(let s=startStep;s<path.length;s++){
         if(!_ltPlayActive) return;
         const cur=path[s];
         const rows=layers.map(L=>({dir:L.dir,lot:L.lot,open:L.open,close:cy.close,cur,pnl:ltCalcPnl(L.dir,L.lot,L.open,cur)}));
