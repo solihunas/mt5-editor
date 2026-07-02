@@ -141,9 +141,49 @@ input[type=number]{-moz-appearance:textfield;}
 body.previewmode #ctrlbar,body.previewmode #projectbar,body.previewmode .hint{display:none!important;}
 .spin{display:inline-block;width:13px;height:13px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:sp .7s linear infinite;vertical-align:-2px;margin-right:5px;}
 @keyframes sp{to{transform:rotate(360deg);}}
+
+/* ══ APP SWITCHER (Riwayat / Live Trade) ══ */
+#appSwitch{width:100%;max-width:420px;display:flex;background:rgba(0,0,0,.92);border-bottom:1px solid rgba(140,60,255,.35);position:sticky;top:0;z-index:80;}
+.asw{flex:1;padding:12px 4px;text-align:center;font-size:12.5px;font-weight:700;color:#8a7aa8;cursor:pointer;border-bottom:3px solid transparent;background:none;border-top:none;border-left:none;border-right:none;}
+.asw.on{color:#fff;border-bottom-color:#a060ff;background:rgba(120,50,220,.18);}
+.appview2{display:none;width:100%;flex-direction:column;align-items:center;}
+.appview2.on{display:flex;}
+
+/* ══ LIVE TRADE ══ */
+#ltCtrlbar{width:100%;max-width:420px;background:rgba(8,0,20,0.9);display:flex;gap:6px;padding:8px 10px;border-bottom:1px solid rgba(140,60,255,0.2);}
+.ctrl.ltplay{background:rgba(40,140,90,0.4);border-color:rgba(60,200,120,0.4);color:#6de8a0;}
+#ltPhotowrap{position:relative;width:360px;background:#000;display:flex;flex-direction:column;}
+#ltPhotowrap>img{display:block;width:100%;height:auto;user-select:none;-webkit-user-drag:none;pointer-events:none;}
+#ltDynTop{position:absolute;top:0;left:0;width:100%;height:0;pointer-events:none;}
+.lt-f{position:absolute;white-space:nowrap;font-family:'Roboto Condensed',sans-serif;}
+#ltPosList{background:#000;min-height:4px;}
+.ltrow{padding:10px 14px 9px;border-bottom:1px solid #1c1c1e;}
+.lttop{white-space:nowrap;}
+.ltbottom{display:flex;justify-content:space-between;align-items:baseline;margin-top:3px;}
+
+/* watermark permanen saat Play — TIDAK boleh dihilangkan/disembunyikan */
+.lt-watermark{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) rotate(-16deg);display:none;text-align:center;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.4);border:2px solid rgba(255,255,255,.4);border-radius:10px;padding:12px 22px;font-size:16px;line-height:1.4;pointer-events:none;z-index:90;text-shadow:0 2px 8px rgba(0,0,0,.7);}
+.lt-watermark span{display:block;font-size:10px;letter-spacing:1px;font-weight:600;margin-top:3px;}
+body.ltplaymode .lt-watermark{display:block;}
+body.ltplaymode #ltCtrlbar,body.ltplaymode .hint,body.ltplaymode #ltCycleWrap,body.ltplaymode #appSwitch{display:none!important;}
+
+#ltCycleWrap{width:360px;background:#161618;border-radius:10px;margin:14px 0 20px;overflow:hidden;}
+.ltcyc-head{display:flex;align-items:center;justify-content:space-between;padding:12px 12px 8px;color:#e8e8ea;font-size:12.5px;font-weight:700;letter-spacing:.3px;text-transform:uppercase;}
+.ltcyc-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 12px;border-top:1px solid #26262a;color:#ddd;font-size:12.5px;}
+.ltcyc-info{flex:1;min-width:0;}
+.ltcyc-info b{color:#fff;}
+.ltcyc-btns{display:flex;gap:5px;flex-shrink:0;}
+.ltcyc-btns button{width:24px;height:24px;border-radius:50%;border:1px solid #3a3a3e;background:#232326;color:#ccc;font-size:10.5px;cursor:pointer;}
 </style>
 </head>
 <body>
+
+<div id="appSwitch">
+  <button class="asw on" id="aswRiwayat" onclick="switchApp2('riwayat')">📜 Riwayat</button>
+  <button class="asw" id="aswLive" onclick="switchApp2('live')">📊 Live Trade</button>
+</div>
+
+<div class="appview2 on" id="riwayatApp">
 
 <div id="ctrlbar">
   <button class="ctrl dl" id="dlbtn" onclick="openDlChoice()">⬇ HD</button>
@@ -236,6 +276,80 @@ body.previewmode #ctrlbar,body.previewmode #projectbar,body.previewmode .hint{di
   <button class="epcancel" style="width:100%;margin-top:10px;" onclick="closeDlChoice()">Batal</button>
 </div>
 
+</div><!-- end #riwayatApp -->
+
+<div class="appview2" id="liveApp">
+
+<div id="ltCtrlbar">
+  <button class="ctrl ltplay" onclick="ltOpenPlayChoice()">▶ Play</button>
+  <button class="ctrl gs" onclick="ltOpenGsPanel()">⚙ Gaya Font</button>
+  <button class="ctrl rs" onclick="ltResetAll()" title="Reset ke contoh awal">↻ Reset</button>
+</div>
+<div class="hint">Header/navigasi = <b>foto asli</b> (dipotong dari screenshot Trade Anda). Kelola siklus buka/tutup posisi di bawah kanvas. Tombol <b>▶ Play</b> memutar animasi tick berjalan lalu menutup sesuai skrip — mode Play akan menampilkan <b>watermark "VIDEO EDITAN"</b> permanen dan menyembunyikan semua tombol; tekan tombol <b>back</b> HP untuk kembali ke mode edit.</div>
+
+<div id="ltPhotowrap">
+  <img src="assets/livetrade-top.jpg" alt="Header Trade MT5" onload="window.ltPositionDynSpans&&ltPositionDynSpans()">
+  <div id="ltDynTop">
+    <span class="lt-f" id="ltTopPnl" data-role="pnl"></span>
+    <span class="lt-f" id="ltSaldo" data-role="val"></span>
+    <span class="lt-f" id="ltEquity" data-role="val"></span>
+    <span class="lt-f" id="ltMargin" data-role="val"></span>
+  </div>
+  <div id="ltPosList"></div>
+  <img src="assets/livetrade-bottom.jpg" alt="Navigasi MT5">
+  <div class="lt-watermark" id="ltWatermark">VIDEO EDITAN<br><span>bukan akun asli</span></div>
+</div>
+
+<div id="ltCycleWrap">
+  <div class="ltcyc-head">
+    <span>Kelola Siklus</span>
+    <span class="fieldlbl" style="margin:0;">Deposito awal</span>
+  </div>
+  <div style="padding:0 12px 10px;"><input id="ltDeposit" class="fld" type="text" inputmode="decimal" oninput="ltDepositChanged()"></div>
+  <div id="ltCycleList"></div>
+  <button class="addbtn buy" style="margin:11px 12px 12px;width:calc(100% - 24px);" onclick="ltOpenCycleForm()">+ Tambah Siklus</button>
+</div>
+
+<!-- FORM SIKLUS -->
+<div class="ov-backdrop" id="ltfBackdrop" onclick="ltCloseCycleForm()"></div>
+<div class="ov-panel" id="ltfPanel">
+  <div class="eplbl">Siklus</div>
+  <div class="dirtoggle">
+    <button class="dirbtn buy" id="ltfBuyBtn" onclick="ltfSetDir('buy')">BUY</button>
+    <button class="dirbtn sell" id="ltfSellBtn" onclick="ltfSetDir('sell')">SELL</button>
+  </div>
+  <div class="grid2">
+    <div><span class="fieldlbl">Total Layer</span><input id="ltfLayers" class="fld" type="number" step="1" min="1" oninput="ltfUpdatePreview()"></div>
+    <div><span class="fieldlbl">Lot / layer</span><input id="ltfLot" class="fld" type="number" step="0.01" oninput="ltfUpdatePreview()"></div>
+  </div>
+  <div class="grid2" style="margin-top:8px;">
+    <div><span class="fieldlbl">Harga Open</span><input id="ltfOpen" class="fld" type="text" inputmode="decimal" oninput="ltfUpdatePreview()"></div>
+    <div><span class="fieldlbl">Harga Close</span><input id="ltfClose" class="fld" type="text" inputmode="decimal" oninput="ltfUpdatePreview()"></div>
+  </div>
+  <div style="margin-top:8px;"><span class="fieldlbl">Durasi berjalan saat Play (detik)</span><input id="ltfDuration" class="fld" type="number" step="1" min="1"></div>
+  <div class="previewline" id="ltfPreview">Hasil per layer: <b>0.00</b></div>
+  <div class="epbrow"><button class="epok" onclick="ltfSubmit()">Simpan</button><button class="epcancel" onclick="ltCloseCycleForm()">Batal</button></div>
+</div>
+
+<!-- PANEL GAYA FONT LIVE TRADE -->
+<div class="ov-backdrop" id="ltgsBackdrop" onclick="ltCloseGsPanel()"></div>
+<div class="ov-panel" id="ltgsPanel">
+  <div class="eplbl">⚙ Gaya Font Live Trade</div>
+  <div id="ltgsBody"></div>
+  <div class="epbrow"><button class="epok" onclick="ltGsSubmit()">Simpan</button><button class="epcancel" onclick="ltCloseGsPanel()">Batal</button></div>
+  <button class="epghost" onclick="ltGsResetDefault()">↺ Reset gaya ke default</button>
+</div>
+
+<!-- PILIHAN PLAY -->
+<div class="ov-backdrop" id="ltplayBackdrop" onclick="ltClosePlayChoice()"></div>
+<div class="ov-panel" id="ltplayChoicePanel" style="max-width:320px;">
+  <div class="eplbl">Mulai Play?</div>
+  <div style="font-size:12.5px;color:#555;line-height:1.6;margin-bottom:12px;">Layar akan masuk mode penuh tanpa tombol (untuk screen record), dengan watermark <b>"VIDEO EDITAN"</b> permanen di tengah. Tekan tombol <b>back</b> HP untuk keluar kapan saja.</div>
+  <button class="epok" style="width:100%;margin-bottom:9px;padding:12px 4px;" onclick="ltClosePlayChoice();ltEnterPlay();">▶ Mulai Play</button>
+  <button class="epcancel" style="width:100%;" onclick="ltClosePlayChoice()">Batal</button>
+</div>
+
+</div><!-- end #liveApp -->
 
 <script>
 /* ══════════════════════════════════════════════
@@ -786,6 +900,365 @@ window.addEventListener('pagehide',forceSave);
 window.addEventListener('beforeunload',forceSave);
 document.addEventListener('visibilitychange',()=>{if(document.hidden)forceSave();});
 
+/* ══════════════════════════════════════════════════════════════
+   APP SWITCHER — Riwayat / Live Trade (1 aplikasi, 2 kanvas)
+═══════════════════════════════════════════════════════════════ */
+function switchApp2(which){
+  document.getElementById('riwayatApp').classList.toggle('on',which==='riwayat');
+  document.getElementById('liveApp').classList.toggle('on',which==='live');
+  document.getElementById('aswRiwayat').classList.toggle('on',which==='riwayat');
+  document.getElementById('aswLive').classList.toggle('on',which==='live');
+  if(which==='live') setTimeout(ltPositionDynSpans,30); /* container baru tampil, ukur ulang posisi */
+}
+
+/* ══════════════════════════════════════════════════════════════
+   LIVE TRADE — simulasi "berjalan" (siklus buka→floating→tutup)
+   PENTING: mode Play SELALU menampilkan watermark "VIDEO EDITAN"
+   permanen (tidak bisa dihilangkan) dan TIDAK ada tombol on-screen
+   selain tombol back HP — ini batasan yang disengaja, bukan bug.
+═══════════════════════════════════════════════════════════════ */
+const LT_KEY='mt5_livetrade_v1';
+function ltDefault(){
+  return {
+    deposit:150.22,
+    sym:'XAUUSDc',
+    cycles:[
+     {dir:'sell',layers:1,lot:0.01,open:4055.374,close:4042.916,duration:6},
+     {dir:'buy', layers:1,lot:0.01,open:4055.916,close:4042.676,duration:6},
+    ],
+  };
+}
+function ltDefaultGS(){
+  return {
+    sym:  {fs:15,fw:700,sx:100,color:'#ffffff'},
+    dir:  {fs:15,fw:400,sx:100},
+    price:{fs:12.5,fw:400,sx:100,color:'#8e8e93'},
+    pnl:  {fs:15,fw:700,sx:100},
+    val:  {fs:15,fw:700,sx:100,color:'#ffffff'},
+    posColor:'#0a84ff', negColor:'#ff453a',
+  };
+}
+let lt=ltDefault();
+let ltGS=ltDefaultGS();
+let _ltLoaded=false;
+function ltSave(){if(!_ltLoaded)return;localStorage.setItem(LT_KEY,JSON.stringify({lt,ltGS}));}
+function ltLoad(){
+  try{
+    const raw=JSON.parse(localStorage.getItem(LT_KEY)||'null');
+    if(raw&&raw.lt){lt=Object.assign(ltDefault(),raw.lt);ltGS=Object.assign(ltDefaultGS(),raw.ltGS||{});}
+  }catch(e){}
+  _ltLoaded=true;
+}
+function ltResetAll(){
+  if(!confirm('Reset semua siklus Live Trade ke contoh awal?'))return;
+  lt=ltDefault();ltGS=ltDefaultGS();
+  ltRenderAll();ltSave();
+}
+
+const LT_STYLE_FIELDS=[
+ {key:'sym',  label:'Simbol',        hasColor:true},
+ {key:'dir',  label:'Buy / Sell',    hasColor:false},
+ {key:'price',label:'Harga Open → Close',hasColor:true},
+ {key:'pnl',  label:'PnL Floating/Hasil',hasColor:false},
+ {key:'val',  label:'Saldo/Equity/Margin/PnL Total',hasColor:true},
+];
+function ltFieldCss(st,color){
+  let css=`font-size:${st.fs}px;font-weight:${st.fw};color:${color||st.color||'#fff'};`;
+  if(st.sx&&st.sx!==100) css+=`display:inline-block;transform:scaleX(${st.sx/100});`;
+  return css;
+}
+
+/* ── posisi kalkulasi otomatis, leverage 1:unlimited -> margin diabaikan ── */
+function ltCalcPnl(dir,lot,open,cur){return calcPnl(dir,lot,open,cur);}
+
+/* ── render kanvas statis (mode edit): semua siklus ditampilkan seolah
+   sudah closed semua, buat preview cepat sebelum Play ── */
+function ltRenderCanvasStatic(){
+  let totalPnl=0;
+  const rows=[];
+  lt.cycles.forEach(c=>{
+    const pnl=ltCalcPnl(c.dir,c.lot,c.open,c.close);
+    totalPnl+=pnl*c.layers;
+    for(let i=0;i<c.layers;i++) rows.push({dir:c.dir,lot:c.lot,open:c.open,close:c.close,pnl});
+  });
+  ltRenderPositionRows(rows);
+  ltRenderTopValues(0,totalPnl); /* floating=0 (semua dianggap sudah close), realized=totalPnl */
+}
+function ltRenderPositionRows(rows){
+  const c=document.getElementById('ltPosList');
+  c.innerHTML=rows.map(r=>{
+    const dirColor=r.dir==='buy'?ltGS.posColor:ltGS.negColor;
+    const pnlColor=r.pnl<0?ltGS.negColor:ltGS.posColor;
+    const dirTxt=(r.dir==='buy'?'buy':'sell')+' '+Number(r.lot).toFixed(2);
+    const priceTxt=formatPriceNum(r.open,lt.sym)+' → '+formatPriceNum(r.cur!=null?r.cur:r.close,lt.sym);
+    const pnlTxt=formatMoney(r.pnl,2,false);
+    return `<div class="ltrow"><div class="lttop"><span style="${ltFieldCss(ltGS.sym)}">${escapeHtml(lt.sym||'XAUUSDc')},</span> <span style="${ltFieldCss(ltGS.dir,dirColor)}">${escapeHtml(dirTxt)}</span></div><div class="ltbottom"><span style="${ltFieldCss(ltGS.price)}">${escapeHtml(priceTxt)}</span><span style="${ltFieldCss(ltGS.pnl,pnlColor)}">${escapeHtml(pnlTxt)}</span></div></div>`;
+  }).join('');
+}
+function ltRenderTopValues(floating,realized){
+  const saldo=lt.deposit+realized;
+  const equity=saldo+floating;
+  const marginBebas=equity; /* leverage 1:unlimited -> tidak ada margin terkunci */
+  const topColor=floating<0?ltGS.negColor:(floating>0?ltGS.posColor:'#ffffff');
+  const valSty=(v)=>`${ltFieldCss(ltGS.val)}`;
+  document.getElementById('ltTopPnl').innerHTML=`<span style="${ltFieldCss(ltGS.pnl,topColor)}">${escapeHtml(formatMoney(floating,2,true))} USC</span>`;
+  document.getElementById('ltSaldo').innerHTML=`<span style="${valSty()}">${escapeHtml(formatMoney(saldo,2,false))}</span>`;
+  document.getElementById('ltEquity').innerHTML=`<span style="${valSty()}">${escapeHtml(formatMoney(equity,2,false))}</span>`;
+  document.getElementById('ltMargin').innerHTML=`<span style="${valSty()}">${escapeHtml(formatMoney(marginBebas,2,false))}</span>`;
+  ltPositionDynSpans();
+}
+/* posisikan 4 field dinamis persis di atas kotak hitam yang sudah dimasking
+   di foto (koordinat diukur dari foto asli 1080x462) */
+const LT_TOP_H=462, LT_TOP_W=1080;
+const LT_DYN_BOXES={
+  ltTopPnl:  {l:105,t:80, w:320,h:46, align:'left'},
+  ltSaldo:   {l:855,t:191,w:200,h:40, align:'right'},
+  ltEquity:  {l:855,t:249,w:200,h:40, align:'right'},
+  ltMargin:  {l:855,t:306,w:200,h:40, align:'right'},
+};
+function ltPositionDynSpans(){
+  const dynTop=document.getElementById('ltDynTop');
+  const topImgH=document.querySelector('#ltPhotowrap>img').offsetHeight||0;
+  Object.keys(LT_DYN_BOXES).forEach(id=>{
+    const b=LT_DYN_BOXES[id];
+    const el=document.getElementById(id);
+    el.style.position='absolute';
+    el.style.left=(b.l/LT_TOP_W*100)+'%';
+    el.style.top=(topImgH*(b.t/LT_TOP_H))+'px';
+    el.style.width=(b.w/LT_TOP_W*100)+'%';
+    el.style.height=(topImgH*(b.h/LT_TOP_H))+'px';
+    el.style.display='flex';
+    el.style.alignItems='center';
+    el.style.justifyContent=b.align==='right'?'flex-end':'flex-start';
+  });
+}
+function ltRenderAll(){
+  document.getElementById('ltDeposit').value=lt.deposit;
+  ltRenderCycleList();
+  ltRenderCanvasStatic();
+}
+
+/* ── daftar siklus (panel edit terpisah dari kanvas) ── */
+function ltRenderCycleList(){
+  const c=document.getElementById('ltCycleList');
+  c.innerHTML=lt.cycles.map((cy,i)=>{
+    const pnl=ltCalcPnl(cy.dir,cy.lot,cy.open,cy.close);
+    const totalPnl=pnl*cy.layers;
+    return `<div class="ltcyc-row"><div class="ltcyc-info">Siklus ${i+1}: <b>${cy.dir.toUpperCase()}</b> ×${cy.layers} layer @ ${Number(cy.lot).toFixed(2)} lot · ${cy.duration}d · hasil <b>${escapeHtml(formatMoney(totalPnl,2,true))}</b></div><div class="ltcyc-btns"><button onclick="ltOpenCycleForm(${i})">✎</button><button onclick="ltDuplicateCycle(${i})">⧉</button><button onclick="ltDeleteCycle(${i})">✕</button></div></div>`;
+  }).join('');
+}
+function ltDepositChanged(){lt.deposit=parseNum(document.getElementById('ltDeposit').value)||0;ltRenderCanvasStatic();ltRenderCycleList();ltSave();}
+function ltDeleteCycle(i){lt.cycles.splice(i,1);ltRenderAll();ltSave();}
+function ltDuplicateCycle(i){lt.cycles.splice(i+1,0,JSON.parse(JSON.stringify(lt.cycles[i])));ltRenderAll();ltSave();}
+
+/* ── form tambah/edit siklus ── */
+let ltfEditIndex=null,ltfDir='sell';
+function ltfSetDir(d){
+  ltfDir=d;
+  document.getElementById('ltfBuyBtn').classList.toggle('on',d==='buy');
+  document.getElementById('ltfSellBtn').classList.toggle('on',d==='sell');
+  ltfUpdatePreview();
+}
+function ltOpenCycleForm(editIndex){
+  ltfEditIndex=(typeof editIndex==='number')?editIndex:null;
+  if(ltfEditIndex!==null){
+    const cy=lt.cycles[ltfEditIndex];
+    ltfSetDir(cy.dir);
+    document.getElementById('ltfLayers').value=cy.layers;
+    document.getElementById('ltfLot').value=cy.lot;
+    document.getElementById('ltfOpen').value=cy.open;
+    document.getElementById('ltfClose').value=cy.close;
+    document.getElementById('ltfDuration').value=cy.duration;
+  }else{
+    ltfSetDir('sell');
+    document.getElementById('ltfLayers').value=1;
+    document.getElementById('ltfLot').value=0.01;
+    document.getElementById('ltfOpen').value='';
+    document.getElementById('ltfClose').value='';
+    document.getElementById('ltfDuration').value=6;
+  }
+  ltfUpdatePreview();
+  document.getElementById('ltfBackdrop').style.display='block';
+  document.getElementById('ltfPanel').style.display='block';
+}
+function ltCloseCycleForm(){document.getElementById('ltfBackdrop').style.display='none';document.getElementById('ltfPanel').style.display='none';ltfEditIndex=null;}
+function ltfUpdatePreview(){
+  const lot=parseNum(document.getElementById('ltfLot').value)||0;
+  const open=parseNum(document.getElementById('ltfOpen').value)||0;
+  const close=parseNum(document.getElementById('ltfClose').value)||0;
+  const pnl=ltCalcPnl(ltfDir,lot,open,close);
+  const color=pnl<0?ltGS.negColor:ltGS.posColor;
+  document.getElementById('ltfPreview').innerHTML=`Hasil per layer: <b style="color:${color}">${escapeHtml(formatMoney(pnl,2,true))}</b>`;
+}
+function ltfSubmit(){
+  const cycle={
+    dir:ltfDir,
+    layers:Math.max(1,parseInt(document.getElementById('ltfLayers').value)||1),
+    lot:parseNum(document.getElementById('ltfLot').value)||0.01,
+    open:parseNum(document.getElementById('ltfOpen').value)||0,
+    close:parseNum(document.getElementById('ltfClose').value)||0,
+    duration:Math.max(1,parseInt(document.getElementById('ltfDuration').value)||6),
+  };
+  if(ltfEditIndex!==null) lt.cycles[ltfEditIndex]=cycle;
+  else lt.cycles.push(cycle);
+  ltRenderAll();ltCloseCycleForm();ltSave();
+}
+
+/* ── panel gaya font live trade ── */
+function ltBuildGsBody(){
+  const wrap=document.getElementById('ltgsBody');
+  wrap.innerHTML=LT_STYLE_FIELDS.map(f=>`
+    <div class="epsec">${f.label}</div>
+    <div class="${f.hasColor?'grid4':'grid3'}">
+      <div><span class="fieldlbl">Ukuran</span><input class="numinp" id="ltgs-${f.key}-fs" type="number" step="0.5"></div>
+      <div><span class="fieldlbl">Tebal</span><select class="numinp" id="ltgs-${f.key}-fw" style="padding:6px 2px;">
+        <option value="300">Ringan</option><option value="400">Reguler</option><option value="500">Sedang</option>
+        <option value="600">Semi Tebal</option><option value="700">Tebal</option><option value="800">Ekstra Tebal</option>
+      </select></div>
+      <div><span class="fieldlbl">Kerapatan %</span><input class="numinp" id="ltgs-${f.key}-sx" type="number" step="1"></div>
+      ${f.hasColor?`<div><span class="fieldlbl">Warna</span><input class="numinp" id="ltgs-${f.key}-color" type="text" style="text-transform:uppercase;font-family:monospace;"></div>`:''}
+    </div>
+  `).join('')+`
+    <div class="epsec">Warna Untung / Rugi</div>
+    <div class="grid2">
+      <div><span class="fieldlbl">Untung / Buy</span><div class="hexrow"><input type="color" id="ltgsPosPick" oninput="document.getElementById('ltgsPosHex').value=this.value"><input class="fld" id="ltgsPosHex" type="text" style="font-family:monospace;text-transform:uppercase;"></div></div>
+      <div><span class="fieldlbl">Rugi / Sell</span><div class="hexrow"><input type="color" id="ltgsNegPick" oninput="document.getElementById('ltgsNegHex').value=this.value"><input class="fld" id="ltgsNegHex" type="text" style="font-family:monospace;text-transform:uppercase;"></div></div>
+    </div>
+  `;
+}
+function ltOpenGsPanel(){
+  LT_STYLE_FIELDS.forEach(f=>{
+    const st=ltGS[f.key];
+    document.getElementById(`ltgs-${f.key}-fs`).value=st.fs;
+    document.getElementById(`ltgs-${f.key}-fw`).value=st.fw;
+    document.getElementById(`ltgs-${f.key}-sx`).value=st.sx;
+    if(f.hasColor) document.getElementById(`ltgs-${f.key}-color`).value=st.color;
+  });
+  document.getElementById('ltgsPosHex').value=ltGS.posColor;
+  document.getElementById('ltgsPosPick').value=ltGS.posColor;
+  document.getElementById('ltgsNegHex').value=ltGS.negColor;
+  document.getElementById('ltgsNegPick').value=ltGS.negColor;
+  document.getElementById('ltgsBackdrop').style.display='block';
+  document.getElementById('ltgsPanel').style.display='block';
+}
+function ltCloseGsPanel(){document.getElementById('ltgsBackdrop').style.display='none';document.getElementById('ltgsPanel').style.display='none';}
+function ltGsSubmit(){
+  LT_STYLE_FIELDS.forEach(f=>{
+    const st=ltGS[f.key];
+    st.fs=parseFloat(document.getElementById(`ltgs-${f.key}-fs`).value)||st.fs;
+    st.fw=parseInt(document.getElementById(`ltgs-${f.key}-fw`).value)||st.fw;
+    st.sx=parseFloat(document.getElementById(`ltgs-${f.key}-sx`).value);
+    if(isNaN(st.sx)) st.sx=100;
+    if(f.hasColor) st.color=validHex(document.getElementById(`ltgs-${f.key}-color`).value,st.color);
+  });
+  ltGS.posColor=validHex(document.getElementById('ltgsPosHex').value,ltGS.posColor);
+  ltGS.negColor=validHex(document.getElementById('ltgsNegHex').value,ltGS.negColor);
+  ltRenderAll();ltSave();ltCloseGsPanel();
+}
+function ltGsResetDefault(){
+  if(!confirm('Reset gaya font Live Trade ke default?'))return;
+  ltGS=ltDefaultGS();
+  ltRenderAll();ltSave();
+  ltOpenGsPanel();
+}
+
+/* ══════════════════════════════════════════════════════════════
+   MODE PLAY — animasi tick berjalan lalu close per siklus.
+   Watermark & penyembunyian tombol WAJIB, tidak bisa dimatikan.
+   Keluar hanya lewat tombol back HP (history.pushState+popstate),
+   sama seperti Preview di Riwayat.
+═══════════════════════════════════════════════════════════════ */
+function ltOpenPlayChoice(){document.getElementById('ltplayBackdrop').style.display='block';document.getElementById('ltplayChoicePanel').style.display='block';}
+function ltClosePlayChoice(){document.getElementById('ltplayBackdrop').style.display='none';document.getElementById('ltplayChoicePanel').style.display='none';}
+
+function ltSleep(ms){return new Promise(r=>{_ltSleepTimers.push(setTimeout(r,ms));});}
+let _ltSleepTimers=[];
+function ltClearTimers(){_ltSleepTimers.forEach(clearTimeout);_ltSleepTimers=[];}
+
+/* fractional Brownian bridge: mulai persis di O, berakhir persis di C,
+   dengan fluktuasi acak di antaranya (biar kelihatan seperti tick asli) */
+function ltBrownianBridge(O,C,steps){
+  let pts=[O,C];
+  let variance=Math.max(Math.abs(C-O)*0.9,Math.abs(O)*0.0004);
+  while(pts.length<steps){
+    const next=[pts[0]];
+    for(let i=0;i<pts.length-1;i++){
+      const mid=(pts[i]+pts[i+1])/2+(Math.random()*2-1)*variance;
+      next.push(mid,pts[i+1]);
+    }
+    pts=next;
+    variance*=0.6;
+  }
+  // resample ke jumlah 'steps' titik merata
+  const out=[];
+  for(let i=0;i<steps;i++){
+    const idx=Math.round(i/(steps-1)*(pts.length-1));
+    out.push(pts[idx]);
+  }
+  out[0]=O; out[out.length-1]=C;
+  return out;
+}
+
+let _ltPlayActive=false;
+async function ltPlayLoop(){
+  let realized=0;
+  while(_ltPlayActive){
+    for(let ci=0; ci<lt.cycles.length; ci++){
+      if(!_ltPlayActive) return;
+      const cy=lt.cycles[ci];
+      const layers=[];
+      for(let i=0;i<cy.layers;i++) layers.push({dir:cy.dir,lot:cy.lot,open:cy.open,close:cy.close,cur:cy.open});
+      const STEPS=Math.max(10,Math.min(40,cy.duration*4));
+      const paths=layers.map(()=>ltBrownianBridge(cy.open,cy.close,STEPS));
+      const stepMs=Math.max(120,(cy.duration*1000)/STEPS);
+      for(let s=0;s<STEPS;s++){
+        if(!_ltPlayActive) return;
+        layers.forEach((L,idx)=>{L.cur=paths[idx][s];});
+        const rows=layers.map(L=>({dir:L.dir,lot:L.lot,open:L.open,close:L.close,cur:L.cur,pnl:ltCalcPnl(L.dir,L.lot,L.open,L.cur)}));
+        const floating=rows.reduce((sum,r)=>sum+r.pnl,0);
+        ltRenderPositionRows(rows);
+        ltRenderTopValues(floating,realized);
+        await ltSleep(stepMs);
+      }
+      if(!_ltPlayActive) return;
+      // finalisasi tepat di harga close, tahan sebentar sebelum ditutup
+      const finalRows=layers.map(L=>({dir:L.dir,lot:L.lot,open:L.open,close:L.close,cur:L.close,pnl:ltCalcPnl(L.dir,L.lot,L.open,L.close)}));
+      const finalFloating=finalRows.reduce((s,r)=>s+r.pnl,0);
+      ltRenderPositionRows(finalRows);
+      ltRenderTopValues(finalFloating,realized);
+      await ltSleep(600);
+      if(!_ltPlayActive) return;
+      realized+=finalFloating;
+      ltRenderPositionRows([]);
+      ltRenderTopValues(0,realized);
+      await ltSleep(700);
+    }
+  }
+}
+function ltEnterPlay(){
+  _ltPlayActive=true;
+  history.pushState({mt5LtPlay:true},'','');
+  document.body.classList.add('ltplaymode');
+  ltPlayLoop();
+}
+function ltExitPlay(){
+  if(!_ltPlayActive)return;
+  _ltPlayActive=false;
+  ltClearTimers();
+  document.body.classList.remove('ltplaymode');
+  ltRenderCanvasStatic(); /* kembali ke preview statis di mode edit */
+}
+window.addEventListener('popstate',()=>{
+  if(_ltPlayActive) ltExitPlay();
+});
+window.addEventListener('resize',()=>{if(document.getElementById('liveApp').classList.contains('on')) ltPositionDynSpans();});
+
+function ltInit(){
+  ltLoad();
+  ltBuildGsBody();
+  ltRenderAll();
+}
+
 /* Muat dulu bobot font yang benar-benar dipakai SEBELUM render pertama,
    supaya applyStretchBoxes() langsung mengukur dengan metrik font final
    (bukan font pengganti sementara) — ini menghilangkan akar masalah
@@ -805,6 +1278,7 @@ async function boot(){
   buildGsBody();
   initStore();
   applyFontFallback();
+  ltInit();
 }
 boot();
 </script>
