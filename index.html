@@ -162,12 +162,24 @@ body.previewmode #ctrlbar,body.previewmode #projectbar,body.previewmode .hint{di
 .lt-f{position:absolute;white-space:nowrap;font-family:'Roboto Condensed',sans-serif;}
 #ltPosList{background:#000;flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;}
 #ltPhotowrap.theme-white #ltPosList{background:#fff;}
-.ltrow{padding:10px 14px 9px;border-bottom:1px solid #1c1c1e;}
+/* baris Saldo/Equity/Margin/Margin Bebas/Level Margin (%) — dirender HTML
+   (bukan foto) supaya jumlah barisnya bisa fleksibel (3 atau 5 baris) */
+#ltBalanceRows{background:#000;flex-shrink:0;padding:13px 14px 4px;}
+#ltPhotowrap.theme-white #ltBalanceRows{background:#fff;}
+.ltbal-row{display:flex;align-items:baseline;margin-bottom:10px;}
+.ltbal-lbl{font-weight:700;font-size:15px;font-family:'Roboto Condensed',sans-serif;color:#fff;white-space:nowrap;}
+#ltPhotowrap.theme-white .ltbal-lbl{color:#1c1c1e;}
+.ltbal-dots{flex:1 1 auto;min-width:16px;border-bottom:2.5px dotted #3a3c44;margin:0 8px 5px;}
+#ltPhotowrap.theme-white .ltbal-dots{border-bottom-color:#d6d6d6;}
+/* baris posisi terbuka: 1 baris flex — kiri (simbol+arah, lalu harga)
+   ditumpuk vertikal, kanan PnL center kalibrasi vertikal thd SELURUH baris
+   (bukan cuma sejajar baris harga) — sesuai tampilan asli MT5 */
+.ltrow{display:flex;align-items:center;gap:8px;border-bottom:1px solid #1c1c1e;}
 #ltPhotowrap.theme-white .ltrow{border-bottom-color:#e5e5ea;}
-.lttop{white-space:nowrap;}
-/* align-items:center (bukan baseline) supaya PnL kanan tetap center kalibrasi
-   vertikal terhadap baris walau ukuran font harga & PnL beda jauh */
-.ltbottom{display:flex;justify-content:space-between;align-items:center;margin-top:3px;}
+.ltrow-left{flex:1 1 auto;min-width:0;}
+.lttop{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ltprice{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:3px;}
+.ltrow-pnl{flex:0 0 auto;text-align:right;white-space:nowrap;}
 .themetoggle{display:flex;gap:8px;margin-bottom:4px;}
 .themebtn{flex:1;padding:9px;border-radius:9px;border:1.5px solid #d8d8dc;background:#f7f7f9;color:#888;font-weight:700;cursor:pointer;font-size:12.5px;}
 .themebtn.on{background:#333;border-color:#333;color:#fff;}
@@ -302,13 +314,12 @@ body.ltplaymode #ltCtrlbar,body.ltplaymode .hint,body.ltplaymode #ltCycleWrap,bo
 <div class="hint">Header/navigasi = <b>foto asli</b> (dipotong dari screenshot Trade Anda). Kelola siklus buka/tutup posisi di bawah kanvas. Tombol <b>▶ Play</b> memutar animasi tick berjalan lalu menutup sesuai skrip — mode Play akan menampilkan <b>watermark "VIDEO EDITAN"</b> permanen dan menyembunyikan semua tombol; tekan tombol <b>back</b> HP untuk kembali ke mode edit.</div>
 
 <div id="ltPhotowrap">
-  <img id="ltTopImg" src="assets/livetrade-top.jpg" alt="Header Trade MT5" onload="window.ltPositionDynSpans&&ltPositionDynSpans()">
+  <img id="ltTopImg" src="assets/livetrade-chrome.jpg" alt="Header Trade MT5" onload="window.ltPositionDynSpans&&ltPositionDynSpans()">
   <div id="ltDynTop">
     <span class="lt-f" id="ltTopPnl" data-role="pnl"></span>
-    <span class="lt-f" id="ltSaldo" data-role="val"></span>
-    <span class="lt-f" id="ltEquity" data-role="val"></span>
-    <span class="lt-f" id="ltMargin" data-role="val"></span>
   </div>
+  <div id="ltBalanceRows"></div>
+  <img id="ltPosisiImg" src="assets/livetrade-posisi.jpg" alt="Posisi">
   <div id="ltPosList"></div>
   <img id="ltBotImg" src="assets/livetrade-bottom.jpg" alt="Navigasi MT5">
   <div class="lt-watermark" id="ltWatermark">VIDEO EDITAN<br><span>bukan akun asli</span></div>
@@ -954,7 +965,7 @@ function ltDefaultGS(){
     pnl:  {fs:15,fw:700,sx:100},
     val:  {fs:15,fw:700,sx:100,color:'#ffffff'},
     posColor:'#0a84ff', negColor:'#ff453a',
-    theme:'dark', pnlColWidth:34,
+    theme:'dark', pnlColWidth:34, rowPadY:6, showMargin:true,
   };
 }
 let lt=ltDefault();
@@ -992,6 +1003,10 @@ function ltCalcPnl(dir,lot,open,cur){return calcPnl(dir,lot,open,cur);}
 
 /* ── render kanvas statis (mode edit): semua siklus ditampilkan seolah
    sudah closed semua, buat preview cepat sebelum Play ── */
+/* margin XAUUSDc: kontrak 100 oz/lot, leverage 1:2000 (dicocokkan dari
+   contoh nyata: 0.01 lot @ ~4057 -> margin 2.03) */
+const LT_LEVERAGE=2000, LT_CONTRACT=100;
+function ltCalcMargin(lot,openPrice){return lot*LT_CONTRACT*openPrice/LT_LEVERAGE;}
 function ltRenderCanvasStatic(){
   let totalPnl=0;
   const rows=[];
@@ -1001,62 +1016,62 @@ function ltRenderCanvasStatic(){
     for(let i=0;i<c.layers;i++) rows.push({dir:c.dir,lot:c.lot,open:c.open,close:c.close,pnl});
   });
   ltRenderPositionRows(rows);
-  ltRenderTopValues(0,totalPnl); /* floating=0 (semua dianggap sudah close), realized=totalPnl */
+  ltRenderTopValues(0,totalPnl,0); /* floating=0 (semua dianggap sudah close), realized=totalPnl, margin=0 (tidak ada posisi terbuka di preview statis) */
 }
 function ltRenderPositionRows(rows){
   const c=document.getElementById('ltPosList');
+  const pad=Math.min(20,Math.max(2,ltGS.rowPadY!=null?ltGS.rowPadY:6));
+  const pnlW=Math.min(60,Math.max(15,ltGS.pnlColWidth||34));
   c.innerHTML=rows.map(r=>{
     const dirColor=r.dir==='buy'?ltGS.posColor:ltGS.negColor;
     const pnlColor=r.pnl<0?ltGS.negColor:ltGS.posColor;
     const dirTxt=(r.dir==='buy'?'buy':'sell')+' '+Number(r.lot).toFixed(2);
     const priceTxt=formatPriceNum(r.open,lt.sym)+' → '+formatPriceNum(r.cur!=null?r.cur:r.close,lt.sym);
     const pnlTxt=formatMoney(r.pnl,2,false);
-    const pnlW=Math.min(60,Math.max(15,ltGS.pnlColWidth||34));
-    return `<div class="ltrow"><div class="lttop"><span style="${ltFieldCss(ltGS.sym)}">${escapeHtml(lt.sym||'XAUUSDc')},</span> <span style="${ltFieldCss(ltGS.dir,dirColor)}">${escapeHtml(dirTxt)}</span></div><div class="ltbottom"><span style="${ltFieldCss(ltGS.price)};flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(priceTxt)}</span><span style="${ltFieldCss(ltGS.pnl,pnlColor)};flex:0 0 ${pnlW}%;text-align:right;">${escapeHtml(pnlTxt)}</span></div></div>`;
+    return `<div class="ltrow" style="padding:${pad}px 14px;"><div class="ltrow-left"><div class="lttop"><span style="${ltFieldCss(ltGS.sym)}">${escapeHtml(lt.sym||'XAUUSDc')},</span> <span style="${ltFieldCss(ltGS.dir,dirColor)}">${escapeHtml(dirTxt)}</span></div><div class="ltprice"><span style="${ltFieldCss(ltGS.price)}">${escapeHtml(priceTxt)}</span></div></div><span class="ltrow-pnl" style="${ltFieldCss(ltGS.pnl,pnlColor)};flex-basis:${pnlW}%;">${escapeHtml(pnlTxt)}</span></div>`;
   }).join('');
 }
-function ltRenderTopValues(floating,realized){
+function ltRenderBalanceRows(saldo,equity,marginTotal,marginBebas,levelMargin){
+  const wrap=document.getElementById('ltBalanceRows');
+  const valSty=ltFieldCss(ltGS.val);
+  const rows=[['Saldo:',formatMoney(saldo,2,false)],['Equity:',formatMoney(equity,2,false)]];
+  if(ltGS.showMargin) rows.push(['Margin:',formatMoney(marginTotal,2,false)]);
+  rows.push(['Margin Bebas:',formatMoney(marginBebas,2,false)]);
+  if(ltGS.showMargin) rows.push(['Level Margin (%):',formatMoney(levelMargin,2,false)]);
+  wrap.innerHTML=rows.map(([lbl,val])=>`<div class="ltbal-row"><span class="ltbal-lbl">${escapeHtml(lbl)}</span><span class="ltbal-dots"></span><span style="${valSty}">${escapeHtml(val)}</span></div>`).join('');
+}
+function ltRenderTopValues(floating,realized,marginTotal){
+  marginTotal=marginTotal||0;
   const saldo=lt.deposit+realized;
   const equity=saldo+floating;
-  const marginBebas=equity; /* leverage 1:unlimited -> tidak ada margin terkunci */
+  const marginBebas=equity-marginTotal; /* margin dikunci dari posisi terbuka */
+  const levelMargin=marginTotal>0?(equity/marginTotal*100):0;
   const neutralColor=(LT_THEMES[ltGS.theme||'dark']||LT_THEMES.dark).textDefaultColor;
   const topColor=floating<0?ltGS.negColor:(floating>0?ltGS.posColor:neutralColor);
-  const valSty=(v)=>`${ltFieldCss(ltGS.val)}`;
   document.getElementById('ltTopPnl').innerHTML=`<span style="${ltFieldCss(ltGS.pnl,topColor)}">${escapeHtml(formatMoney(floating,2,true))} USC</span>`;
-  document.getElementById('ltSaldo').innerHTML=`<span style="${valSty()}">${escapeHtml(formatMoney(saldo,2,false))}</span>`;
-  document.getElementById('ltEquity').innerHTML=`<span style="${valSty()}">${escapeHtml(formatMoney(equity,2,false))}</span>`;
-  document.getElementById('ltMargin').innerHTML=`<span style="${valSty()}">${escapeHtml(formatMoney(marginBebas,2,false))}</span>`;
+  ltRenderBalanceRows(saldo,equity,marginTotal,marginBebas,levelMargin);
   ltPositionDynSpans();
 }
 /* dua tema tampilan (foto asli, sudah dimasking di 4 titik nilai dinamis) —
    koordinat kotak diukur dari foto asli tiap tema (ukuran beda2 per device) */
 const LT_THEMES={
   dark:{
-    topImg:'assets/livetrade-top.jpg', botImg:'assets/livetrade-bottom.jpg',
-    topW:1080, topH:462,
-    boxes:{
-      ltTopPnl:  {l:105,t:80, w:320,h:46, align:'left'},
-      ltSaldo:   {l:855,t:191,w:200,h:40, align:'right'},
-      ltEquity:  {l:855,t:249,w:200,h:40, align:'right'},
-      ltMargin:  {l:855,t:306,w:200,h:40, align:'right'},
-    },
+    topImg:'assets/livetrade-chrome.jpg', posisiImg:'assets/livetrade-posisi.jpg', botImg:'assets/livetrade-bottom.jpg',
+    topW:1080, topH:165,
+    boxes:{ ltTopPnl:{l:105,t:80,w:320,h:46,align:'left'} },
     textDefaultColor:'#ffffff',
   },
   white:{
-    topImg:'assets/livetrade-top-white.jpg', botImg:'assets/livetrade-bottom-white.jpg',
-    topW:1220, topH:548,
-    boxes:{
-      ltTopPnl:  {l:95, t:88, w:245,h:70, align:'left'},
-      ltSaldo:   {l:1020,t:212,w:180,h:70, align:'right'},
-      ltEquity:  {l:1020,t:287,w:180,h:70, align:'right'},
-      ltMargin:  {l:1020,t:362,w:180,h:70, align:'right'},
-    },
+    topImg:'assets/livetrade-chrome-white.jpg', posisiImg:'assets/livetrade-posisi-white.jpg', botImg:'assets/livetrade-bottom-white.jpg',
+    topW:1220, topH:195,
+    boxes:{ ltTopPnl:{l:95,t:88,w:245,h:70,align:'left'} },
     textDefaultColor:'#1c1c1e',
   },
 };
 function ltApplyTheme(theme){
   const cfg=LT_THEMES[theme]||LT_THEMES.dark;
   document.getElementById('ltTopImg').src=cfg.topImg;
+  document.getElementById('ltPosisiImg').src=cfg.posisiImg;
   document.getElementById('ltBotImg').src=cfg.botImg;
   document.getElementById('ltPhotowrap').classList.toggle('theme-white',theme==='white');
   setTimeout(ltPositionDynSpans,30); /* jaga2 kalau onload gambar sudah lewat/cache */
@@ -1164,11 +1179,17 @@ function ltBuildGsBody(){
       <button type="button" class="themebtn" id="ltThemeWhiteBtn" onclick="ltGsSetTheme('white')">☀ Terang (putih)</button>
     </div>
     <div style="font-size:10.5px;color:#8e8e93;margin-bottom:10px;line-height:1.4;">Ganti latar header/navigasi ke versi terang sesuai screenshot Anda. Warna teks Simbol & Saldo/Equity/Margin otomatis disesuaikan biar tetap kebaca (masih bisa diubah manual di bawah).</div>
-    <div class="epsec">Lebar Kolom PnL (posisi terbuka)</div>
+    <div class="epsec">Baris Posisi Terbuka</div>
     <div class="grid2">
-      <div><span class="fieldlbl">Lebar PnL (%)</span><input class="numinp" id="ltgsPnlColWidth" type="number" step="1" min="15" max="60"></div>
+      <div><span class="fieldlbl">Lebar kolom PnL (%)</span><input class="numinp" id="ltgsPnlColWidth" type="number" step="1" min="15" max="60"></div>
+      <div><span class="fieldlbl">Tinggi baris (padding, px)</span><input class="numinp" id="ltgsRowPadY" type="number" step="1" min="2" max="20"></div>
     </div>
-    <div style="font-size:10.5px;color:#8e8e93;margin-bottom:10px;">Sisanya (kiri) otomatis dipakai kolom harga Open → Current/Close. Perbesar % kalau angka PnL terpotong.</div>
+    <div style="font-size:10.5px;color:#8e8e93;margin-bottom:10px;">Kolom harga Open → Current/Close otomatis mengisi sisa lebar. Kecilkan padding biar baris lebih tipis/ceper seperti aslinya.</div>
+    <div class="epsec">Margin</div>
+    <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:#333;font-weight:600;cursor:pointer;margin-bottom:10px;">
+      <input type="checkbox" id="ltgsShowMargin"> Tampilkan baris "Margin:" &amp; "Level Margin (%):"
+    </label>
+    <div style="font-size:10.5px;color:#8e8e93;margin-top:-6px;margin-bottom:10px;">Dihitung otomatis dari posisi terbuka (kontrak 100 oz/lot, leverage 1:2000) — Margin Bebas &amp; Level Margin ikut menyesuaikan.</div>
   `+LT_STYLE_FIELDS.map(f=>`
     <div class="epsec">${f.label}</div>
     <div class="${f.hasColor?'grid4':'grid3'}">
@@ -1210,6 +1231,8 @@ function ltGsSetTheme(t){
 function ltOpenGsPanel(){
   ltgsTheme=ltGS.theme||'dark';
   document.getElementById('ltgsPnlColWidth').value=ltGS.pnlColWidth||34;
+  document.getElementById('ltgsRowPadY').value=ltGS.rowPadY!=null?ltGS.rowPadY:6;
+  document.getElementById('ltgsShowMargin').checked=ltGS.showMargin!==false;
   LT_STYLE_FIELDS.forEach(f=>{
     const st=ltGS[f.key];
     document.getElementById(`ltgs-${f.key}-fs`).value=st.fs;
@@ -1240,6 +1263,9 @@ function ltGsSubmit(){
   ltGS.theme=ltgsTheme;
   const pw=parseFloat(document.getElementById('ltgsPnlColWidth').value);
   ltGS.pnlColWidth=isNaN(pw)?34:Math.min(60,Math.max(15,pw));
+  const rp=parseFloat(document.getElementById('ltgsRowPadY').value);
+  ltGS.rowPadY=isNaN(rp)?6:Math.min(20,Math.max(2,rp));
+  ltGS.showMargin=document.getElementById('ltgsShowMargin').checked;
   ltApplyTheme(ltGS.theme);
   ltRenderAll();ltSave();ltCloseGsPanel();
 }
@@ -1327,11 +1353,13 @@ async function ltPlayLoop(){
         const cur=path[Math.min(i,path.length-1)];
         const rows=layers.map(L=>({dir:L.dir,lot:L.lot,open:L.open,close:cy.close,cur,pnl:ltCalcPnl(L.dir,L.lot,L.open,cur)}));
         const floating=rows.reduce((sum,r)=>sum+r.pnl,0);
+        const marginTotal=layers.reduce((s,L)=>s+ltCalcMargin(L.lot,L.open),0);
         ltRenderPositionRows(rows);
-        ltRenderTopValues(floating,realized);
+        ltRenderTopValues(floating,realized,marginTotal);
         if(i<cy.layers-1) await ltSleep(150+Math.random()*250);
       }
       if(!_ltPlayActive) return;
+      const marginTotal=layers.reduce((s,L)=>s+ltCalcMargin(L.lot,L.open),0);
       const startStep=Math.min(cy.layers-1,path.length-1)+1;
       for(let s=startStep;s<path.length;s++){
         if(!_ltPlayActive) return;
@@ -1339,7 +1367,7 @@ async function ltPlayLoop(){
         const rows=layers.map(L=>({dir:L.dir,lot:L.lot,open:L.open,close:cy.close,cur,pnl:ltCalcPnl(L.dir,L.lot,L.open,cur)}));
         const floating=rows.reduce((sum,r)=>sum+r.pnl,0);
         ltRenderPositionRows(rows);
-        ltRenderTopValues(floating,realized);
+        ltRenderTopValues(floating,realized,marginTotal);
         await ltSleep(stepMs);
       }
       if(!_ltPlayActive) return;
@@ -1347,12 +1375,12 @@ async function ltPlayLoop(){
       const finalRows=layers.map(L=>({dir:L.dir,lot:L.lot,open:L.open,close:cy.close,cur:cy.close,pnl:ltCalcPnl(L.dir,L.lot,L.open,cy.close)}));
       const finalFloating=finalRows.reduce((s,r)=>s+r.pnl,0);
       ltRenderPositionRows(finalRows);
-      ltRenderTopValues(finalFloating,realized);
+      ltRenderTopValues(finalFloating,realized,marginTotal);
       await ltSleep(600);
       if(!_ltPlayActive) return;
       realized+=finalFloating;
       ltRenderPositionRows([]);
-      ltRenderTopValues(0,realized);
+      ltRenderTopValues(0,realized,0);
       await ltSleep(2000+Math.random()*2000); /* jeda close->open berikutnya: 2-4 detik acak */
     }
   }
