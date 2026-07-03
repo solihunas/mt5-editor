@@ -42,9 +42,6 @@ html,body{background:radial-gradient(ellipse at top left,#1a0830 0%,#08000f 55%,
 .ptab .pdel:hover{background:rgba(255,255,255,.3);}
 .paddbtn{flex-shrink:0;padding:6px 14px;border-radius:16px;background:rgba(40,140,90,0.35);border:1px solid rgba(60,200,120,0.4);color:#8ef0b0;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;}
 
-.hint{color:#9a85c0;font-size:11px;padding:8px 12px;text-align:center;max-width:420px;background:rgba(5,0,15,.6);line-height:1.5;}
-.hint b{color:#d0b0ff;}
-
 /* photowrap = "layar hp": header (status bar+judul+tab) & footer (nav bawah)
    paten/fixed, hanya area tengah (ringkasan+daftar transaksi) yang discroll —
    persis seperti aplikasi MT5 aslinya. Tinggi dikunci mengikuti rasio foto
@@ -144,7 +141,7 @@ input[type=number]{-moz-appearance:textfield;}
    switcher Riwayat–Live Trade/tombol edit baris disembunyikan), cuma tombol
    back HP yang bisa keluar. Switcher WAJIB ikut hilang — kalau tidak, bar
    sticky-nya menutupi header foto & screenshot tidak bisa full layar. */
-body.previewmode #ctrlbar,body.previewmode #projectbar,body.previewmode .hint,body.previewmode #appSwitch{display:none!important;}
+body.previewmode #ctrlbar,body.previewmode #projectbar,body.previewmode #appSwitch{display:none!important;}
 /* preview = layar penuh seperti mode Play di Live Trade: mockup diperbesar
    sampai mentok atas-bawah/kiri-kanan, header & footer foto tetap paten,
    hanya daftar tengah yang bisa discroll */
@@ -211,9 +208,13 @@ body.previewmode #photowrap{width:min(100vw,calc(100vh * 1220 / 2454));}
 .lt-watermark::before{content:'';position:absolute;inset:0;border-radius:inherit;padding:3px;background:conic-gradient(from var(--wmAngle,0deg),#0a84ff,#ffffff 25%,#ff3b30 50%,#ffffff 75%,#0a84ff);-webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);-webkit-mask-composite:xor;mask-composite:exclude;filter:drop-shadow(0 0 6px rgba(120,80,255,.5));}
 .lt-watermark.wm-noborder::before{display:none;}
 body.ltplaymode .lt-watermark{display:block;}
+/* saat Play, watermark bisa di-drag (mis. ditaruh di atas untuk menutupi
+   angka/teks lain) — pointer-events dinyalakan HANYA di mode Play;
+   touch-action:none supaya gesernya tidak ikut menscroll daftar posisi */
+body.ltplaymode .lt-watermark{pointer-events:auto;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;}
 body.ltplaymode .lt-watermark::before{animation:wmspin var(--wmSpeed,3s) linear infinite;}
 @keyframes wmspin{to{--wmAngle:360deg;}}
-body.ltplaymode #ltCtrlbar,body.ltplaymode .hint,body.ltplaymode #ltCycleWrap,body.ltplaymode #appSwitch{display:none!important;}
+body.ltplaymode #ltCtrlbar,body.ltplaymode #ltCycleWrap,body.ltplaymode #appSwitch{display:none!important;}
 /* mode Play: perbesar "layar hp" mockup sampai memenuhi layar penuh —
    mentok atas-bawah ATAU kiri-kanan (mana yang lebih dulu kena), bukan
    tetap kecil 360px seperti mode edit, supaya hasil rekaman layar terlihat
@@ -251,8 +252,6 @@ body.ltplaymode #ltPhotowrap{width:min(100vw,calc(100vh * 1080 / 2229));max-widt
 </div>
 
 <div id="projectbar"></div>
-
-<div class="hint">Header/status bar/navigasi = <b>foto asli</b>. Font/ukuran/ketebalan/lebar/warna diatur <b>global</b> lewat "⚙ Gaya Global". Tambah transaksi lewat tombol Buy/Sell — hasil &amp; warna dihitung otomatis. <b>Keuntungan = total history + keuntungan tersembunyi</b> dan <b>Saldo = Deposito + Keuntungan</b> (dua-duanya otomatis; "keuntungan tersembunyi" = baris kuning di bawah Saldo, untuk history yang tidak ditampilkan, tidak ikut screenshot). Tombol "⬇ HD" punya 2 opsi: Download instan, atau <b>Preview</b> layar penuh (bisa discroll, cocok untuk screen record) — keluar dari Preview pakai tombol back HP.</div>
 
 <div id="photowrap">
   <img src="assets/riwayat-top.jpg" alt="Header Riwayat MT5">
@@ -344,8 +343,6 @@ body.ltplaymode #ltPhotowrap{width:min(100vw,calc(100vh * 1080 / 2229));max-widt
   <button class="ctrl gs" onclick="ltOpenGsPanel()">⚙ Gaya Font</button>
   <button class="ctrl rs" onclick="ltResetAll()" title="Reset ke contoh awal">↻ Reset</button>
 </div>
-<div class="hint">Header/navigasi = <b>foto asli</b> (dipotong dari screenshot Trade Anda). Kelola siklus buka/tutup posisi di bawah kanvas. Tombol <b>▶ Play</b> memutar animasi tick berjalan lalu menutup sesuai skrip — mode Play akan menampilkan <b>watermark "VIDEO EDITAN"</b> permanen dan menyembunyikan semua tombol; tekan tombol <b>back</b> HP untuk kembali ke mode edit.</div>
-
 <div id="ltPhotowrap">
   <img id="ltTopImg" src="assets/livetrade-chrome.jpg" alt="Header Trade MT5" onload="window.ltPositionDynSpans&&ltPositionDynSpans()">
   <div id="ltDynTop">
@@ -1021,6 +1018,7 @@ function ltDefaultGS(){
     posColor:'#0E71E9', negColor:'#BC0D0A',
     theme:'white', pnlColWidth:15, rowPadY:2, showMargin:false, lineGap:0.02,
     wmText:'BOT BY IPI DIGITAL|NOT FOR SALE', wmSpeed:0.5, wmOpacity:50, wmBorder:true,
+    wmX:50, wmY:50, /* posisi watermark (% terhadap layar hp), diubah dgn drag saat Play */
   };
 }
 let lt=ltDefault();
@@ -1164,7 +1162,41 @@ function ltApplyWatermark(){
   el.style.setProperty('--wmSpeed',spd+'s');
   el.style.setProperty('--wmOpacity',op/100);
   el.classList.toggle('wm-noborder',ltGS.wmBorder===false);
+  el.style.left=Math.min(97,Math.max(3,ltGS.wmX!=null?ltGS.wmX:50))+'%';
+  el.style.top=Math.min(97,Math.max(3,ltGS.wmY!=null?ltGS.wmY:50))+'%';
 }
+
+/* drag watermark saat Play — geser bebas (mis. ke atas untuk menutupi
+   angka/teks lain). Posisi dalam % terhadap "layar hp" (bukan px) supaya
+   proporsional di semua ukuran layar, dan disimpan supaya tidak balik ke
+   tengah tiap kali Play ulang. Hanya posisinya yang bisa diubah — watermark
+   sendiri tetap tampil permanen. */
+(function(){
+  const wm=document.getElementById('ltWatermark');
+  let dragging=false,startX=0,startY=0,origX=50,origY=50;
+  wm.addEventListener('pointerdown',e=>{
+    if(!_ltPlayActive)return;
+    dragging=true;
+    wm.setPointerCapture(e.pointerId);
+    startX=e.clientX;startY=e.clientY;
+    origX=ltGS.wmX!=null?ltGS.wmX:50;
+    origY=ltGS.wmY!=null?ltGS.wmY:50;
+    wm.style.cursor='grabbing';
+    e.preventDefault();
+  });
+  wm.addEventListener('pointermove',e=>{
+    if(!dragging)return;
+    const wrap=document.getElementById('ltPhotowrap').getBoundingClientRect();
+    if(!wrap.width||!wrap.height)return;
+    ltGS.wmX=Math.min(97,Math.max(3,origX+(e.clientX-startX)/wrap.width*100));
+    ltGS.wmY=Math.min(97,Math.max(3,origY+(e.clientY-startY)/wrap.height*100));
+    wm.style.left=ltGS.wmX+'%';
+    wm.style.top=ltGS.wmY+'%';
+  });
+  const endDrag=()=>{if(!dragging)return;dragging=false;wm.style.cursor='';ltSave();};
+  wm.addEventListener('pointerup',endDrag);
+  wm.addEventListener('pointercancel',endDrag);
+})();
 
 function ltRenderAll(){
   document.getElementById('ltDeposit').value=lt.deposit;
