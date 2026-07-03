@@ -214,6 +214,41 @@ body.ltplaymode .lt-watermark{display:block;}
 body.ltplaymode .lt-watermark{pointer-events:auto;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;}
 body.ltplaymode .lt-watermark::before{animation:wmspin var(--wmSpeed,3s) linear infinite;}
 @keyframes wmspin{to{--wmAngle:360deg;}}
+
+/* ══ OVERLAY "CLAUDE AI AUTOTRADE" (mode Play) ══
+   Panel HUD di tengah — seolah Claude memproses semua trade di balik layar.
+   Statusnya sinkron dengan siklus: SCAN & CALCULATE (belum ada posisi) →
+   EXECUTE (buka) → RUNNING (berjalan) → CLOSE (tutup). Hanya bisa digeser
+   VERTIKAL (horizontal terkunci di tengah), tidak memenuhi layar. */
+.lt-ai-overlay{position:absolute;left:50%;top:var(--aiY,40%);transform:translate(-50%,-50%);width:min(86%,320px);display:none;z-index:95;
+  background:linear-gradient(160deg,rgba(18,10,32,.93),rgba(6,3,14,.93));
+  border:1px solid rgba(150,90,255,.5);border-radius:14px;padding:12px 14px 14px;
+  box-shadow:0 0 22px rgba(120,60,255,.32),inset 0 0 18px rgba(120,60,255,.08);
+  font-family:'Roboto Condensed',sans-serif;}
+.lt-ai-overlay::after{content:'';position:absolute;inset:3px;border-radius:11px;border:1px solid rgba(150,90,255,.16);pointer-events:none;}
+body.ltplaymode .lt-ai-overlay{display:block;pointer-events:auto;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;}
+.aio-head{display:flex;align-items:center;gap:10px;}
+.aio-logo-svg{width:38px;height:38px;flex-shrink:0;filter:drop-shadow(0 0 6px rgba(255,122,26,.7));}
+.aio-logo-svg rect{fill:#ff7a1a;}
+.aio-titles{min-width:0;line-height:1;}
+.aio-title{font-size:21px;font-weight:800;color:#fff;letter-spacing:1px;}
+.aio-title span{color:#ff7a1a;}
+.aio-sub{font-size:9px;font-weight:700;letter-spacing:1px;color:#9a8fb5;margin-top:3px;}
+.aio-sub span{color:#ff7a1a;}
+.aio-divider{height:1px;background:linear-gradient(90deg,transparent,rgba(150,90,255,.6),transparent);margin:10px 0;}
+.aio-status{display:flex;align-items:center;gap:9px;}
+.aio-ico{width:32px;height:32px;flex-shrink:0;border-radius:8px;border:1px solid var(--aioC,#a06bff);display:flex;align-items:center;justify-content:center;color:var(--aioC,#a06bff);font-size:16px;box-shadow:0 0 8px -2px var(--aioC,#a06bff);}
+.aio-mid{flex:1;min-width:0;}
+.aio-state{font-size:17px;font-weight:800;letter-spacing:.5px;color:var(--aioC,#a06bff);text-shadow:0 0 9px var(--aioC,#a06bff);white-space:nowrap;}
+.aio-bar{height:5px;margin-top:5px;border-radius:3px;background:rgba(255,255,255,.08);overflow:hidden;position:relative;}
+.aio-bar::before{content:'';position:absolute;top:0;bottom:0;left:0;width:42%;border-radius:3px;background:linear-gradient(90deg,transparent,var(--aioC,#a06bff));animation:aioflow 1.1s linear infinite;}
+@keyframes aioflow{from{transform:translateX(-110%);}to{transform:translateX(360%);}}
+.aio-right{flex-shrink:0;font-size:11px;font-weight:700;letter-spacing:.5px;color:var(--aioC,#a06bff);}
+.lt-ai-overlay.aio-scan,.lt-ai-overlay.aio-running{--aioC:#a06bff;}
+.lt-ai-overlay.aio-execute,.lt-ai-overlay.aio-close{--aioC:#ff7a1a;}
+/* SCAN & CALCULATE dan RUNNING berkedip (proses); EXECUTE & CLOSE tetap */
+.lt-ai-overlay.aio-blink .aio-state{animation:aioblink .9s ease-in-out infinite;}
+@keyframes aioblink{0%,100%{opacity:1;}50%{opacity:.22;}}
 body.ltplaymode #ltCtrlbar,body.ltplaymode #ltCycleWrap,body.ltplaymode #appSwitch{display:none!important;}
 /* mode Play: perbesar "layar hp" mockup sampai memenuhi layar penuh —
    mentok atas-bawah ATAU kiri-kanan (mana yang lebih dulu kena), bukan
@@ -353,6 +388,24 @@ body.ltplaymode #ltPhotowrap{width:min(100vw,calc(100vh * 1080 / 2229));max-widt
   <div id="ltPosList"></div>
   <img id="ltBotImg" src="assets/livetrade-bottom.jpg" alt="Navigasi MT5">
   <div class="lt-watermark" id="ltWatermark"><span class="wmline">BOT BY IPI DIGITAL</span><span class="wmline">NOT FOR SALE</span></div>
+  <div class="lt-ai-overlay aio-scan aio-blink" id="ltAiOverlay">
+    <div class="aio-head">
+      <div class="aio-logo" id="ltAiLogo"></div>
+      <div class="aio-titles">
+        <div class="aio-title">CLAUDE <span>AI</span></div>
+        <div class="aio-sub">AUTOTRADE by <span>IPI DIGITAL</span></div>
+      </div>
+    </div>
+    <div class="aio-divider"></div>
+    <div class="aio-status">
+      <div class="aio-ico" id="ltAiIco">⊙</div>
+      <div class="aio-mid">
+        <div class="aio-state" id="ltAiState">SCAN &amp; CALCULATE</div>
+        <div class="aio-bar"></div>
+      </div>
+      <div class="aio-right" id="ltAiRight">RUNNING</div>
+    </div>
+  </div>
 </div>
 
 <div id="ltCycleWrap">
@@ -1019,6 +1072,7 @@ function ltDefaultGS(){
     theme:'white', pnlColWidth:15, rowPadY:2, showMargin:false, lineGap:0.02,
     wmText:'BOT BY IPI DIGITAL|NOT FOR SALE', wmSpeed:0.5, wmOpacity:50, wmBorder:true,
     wmX:50, wmY:50, /* posisi watermark (% terhadap layar hp), diubah dgn drag saat Play */
+    aiY:40, /* posisi vertikal overlay CLAUDE AI (%), diubah dgn drag vertikal saat Play */
   };
 }
 let lt=ltDefault();
@@ -1198,10 +1252,69 @@ function ltApplyWatermark(){
   wm.addEventListener('pointercancel',endDrag);
 })();
 
+/* ══ OVERLAY CLAUDE AI — logo, status siklus, drag vertikal ══ */
+/* logo "sunburst" oranye direplika dengan SVG (bukan gambar) — 11 jari
+   memancar dengan panjang berselang-seling supaya terlihat organik */
+function ltBuildAiLogo(){
+  const N=11,spokes=[];
+  for(let i=0;i<N;i++){
+    const ang=i*(360/N);
+    const len=(i%2===0)?40:31;
+    spokes.push(`<rect x="-3.4" y="${-len}" width="6.8" height="${len-8}" rx="3.4" transform="rotate(${ang})"/>`);
+  }
+  return `<svg viewBox="-50 -50 100 100" class="aio-logo-svg"><g>${spokes.join('')}</g></svg>`;
+}
+const LT_AI_STATES={
+  scan:   {txt:'SCAN & CALCULATE', ico:'⊙', blink:true,  right:'RUNNING'},
+  execute:{txt:'EXECUTE',          ico:'◎', blink:false, right:'ACTIVE'},
+  running:{txt:'RUNNING',          ico:'↻', blink:true,  right:'RUNNING'},
+  close:  {txt:'CLOSE',            ico:'✓', blink:false, right:'DONE'},
+};
+function ltAiSet(state){
+  const ov=document.getElementById('ltAiOverlay');
+  if(!ov) return;
+  const m=LT_AI_STATES[state]||LT_AI_STATES.scan;
+  ov.classList.remove('aio-scan','aio-execute','aio-running','aio-close','aio-blink');
+  ov.classList.add('aio-'+state);
+  if(m.blink) ov.classList.add('aio-blink');
+  document.getElementById('ltAiState').textContent=m.txt;
+  document.getElementById('ltAiIco').textContent=m.ico;
+  document.getElementById('ltAiRight').textContent=m.right;
+}
+function ltApplyAiOverlay(){
+  const el=document.getElementById('ltAiOverlay');
+  if(!el) return;
+  if(!el.querySelector('.aio-logo-svg')) document.getElementById('ltAiLogo').innerHTML=ltBuildAiLogo();
+  el.style.top=Math.min(88,Math.max(12,ltGS.aiY!=null?ltGS.aiY:40))+'%';
+}
+/* drag overlay: HANYA vertikal — left tetap 50% (translate -50% mengunci
+   horizontal di tengah), cuma top yang berubah */
+(function(){
+  const ov=document.getElementById('ltAiOverlay');
+  let dragging=false,startY=0,orig=40;
+  ov.addEventListener('pointerdown',e=>{
+    if(!_ltPlayActive)return;
+    dragging=true;ov.setPointerCapture(e.pointerId);
+    startY=e.clientY;orig=ltGS.aiY!=null?ltGS.aiY:40;
+    ov.style.cursor='grabbing';e.preventDefault();
+  });
+  ov.addEventListener('pointermove',e=>{
+    if(!dragging)return;
+    const wrap=document.getElementById('ltPhotowrap').getBoundingClientRect();
+    if(!wrap.height)return;
+    ltGS.aiY=Math.min(88,Math.max(12,orig+(e.clientY-startY)/wrap.height*100));
+    ov.style.top=ltGS.aiY+'%';
+  });
+  const end=()=>{if(!dragging)return;dragging=false;ov.style.cursor='';ltSave();};
+  ov.addEventListener('pointerup',end);
+  ov.addEventListener('pointercancel',end);
+})();
+
 function ltRenderAll(){
   document.getElementById('ltDeposit').value=lt.deposit;
   ltApplyTheme(ltGS.theme||'dark');
   ltApplyWatermark();
+  ltApplyAiOverlay();
   ltRenderCycleList();
   ltRenderCanvasStatic();
 }
@@ -1469,6 +1582,10 @@ async function ltPlayLoop(){
       const STEPS=Math.max(10,Math.min(40,cy.duration*4));
       const path=ltBuildPricePath(cy,STEPS);
       const stepMs=Math.max(120,(cy.duration*1000)/path.length);
+      /* SCAN & CALCULATE dulu (belum ada posisi), lalu EXECUTE muncul 0.5s
+         sebelum posisi pertama benar-benar terbuka — ilusi delay proses AI */
+      ltAiSet('scan'); await ltSleep(900); if(!_ltPlayActive) return;
+      ltAiSet('execute'); await ltSleep(500); if(!_ltPlayActive) return;
       /* layer masuk satu per satu (bukan instan) — jeda cepat 150-400ms
          antar layer, persis seperti entry manual/EA yang tidak pernah
          benar2 simultan. Selama masuk bertahap, harga jalan sudah mulai
@@ -1491,6 +1608,7 @@ async function ltPlayLoop(){
       }
       if(!_ltPlayActive) return;
       const marginTotal=layers.reduce((s,L)=>s+ltCalcMargin(L.lot,L.open),0);
+      ltAiSet('running'); /* posisi berjalan */
       const startStep=Math.min(cy.layers-1,path.length-1)+1;
       for(let s=startStep;s<path.length;s++){
         if(!_ltPlayActive) return;
@@ -1502,17 +1620,33 @@ async function ltPlayLoop(){
         await ltSleep(stepMs);
       }
       if(!_ltPlayActive) return;
-      // finalisasi tepat di harga close (current price = close), tahan sebentar sebelum ditutup
+      // harga sudah sampai close (current price = close) — tampilkan dulu
       const finalRows=layers.map(L=>({dir:L.dir,lot:L.lot,open:L.open,close:cy.close,cur:cy.close,pnl:ltCalcPnl(L.dir,L.lot,L.open,cy.close)}));
       const finalFloating=finalRows.reduce((s,r)=>s+r.pnl,0);
       ltRenderPositionRows(finalRows);
       ltRenderTopValues(finalFloating,realized,marginTotal);
-      await ltSleep(600);
+      // CLOSE muncul 0.5s sebelum layer benar-benar ditutup — ilusi delay
+      ltAiSet('close'); await ltSleep(500); if(!_ltPlayActive) return;
+      /* tutup layer BERTAHAP: 0.05 detik per layer (bukan lenyap sekaligus).
+         Tiap layer yang ditutup langsung menambah realized & mengurangi
+         floating/margin, jadi angka atas ikut turun realistis. */
+      const remaining=finalRows.slice();
+      while(remaining.length){
+        if(!_ltPlayActive) return;
+        const closed=remaining.shift();
+        realized+=closed.pnl;
+        const fl=remaining.reduce((s,r)=>s+r.pnl,0);
+        const mg=remaining.reduce((s,r)=>s+ltCalcMargin(r.lot,r.open),0);
+        ltRenderPositionRows(remaining);
+        ltRenderTopValues(fl,realized,mg);
+        await ltSleep(50);
+      }
       if(!_ltPlayActive) return;
-      realized+=finalFloating;
       ltRenderPositionRows([]);
       ltRenderTopValues(0,realized,0);
-      await ltSleep(2000+Math.random()*2000); /* jeda close->open berikutnya: 2-4 detik acak */
+      // jeda sebelum siklus berikutnya — kembali SCAN & CALCULATE (berkedip)
+      ltAiSet('scan');
+      await ltSleep(2000+Math.random()*2000);
     }
   }
 }
@@ -1520,6 +1654,8 @@ function ltEnterPlay(){
   _ltPlayActive=true;
   history.pushState({mt5LtPlay:true},'','');
   document.body.classList.add('ltplaymode');
+  ltApplyAiOverlay();
+  ltAiSet('scan');
   ltPlayLoop();
 }
 function ltExitPlay(){
