@@ -96,7 +96,11 @@ body:not(.cap) .symtxt:hover{outline:1.5px dashed rgba(10,132,255,.5);outline-of
 .addbtn.buy{border-color:#a8d2ff;color:#0a84ff;}
 .addbtn.sell{border-color:#f4b8b0;color:#e0322e;}
 
-body.cap .rowbtns,body.cap .addrow{display:none!important;}
+/* baris "Keuntungan tersembunyi" = alat editor (bukan bagian tampilan MT5),
+   otomatis disembunyikan saat capture/download & mode preview */
+.srow.hiddenrow{background:#fff8ea;cursor:pointer;padding-top:5px;padding-bottom:4px;}
+.srow.hiddenrow .slbl,.srow.hiddenrow .sval{color:#b8860b;font-size:12.5px;font-weight:700;}
+body.cap .rowbtns,body.cap .addrow,body.cap .hiddenrow{display:none!important;}
 
 /* ── modal umum (form transaksi, mini-edit, gaya global, preview) ── */
 .ov-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:899;display:none;}
@@ -137,8 +141,15 @@ input[type=number]{-moz-appearance:textfield;}
 #modal .mclose{background:rgba(60,20,90,0.8);color:#c8a0ff;border:1px solid rgba(140,60,255,0.3);}
 
 /* mode preview murni: TIDAK ada tombol apapun (ctrlbar/project bar/hint/
-   tombol edit baris disembunyikan), cuma tombol back HP yang bisa keluar */
-body.previewmode #ctrlbar,body.previewmode #projectbar,body.previewmode .hint{display:none!important;}
+   switcher Riwayat–Live Trade/tombol edit baris disembunyikan), cuma tombol
+   back HP yang bisa keluar. Switcher WAJIB ikut hilang — kalau tidak, bar
+   sticky-nya menutupi header foto & screenshot tidak bisa full layar. */
+body.previewmode #ctrlbar,body.previewmode #projectbar,body.previewmode .hint,body.previewmode #appSwitch{display:none!important;}
+/* preview = layar penuh seperti mode Play di Live Trade: mockup diperbesar
+   sampai mentok atas-bawah/kiri-kanan, header & footer foto tetap paten,
+   hanya daftar tengah yang bisa discroll */
+body.previewmode{justify-content:center;overflow:hidden;background:#000;align-self:stretch;}
+body.previewmode #photowrap{width:min(100vw,calc(100vh * 1220 / 2454));}
 .spin{display:inline-block;width:13px;height:13px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:sp .7s linear infinite;vertical-align:-2px;margin-right:5px;}
 @keyframes sp{to{transform:rotate(360deg);}}
 
@@ -241,7 +252,7 @@ body.ltplaymode #ltPhotowrap{width:min(100vw,calc(100vh * 1080 / 2229));max-widt
 
 <div id="projectbar"></div>
 
-<div class="hint">Header/status bar/navigasi = <b>foto asli</b>. Font/ukuran/ketebalan/lebar/warna diatur <b>global</b> lewat "⚙ Gaya Global". Tambah transaksi lewat tombol Buy/Sell — hasil &amp; warna dihitung otomatis. <b>Saldo = Deposito + Keuntungan</b> (otomatis). Tombol "⬇ HD" kini punya 2 opsi: Download instan, atau <b>Preview</b> layar penuh (bisa discroll, cocok untuk screen record) — keluar dari Preview pakai tombol back HP.</div>
+<div class="hint">Header/status bar/navigasi = <b>foto asli</b>. Font/ukuran/ketebalan/lebar/warna diatur <b>global</b> lewat "⚙ Gaya Global". Tambah transaksi lewat tombol Buy/Sell — hasil &amp; warna dihitung otomatis. <b>Keuntungan = total history + keuntungan tersembunyi</b> dan <b>Saldo = Deposito + Keuntungan</b> (dua-duanya otomatis; "keuntungan tersembunyi" = baris kuning di bawah Saldo, untuk history yang tidak ditampilkan, tidak ikut screenshot). Tombol "⬇ HD" punya 2 opsi: Download instan, atau <b>Preview</b> layar penuh (bisa discroll, cocok untuk screen record) — keluar dari Preview pakai tombol back HP.</div>
 
 <div id="photowrap">
   <img src="assets/riwayat-top.jpg" alt="Header Riwayat MT5">
@@ -443,14 +454,14 @@ const STYLE_FIELDS=[
 ];
 function defaultGlobalStyle(){
   return {
-    sym:  {fs:17,  fw:700, sx:92, color:'#1c1c1c'},
-    dir:  {fs:17,  fw:500, sx:90},
-    price:{fs:17,  fw:700, sx:90, color:'#6F6F6F'},
-    date: {fs:14.5,fw:500, sx:95, color:'#8A8A8A'},
-    pnl:  {fs:15,  fw:800, sx:80},
-    val:  {fs:15,  fw:700, sx:100,color:'#1c1c1c'},
-    posColor:'#0a84ff', negColor:'#e0322e',
-    rightPad:16, defaultLot:1.00,
+    sym:  {fs:17,fw:700,sx:92, color:'#000000'},
+    dir:  {fs:17,fw:500,sx:90},
+    price:{fs:17,fw:700,sx:90, color:'#6F6F6F'},
+    date: {fs:13,fw:500,sx:100,color:'#8A8A8A'},
+    pnl:  {fs:13,fw:700,sx:100},
+    val:  {fs:15,fw:500,sx:100,color:'#000000'},
+    posColor:'#0E71E9', negColor:'#BC0D0A',
+    rightPad:0, defaultLot:1.00,
   };
 }
 let GS=defaultGlobalStyle();
@@ -497,18 +508,21 @@ function escapeHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;
 
 function defaultTemplate(){
   return {
-    summaryData:{keuntungan:-24.80,deposito:100.00,swap:0.00,komisi:0.00,saldo:75.20},
+    /* keuntungan & saldo TIDAK disimpan sebagai input — keduanya dihitung:
+       Keuntungan = total hasil history + keuntungan tersembunyi (hidden),
+       Saldo = Deposito + Keuntungan */
+    summaryData:{hidden:364.95,deposito:1000.00,swap:0.00,komisi:0.00},
     trades:[
-     {sym:'XAUUSDc',dir:'buy', lot:0.01,open:4026.005,close:4036.038,time:'2026.06.30 08:00:39'},
-     {sym:'XAUUSDc',dir:'sell',lot:0.01,open:4038.027,close:4043.033,time:'2026.06.29 12:02:29'},
-     {sym:'XAUUSDc',dir:'buy', lot:0.01,open:4017.189,close:4028.001,time:'2026.06.26 01:01:13'},
-     {sym:'XAUUSDc',dir:'sell',lot:0.01,open:3970.908,close:3975.875,time:'2026.06.25 03:45:03'},
-     {sym:'XAUUSDc',dir:'sell',lot:0.01,open:4041.824,close:4047.019,time:'2026.06.24 11:50:19'},
-     {sym:'XAUUSDc',dir:'buy', lot:0.01,open:4086.568,close:4081.631,time:'2026.06.24 07:31:50'},
-     {sym:'XAUUSDc',dir:'sell',lot:0.01,open:4061.851,close:4067.084,time:'2026.06.24 04:58:02'},
-     {sym:'XAUUSDc',dir:'sell',lot:0.01,open:4120.058,close:4125.095,time:'2026.06.23 11:57:43'},
-     {sym:'XAUUSDc',dir:'sell',lot:0.01,open:4180.989,close:4186.041,time:'2026.06.23 00:31:01'},
-     {sym:'XAUUSDc',dir:'sell',lot:0.01,open:4194.895,close:4185.113,time:'2026.06.22 13:30:03'},
+     {sym:'XAUUSDc',dir:'buy', lot:0.30,open:4060.016,close:4070.034,time:'2026.07.02 11:05:23'},
+     {sym:'XAUUSDc',dir:'buy', lot:0.20,open:4043.003,close:4053.003,time:'2026.07.02 02:07:25'},
+     {sym:'XAUUSDc',dir:'buy', lot:0.20,open:3979.032,close:3974.032,time:'2026.07.01 08:09:23'},
+     {sym:'XAUUSDc',dir:'buy', lot:0.20,open:4026.234,close:4036.226,time:'2026.06.30 07:40:25'},
+     {sym:'XAUUSDc',dir:'sell',lot:0.20,open:4038.152,close:4028.151,time:'2026.06.29 10:35:25'},
+     {sym:'XAUUSDc',dir:'buy', lot:0.10,open:4017.212,close:4028.012,time:'2026.06.26 00:50:52'},
+     {sym:'XAUUSDc',dir:'sell',lot:0.10,open:4042.056,close:4032.012,time:'2026.06.24 12:07:41'},
+     {sym:'XAUUSDc',dir:'sell',lot:0.10,open:4195.011,close:4185.011,time:'2026.06.24 12:58:14'},
+     {sym:'XAUUSDc',dir:'sell',lot:0.10,open:4194.004,close:4183.989,time:'2026.06.22 02:44:56'},
+     {sym:'BTCUSDc',dir:'buy', lot:0.25,open:63500.21,close:63300.42,time:'2026.06.20 03:10:55',pnlOverride:-50.00},
     ]
   };
 }
@@ -556,6 +570,16 @@ function initStore(){
       store={projects:{[id]:{name:'Project 1',...defaultTemplate()}},order:[id],activeId:id,nextNum:2};
     }
   }
+  /* proyek lama belum punya "keuntungan tersembunyi" (dulu Keuntungan diketik
+     manual) — isi dari selisih keuntungan lama vs total history, supaya angka
+     Keuntungan/Saldo yang tampil TIDAK berubah setelah update ini */
+  store.order.forEach(id=>{
+    const sd=store.projects[id].summaryData;
+    if(sd.hidden==null){
+      const hist=(store.projects[id].trades||[]).reduce((s,t)=>s+getPnl(t),0);
+      sd.hidden=Math.round(((sd.keuntungan||0)-hist)*100)/100;
+    }
+  });
   renderProjectBar();renderSummary();renderTrades();
   _projectLoaded=true;
 }
@@ -596,10 +620,11 @@ function deleteProject(id,event){
    RENDER RINGKASAN & DAFTAR TRANSAKSI
    (gaya SELALU dari GS — global, bukan per-baris)
 ═══════════════════════════════════════════════ */
-/* Deposito & Keuntungan = input manual. Saldo = HASIL (Deposito + Keuntungan),
-   dihitung otomatis dan tidak bisa diketik langsung. */
+/* Deposito = input manual. Keuntungan = HASIL (total history + keuntungan
+   tersembunyi), Saldo = HASIL (Deposito + Keuntungan) — dua-duanya dihitung
+   otomatis dan tidak bisa diketik langsung. */
 const SUMMARY_ROWS=[
- {key:'keuntungan',label:'Keuntungan:',signed:true, editable:true},
+ {key:'keuntungan',label:'Keuntungan:',signed:true, editable:false},
  {key:'deposito',  label:'Deposito',   signed:false,editable:true},
  {key:'swap',      label:'Swap:',      signed:false,editable:true},
  {key:'komisi',    label:'Komisi:',    signed:false,editable:true},
@@ -631,8 +656,12 @@ function applyStretchBoxes(root){
 function renderSummary(){
   const c=document.getElementById('summaryList');
   const d=cp().summaryData;
-  /* Saldo = Deposito + Keuntungan, selalu dihitung ulang (bukan nilai tersimpan) */
-  d.saldo=(d.deposito||0)+(d.keuntungan||0);
+  /* Keuntungan = total hasil semua history + keuntungan tersembunyi (untuk
+     history yang sengaja tidak ditampilkan); Saldo = Deposito + Keuntungan.
+     Keduanya selalu dihitung ulang, bukan nilai tersimpan. */
+  const historyPnl=cp().trades.reduce((s,t)=>s+getPnl(t),0);
+  d.keuntungan=Math.round((historyPnl+(d.hidden||0))*100)/100;
+  d.saldo=(d.deposito||0)+d.keuntungan;
   c.innerHTML=SUMMARY_ROWS.map(r=>{
     const raw=d[r.key]||0;
     const color=r.key==='keuntungan'?(raw<0?GS.negColor:(raw>0?GS.posColor:GS.val.color)):GS.val.color;
@@ -641,7 +670,9 @@ function renderSummary(){
     const click=r.editable?` onclick="openMiniValueEdit('${r.key}')"`:'';
     const span=spanTag(txt,st,true,`class="sval${r.editable?'':' sval-ro'}"${click}`);
     return `<div class="srow"><span class="slbl">${r.label}</span><span class="sdot"></span>${span}</div>`;
-  }).join('');
+  }).join('')
+  /* baris alat editor — TIDAK ikut screenshot/preview (class hiddenrow) */
+  +`<div class="srow hiddenrow" onclick="openMiniValueEdit('hidden')"><span class="slbl">Keuntungan tersembunyi (tidak ikut screenshot):</span><span class="sdot"></span><span class="sval">${escapeHtml(formatMoney(d.hidden||0,2,true))}</span></div>`;
   applyStretchBoxes(c);
 }
 
@@ -666,6 +697,7 @@ function renderTrades(){
     return `<div class="trow"><div class="tbar ${bar}"></div><div class="tc"><div class="tleft"><div class="tsl">${symSpan}<span class="tcomma">,</span>${dirSpan}</div><div class="tprices">${priceSpan}</div></div><div class="tright"><div class="tdate">${dateSpan}</div><div class="tpnl">${pnlSpan}</div></div></div><div class="rowbtns"><button class="editbtn" onclick="openTradeForm('${t.dir}',${i})">✎</button><button class="copybtn" onclick="copyT(${i})">⧉</button><button class="delbtn" onclick="delT(${i})">✕</button></div></div>`;
   }).join('');
   applyStretchBoxes(c);
+  renderSummary(); /* history berubah -> Keuntungan & Saldo ikut dihitung ulang */
 }
 
 /* ══════════════════════════════════════════════
@@ -789,8 +821,8 @@ function openSymEdit(i){
 function openMiniValueEdit(key){
   meTarget={type:'summary',key};
   const row=SUMMARY_ROWS.find(r=>r.key===key);
-  document.getElementById('meLabel').textContent='Edit '+row.label.replace(':','');
-  document.getElementById('meInput').value=cp().summaryData[key];
+  document.getElementById('meLabel').textContent='Edit '+(row?row.label.replace(':',''):'Keuntungan Tersembunyi');
+  document.getElementById('meInput').value=cp().summaryData[key]!=null?cp().summaryData[key]:0;
   document.getElementById('meBackdrop').style.display='block';
   document.getElementById('mePanel').style.display='block';
   setTimeout(()=>document.getElementById('meInput').focus(),40);
@@ -981,14 +1013,14 @@ function ltDefault(){
 }
 function ltDefaultGS(){
   return {
-    sym:  {fs:15,fw:700,sx:100,color:'#ffffff'},
-    dir:  {fs:15,fw:400,sx:100},
-    price:{fs:12.5,fw:400,sx:100,color:'#8e8e93'},
-    pnl:  {fs:15,fw:700,sx:100},
-    val:  {fs:15,fw:700,sx:100,color:'#ffffff'},
-    posColor:'#0a84ff', negColor:'#ff453a',
-    theme:'dark', pnlColWidth:34, rowPadY:6, showMargin:true, lineGap:1,
-    wmText:'BOT BY IPI DIGITAL|NOT FOR SALE', wmSpeed:3, wmOpacity:100, wmBorder:true,
+    sym:  {fs:16,fw:700,sx:90, color:'#000000'},
+    dir:  {fs:16,fw:500,sx:100},
+    price:{fs:16,fw:600,sx:95, color:'#8A8A8A'},
+    pnl:  {fs:14,fw:700,sx:100},
+    val:  {fs:15,fw:500,sx:100,color:'#1C1C1E'},
+    posColor:'#0E71E9', negColor:'#BC0D0A',
+    theme:'white', pnlColWidth:15, rowPadY:2, showMargin:false, lineGap:0.02,
+    wmText:'BOT BY IPI DIGITAL|NOT FOR SALE', wmSpeed:0.5, wmOpacity:50, wmBorder:true,
   };
 }
 let lt=ltDefault();
