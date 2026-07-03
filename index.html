@@ -221,13 +221,16 @@ body.ltplaymode .lt-watermark::before{animation:wmspin var(--wmSpeed,3s) linear 
    siklus: SCANNING → EXECUTE → RUNNING → CLOSE. Baris "loading" (titik)
    berkedip saat fasenya aktif, lalu diam saat fase berikutnya muncul.
    Hanya bisa digeser VERTIKAL (horizontal terkunci di tengah). */
-.lt-ai-overlay{position:absolute;left:50%;top:var(--aiY,40%);transform:translate(-50%,-50%);width:min(58%,208px);display:none;z-index:95;
-  background:linear-gradient(160deg,rgba(18,10,32,.94),rgba(6,3,14,.94));
-  border:1px solid rgba(150,90,255,.5);border-radius:11px;padding:9px 11px 10px;
-  box-shadow:0 0 16px rgba(120,60,255,.3),inset 0 0 14px rgba(120,60,255,.08);
+/* kotak STATIS rasio 3:4 — persis seperti potongan (crop) screen-record yang
+   ditempel sebagai overlay video di atas rekaman Live Trade. Ukuran TETAP
+   (tidak ikut membesar mengikuti jumlah baris teks); latar solid, tepi tegas,
+   TANPA cahaya/glow yang bocor ke luar kotak (overflow:hidden mengunci semua
+   efek di dalam crop). */
+.lt-ai-overlay{position:absolute;left:50%;top:var(--aiY,40%);transform:translate(-50%,-50%);width:min(46%,164px);aspect-ratio:3/4;display:none;flex-direction:column;z-index:95;
+  background:#0b0714;
+  border:1px solid rgba(120,80,160,.55);border-radius:6px;padding:10px 11px;overflow:hidden;
   font-family:'Roboto Condensed',sans-serif;}
-.lt-ai-overlay::after{content:'';position:absolute;inset:3px;border-radius:8px;border:1px solid rgba(150,90,255,.16);pointer-events:none;}
-body.ltplaymode .lt-ai-overlay{display:block;pointer-events:auto;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;}
+body.ltplaymode .lt-ai-overlay{display:flex;pointer-events:auto;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;}
 .aio-head{display:flex;align-items:center;gap:7px;}
 .aio-logo-svg{width:26px;height:26px;flex-shrink:0;filter:drop-shadow(0 0 5px rgba(255,122,26,.7));}
 .aio-logo-svg rect{fill:#ff7a1a;}
