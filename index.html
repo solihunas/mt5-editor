@@ -526,7 +526,7 @@ function formatMoney(value,decimals,forceSign){
   const neg=n<0; n=Math.abs(n);
   const parts=n.toFixed(decimals).split('.');
   const intPart=groupThousands(parts[0]);
-  const sign=neg?'-':(forceSign?'+':'');
+  const sign=neg?'-':'';
   return sign+intPart+(decimals>0?'.'+parts[1]:'');
 }
 /* BTCUSDc dipakai 2 digit desimal, simbol lain (XAUUSDc dkk) 3 digit */
