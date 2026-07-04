@@ -169,8 +169,11 @@ body.previewmode #ctrlbar,body.previewmode #projectbar,body.previewmode .hint{di
 .ltbal-row{display:flex;align-items:baseline;margin-bottom:10px;}
 .ltbal-lbl{font-weight:700;font-size:15px;font-family:'Roboto Condensed',sans-serif;color:#fff;white-space:nowrap;}
 #ltPhotowrap.theme-white .ltbal-lbl{color:#1c1c1e;}
-.ltbal-dots{flex:1 1 auto;min-width:16px;border-bottom:2.5px dotted #3a3c44;margin:0 8px 5px;}
-#ltPhotowrap.theme-white .ltbal-dots{border-bottom-color:#d6d6d6;}
+/* garis titik-titik: MODEL SAMA PERSIS dengan .sdot di Riwayat (titik bulat
+   radial, jarak 11px) supaya sinkron antara Trade & Riwayat — bukan lagi
+   border-dotted yang bentuk/rapatnya beda */
+.ltbal-dots{flex:1 1 auto;min-width:16px;height:4px;align-self:flex-end;margin:0 8px 6px;background-image:radial-gradient(circle,rgba(255,255,255,.32) 1.5px,transparent 1.6px);background-repeat:repeat-x;background-position:left bottom;background-size:11px 4px;}
+#ltPhotowrap.theme-white .ltbal-dots{background-image:radial-gradient(circle,rgba(150,150,155,.28) 1.5px,transparent 1.6px);}
 /* baris posisi terbuka: 1 baris flex — kiri (simbol+arah, lalu harga)
    ditumpuk vertikal, kanan PnL center kalibrasi vertikal thd SELURUH baris
    (bukan cuma sejajar baris harga) — sesuai tampilan asli MT5 */
@@ -391,7 +394,7 @@ body.ltplaymode #ltPhotowrap{width:min(100vw,calc(100vh * 1080 / 2229));max-widt
       <div class="summary" id="ltHistSummary"></div>
       <div id="ltHistTrades"></div>
     </div>
-    <img id="ltHistBot" src="assets/riwayat-bottom.jpg" alt="Navigasi MT5">
+    <img id="ltHistBot" src="assets/livetrade-rw-bottom.jpg" alt="Navigasi MT5">
   </div>
   <div id="ltAiMeter">
     <div class="ltai-row"><span class="ltai-phase" id="ltAiPhase">SCANNING</span><span class="ltai-pct" id="ltAiPct"></span></div>
@@ -1668,17 +1671,8 @@ function ltTogglePlayHist(){
        untuk mengukur offsetWidth (kalau masih display:none, lebar terukur 0
        dan teks jadi tumpang-tindih) */
     document.body.classList.add('lthistmode');
-    ltCalibHistFooter();
     ltRenderPlayHistory();
   }else document.body.classList.remove('lthistmode');
-}
-/* samakan tinggi footer nav Riwayat dengan footer Live Trade supaya tidak
-   ada loncatan ukuran saat tap Trade⇄Riwayat (foto beda DPI: 1080 vs 1220).
-   object-fit:cover memangkas padding vertikal tipis, ikon nav tetap utuh. */
-function ltCalibHistFooter(){
-  const liveH=document.getElementById('ltBotImg').offsetHeight;
-  const hbot=document.getElementById('ltHistBot');
-  if(liveH&&hbot){hbot.style.height=liveH+'px';hbot.style.objectFit='cover';hbot.style.objectPosition='center';}
 }
 
 /* ── meter "AI" (opsional) — 4 fase: SCANNING / ENTRY / RUNNING / CLOSE ── */
