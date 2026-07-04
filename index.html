@@ -454,11 +454,8 @@ body.ltplaymode #ltPhotowrap{width:min(100vw,calc(100vh * 1080 / 2229));max-widt
     <div><span class="fieldlbl">Max Floating (opsional)</span><input id="ltfMaxFloat" class="fld" type="text" inputmode="decimal" placeholder="mis. 3 998.000"></div>
   </div>
   <div style="font-size:10.5px;color:#8e8e93;margin-top:4px;line-height:1.4;">Max Floating = titik harga terjauh yang sempat disentuh (floating rugi dulu) sebelum akhirnya ditutup di Harga Close — bikin animasinya realistis. Kosongkan kalau tidak perlu.</div>
-  <div class="grid2" style="margin-top:8px;">
-    <div><span class="fieldlbl">Waktu open (202X.MM.DD HH:MM:SS) — ketik angka saja</span><input id="ltfTime" class="fld" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="off" oninput="ltfTimeInput(this)"></div>
-    <div><span class="fieldlbl">Label close di riwayat</span><select id="ltfLabel" class="fld"><option value="auto">otomatis (sl rugi / tp untung)</option><option value="sl">[sl]</option><option value="tp">[tp]</option><option value="">tanpa label</option></select></div>
-  </div>
-  <div style="font-size:10.5px;color:#8e8e93;margin-top:4px;line-height:1.4;">Waktu jadi acuan riwayat otomatis: open &amp; close tiap layer digeser acak beberapa detik. Tahun dikunci 202X (hanya digit terakhir yang bisa diganti), bulan maks 12, tanggal maks 31.</div>
+  <div style="margin-top:8px;"><span class="fieldlbl">Waktu open (202X.MM.DD HH:MM:SS) — ketik angka saja</span><input id="ltfTime" class="fld" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="off" oninput="ltfTimeInput(this)"></div>
+  <div style="font-size:10.5px;color:#8e8e93;margin-top:4px;line-height:1.4;">Waktu jadi acuan riwayat otomatis: open &amp; close tiap layer digeser acak beberapa detik. Tahun dikunci 202X (hanya digit terakhir yang bisa diganti), bulan maks 12, tanggal maks 31. Posisi rugi otomatis bertanda <b>[sl]</b> di riwayat.</div>
   <div class="previewline" id="ltfPreview">Hasil per layer: <b>0.00</b></div>
   <div class="epbrow"><button class="epok" onclick="ltfSubmit()">Simpan</button><button class="epcancel" onclick="ltCloseCycleForm()">Batal</button></div>
 </div>
@@ -1064,8 +1061,8 @@ function ltDefault(){
     aiTop:70,   /* posisi vertikal meter AI (% tinggi kanvas, hasil drag) */
     history:[],
     cycles:[
-     {dir:'sell',layers:1,lot:0.01,open:4055.374,close:4042.916,duration:6,time:'2026.06.30 09:14:07',closeLabel:'auto'},
-     {dir:'buy', layers:1,lot:0.01,open:4055.916,close:4042.676,duration:6,time:'2026.06.30 09:22:41',closeLabel:'auto'},
+     {dir:'sell',layers:1,lot:0.01,open:4055.374,close:4042.916,duration:6,time:'2026.06.30 09:14:07'},
+     {dir:'buy', layers:1,lot:0.01,open:4055.916,close:4042.676,duration:6,time:'2026.06.30 09:22:41'},
     ],
   };
 }
@@ -1097,7 +1094,7 @@ function ltLoad(){
   if(!Array.isArray(lt.history)) lt.history=[];
   (lt.cycles||[]).forEach((cy,i)=>{
     if(!cy.time) cy.time=ltFormatStamp(new Date(2026,5,30,9,14+i*9,7));
-    if(cy.closeLabel==null) cy.closeLabel='auto';
+    delete cy.closeLabel; /* field lama tak dipakai lagi (loss otomatis [sl]) */
   });
   _ltLoaded=true;
 }
@@ -1311,7 +1308,7 @@ function ltRenderCycleList(){
   c.innerHTML=lt.cycles.map((cy,i)=>{
     const pnl=ltCalcPnl(cy.dir,cy.lot,cy.open,cy.close);
     const totalPnl=pnl*cy.layers;
-    return `<div class="ltcyc-row"><div class="ltcyc-info">Siklus ${i+1}: <b>${cy.dir.toUpperCase()}</b> ×${cy.layers} layer @ ${Number(cy.lot).toFixed(2)} lot · ${cy.duration}d · hasil <b>${escapeHtml(formatMoney(totalPnl,2,true))}</b><br><span style="color:#8e8e93;font-size:11px;">${escapeHtml(cy.time||'')}${cy.closeLabel&&cy.closeLabel!=='auto'?' · ['+escapeHtml(cy.closeLabel)+']':''}</span></div><div class="ltcyc-btns"><button onclick="ltOpenCycleForm(${i})">✎</button><button onclick="ltDuplicateCycle(${i})">⧉</button><button onclick="ltDeleteCycle(${i})">✕</button></div></div>`;
+    return `<div class="ltcyc-row"><div class="ltcyc-info">Siklus ${i+1}: <b>${cy.dir.toUpperCase()}</b> ×${cy.layers} layer @ ${Number(cy.lot).toFixed(2)} lot · ${cy.duration}d · hasil <b>${escapeHtml(formatMoney(totalPnl,2,true))}</b><br><span style="color:#8e8e93;font-size:11px;">${escapeHtml(cy.time||'')}</span></div><div class="ltcyc-btns"><button onclick="ltOpenCycleForm(${i})">✎</button><button onclick="ltDuplicateCycle(${i})">⧉</button><button onclick="ltDeleteCycle(${i})">✕</button></div></div>`;
   }).join('');
 }
 function ltDepositChanged(){lt.deposit=parseNum(document.getElementById('ltDeposit').value)||0;ltRenderCanvasStatic();ltRenderCycleList();ltSave();}
@@ -1345,7 +1342,6 @@ function ltOpenCycleForm(editIndex){
     document.getElementById('ltfDuration').value=cy.duration;
     document.getElementById('ltfMaxFloat').value=cy.maxFloat!=null?cy.maxFloat:'';
     document.getElementById('ltfTime').value=cy.time||ltNextDefaultTime();
-    document.getElementById('ltfLabel').value=cy.closeLabel!=null?cy.closeLabel:'auto';
   }else{
     ltfSetDir('sell');
     document.getElementById('ltfLayers').value=1;
@@ -1355,7 +1351,6 @@ function ltOpenCycleForm(editIndex){
     document.getElementById('ltfDuration').value=6;
     document.getElementById('ltfMaxFloat').value='';
     document.getElementById('ltfTime').value=ltNextDefaultTime();
-    document.getElementById('ltfLabel').value='auto';
   }
   ltfUpdatePreview();
   document.getElementById('ltfBackdrop').style.display='block';
@@ -1381,7 +1376,6 @@ function ltfSubmit(){
     duration:Math.max(1,parseInt(document.getElementById('ltfDuration').value)||6),
     maxFloat: mfRaw===''?null:parseNum(mfRaw),
     time:ltClampStamp(document.getElementById('ltfTime').value),
-    closeLabel:document.getElementById('ltfLabel').value,
   };
   if(ltfEditIndex!==null) lt.cycles[ltfEditIndex]=cycle;
   else lt.cycles.push(cycle);
@@ -1417,11 +1411,10 @@ function ltGenHistory(standalone){
       }
       const open=ltJitterDec(cy.open,dec), close=ltJitterDec(cy.close,dec);
       const pnl=calcPnl(cy.dir,cy.lot,open,close);
-      const lbl=(cy.closeLabel==null||cy.closeLabel==='auto')?(pnl<0?'sl':'tp'):cy.closeLabel;
       entries.push({sym:lt.sym||'XAUUSDc',dir:cy.dir,lot:cy.lot,open,close,
         timeOpen:ltFormatStamp(new Date(base.getTime()+openOfs)),
         timeClose:ltFormatStamp(new Date(closeBase.getTime()+closeOfs)),
-        pnl,mark:lbl||null});
+        pnl,mark:pnl<0?'sl':null}); /* hanya loss ditandai [sl]; profit tanpa label */
     }
   });
   entries.sort((a,b)=>a.timeClose<b.timeClose?1:-1); /* terbaru di atas, seperti MT5 */
@@ -1617,12 +1610,27 @@ function ltBuildPricePath(cy,steps){
 
 let _ltPlayActive=false;
 let _ltHistMode=false, _ltSuppressTap=false;
+/* riwayat SESI Play — dibangun dinamis: HANYA posisi yang sudah close selama
+   Play berjalan, terbaru di atas. Kosong sampai ada yang close. Terpisah dari
+   lt.history (editor) & dari app Riwayat lama (1.a). Direset tiap mulai Play. */
+let _ltSessHist=[];
+function ltSessPush(cy,finalRows){
+  const base=ltParseStamp(cy.time)||new Date(2026,5,30,12,0,0);
+  const closeTime=new Date(base.getTime()+(cy.duration||6)*1000);
+  const entries=finalRows.map((r,idx)=>({
+    sym:lt.sym||'XAUUSDc',dir:r.dir,lot:r.lot,open:r.open,close:cy.close,
+    timeClose:ltFormatStamp(new Date(closeTime.getTime()+idx*1200)),
+    pnl:r.pnl, mark:r.pnl<0?'sl':null, /* TP tidak pernah ditandai; hanya loss=[sl] */
+  }));
+  _ltSessHist=entries.reverse().concat(_ltSessHist); /* siklus terbaru di atas */
+  if(_ltHistMode) ltRenderPlayHistory(); /* sinkron langsung kalau lagi dilihat */
+}
 
 /* ── kanvas Riwayat full-screen saat Play (di-tap untuk transisi) ──
-   dirender dari riwayat turunan Live Trade (lt.history) memakai gaya global
+   dirender dari riwayat SESI (hanya yang sudah close) memakai gaya global
    Riwayat (GS) supaya identik dengan app Riwayat asli */
 function ltRenderPlayHistory(){
-  const trades=lt.history||[];
+  const trades=_ltSessHist;
   const keuntungan=trades.reduce((s,h)=>s+h.pnl,0);
   const d={keuntungan,deposito:lt.deposit,swap:0,komisi:0,saldo:lt.deposit+keuntungan};
   const sc=document.getElementById('ltHistSummary');
@@ -1642,7 +1650,7 @@ function ltRenderPlayHistory(){
     const pnlColor=pnl<0?GS.negColor:GS.posColor;
     const symSpan=spanTag(h.sym,GS.sym,false);
     const dirSpan=spanTag((h.dir==='buy'?'buy':'sell')+' '+Number(h.lot).toFixed(2),Object.assign({},GS.dir,{color:dirColor}),false);
-    const priceSpan=spanTag(formatPriceNum(h.open,h.sym)+'  →  '+formatPriceNum(h.close,h.sym)+(h.mark?'  ['+h.mark+']':''),GS.price,false);
+    const priceSpan=spanTag(formatPriceNum(h.open,h.sym)+'  →  '+formatPriceNum(h.close,h.sym)+(h.mark==='sl'?'  [sl]':''),GS.price,false);
     const dateSpan=spanTag(h.timeClose,GS.date,true);
     const pnlSpan=spanTag(formatMoney(pnl,2,true),Object.assign({},GS.pnl,{color:pnlColor}),true);
     return `<div class="trow"><div class="tbar ${bar}"></div><div class="tc"><div class="tleft"><div class="tsl">${symSpan}<span class="tcomma">,</span>${dirSpan}</div><div class="tprices">${priceSpan}</div></div><div class="tright"><div class="tdate">${dateSpan}</div><div class="tpnl">${pnlSpan}</div></div></div></div>`;
@@ -1660,8 +1668,17 @@ function ltTogglePlayHist(){
        untuk mengukur offsetWidth (kalau masih display:none, lebar terukur 0
        dan teks jadi tumpang-tindih) */
     document.body.classList.add('lthistmode');
+    ltCalibHistFooter();
     ltRenderPlayHistory();
   }else document.body.classList.remove('lthistmode');
+}
+/* samakan tinggi footer nav Riwayat dengan footer Live Trade supaya tidak
+   ada loncatan ukuran saat tap Trade⇄Riwayat (foto beda DPI: 1080 vs 1220).
+   object-fit:cover memangkas padding vertikal tipis, ikon nav tetap utuh. */
+function ltCalibHistFooter(){
+  const liveH=document.getElementById('ltBotImg').offsetHeight;
+  const hbot=document.getElementById('ltHistBot');
+  if(liveH&&hbot){hbot.style.height=liveH+'px';hbot.style.objectFit='cover';hbot.style.objectPosition='center';}
 }
 
 /* ── meter "AI" (opsional) — 4 fase: SCANNING / ENTRY / RUNNING / CLOSE ── */
@@ -1828,6 +1845,7 @@ async function ltPlayLoop(){
       await ltSleep(600);
       if(!_ltPlayActive) return;
       realized+=finalFloating;
+      ltSessPush(cy,finalRows); /* posisi baru saja close → masuk riwayat sesi */
       ltAiClosePhase(finalFloating);
       ltRenderPositionRows([]);
       ltRenderTopValues(0,realized,0);
@@ -1838,6 +1856,7 @@ async function ltPlayLoop(){
 function ltEnterPlay(){
   _ltPlayActive=true;
   _ltHistMode=false;
+  _ltSessHist=[]; /* riwayat sesi dimulai kosong — belum ada posisi close */
   document.body.classList.remove('lthistmode'); /* selalu mulai dari kanvas Live Trade */
   history.pushState({mt5LtPlay:true},'','');
   document.body.classList.add('ltplaymode');
