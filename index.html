@@ -186,12 +186,27 @@ body.previewmode #ctrlbar,body.previewmode #projectbar,body.previewmode .hint{di
 
 /* watermark permanen saat Play — TIDAK boleh dihilangkan/disembunyikan */
 .lt-watermark{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) rotate(-16deg);display:none;text-align:center;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.4);border:2px solid rgba(255,255,255,.4);border-radius:10px;padding:12px 22px;font-size:16px;line-height:1.4;pointer-events:none;z-index:90;text-shadow:0 2px 8px rgba(0,0,0,.7);}
-.lt-watermark span{display:block;font-size:10px;letter-spacing:1px;font-weight:600;margin-top:3px;}
+.lt-watermark .lt-wm-main{display:block;}
+/* baris pengungkapan: teksnya terkunci di kode (bukan dari input) dan SELALU
+   ikut tampil saat Play — hanya baris utama di atasnya yang bisa diedit */
+.lt-watermark .lt-wm-sub{display:block;font-size:10px;letter-spacing:1px;font-weight:600;margin-top:3px;}
 body.ltplaymode .lt-watermark{display:block;}
 /* watermark WAJIB tetap jelas terbaca di tema terang juga (putih lawan
    putih nyaris tak kelihatan) — balik warnanya jadi gelap translusen */
 #ltPhotowrap.theme-white .lt-watermark{color:rgba(20,20,20,.38);border-color:rgba(20,20,20,.38);text-shadow:0 2px 8px rgba(255,255,255,.85);}
-body.ltplaymode #ltCtrlbar,body.ltplaymode .hint,body.ltplaymode #ltCycleWrap,body.ltplaymode #appSwitch{display:none!important;}
+
+/* meter "AI confidence" (opsional) — overlay tipis di atas nav bawah saat Play */
+#ltAiMeter{position:absolute;left:0;width:100%;display:none;z-index:80;padding:8px 14px 10px;background:rgba(8,10,14,.82);pointer-events:none;}
+body.ltplaymode #ltAiMeter.on{display:block;}
+.ltai-row{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px;}
+.ltai-txt{font-size:11px;color:#8ea0b8;letter-spacing:.4px;font-weight:600;min-height:13px;}
+.ltai-pct{font-size:12px;font-weight:700;color:#8ea0b8;}
+.ltai-barwrap{height:4px;border-radius:2px;background:rgba(255,255,255,.12);overflow:hidden;}
+.ltai-bar{height:100%;width:0%;background:linear-gradient(90deg,#3d7bff,#6de8a0);transition:width .15s ease;}
+#ltPhotowrap.theme-white #ltAiMeter{background:rgba(255,255,255,.88);}
+#ltPhotowrap.theme-white .ltai-barwrap{background:rgba(0,0,0,.12);}
+
+body.ltplaymode #ltCtrlbar,body.ltplaymode .hint,body.ltplaymode #ltCycleWrap,body.ltplaymode #ltHistWrap,body.ltplaymode #appSwitch{display:none!important;}
 /* mode Play: perbesar "layar hp" mockup sampai memenuhi layar penuh —
    mentok atas-bawah ATAU kiri-kanan (mana yang lebih dulu kena), bukan
    tetap kecil 360px seperti mode edit, supaya hasil rekaman layar terlihat
@@ -204,7 +219,8 @@ body.ltplaymode #ltCtrlbar,body.ltplaymode .hint,body.ltplaymode #ltCycleWrap,bo
 body.ltplaymode{justify-content:center;overflow:hidden;background:#000;align-self:stretch;}
 body.ltplaymode #ltPhotowrap{width:min(100vw,calc(100vh * 1080 / 2229));max-width:none;}
 
-#ltCycleWrap{width:360px;background:#161618;border-radius:10px;margin:14px 0 20px;overflow:hidden;}
+#ltCycleWrap,#ltHistWrap{width:360px;background:#161618;border-radius:10px;margin:14px 0 20px;overflow:hidden;}
+#ltHistWrap{margin-top:0;}
 .ltcyc-head{display:flex;align-items:center;justify-content:space-between;padding:12px 12px 8px;color:#e8e8ea;font-size:12.5px;font-weight:700;letter-spacing:.3px;text-transform:uppercase;}
 .ltcyc-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 12px;border-top:1px solid #26262a;color:#ddd;font-size:12.5px;}
 .ltcyc-info{flex:1;min-width:0;}
@@ -322,7 +338,7 @@ body.ltplaymode #ltPhotowrap{width:min(100vw,calc(100vh * 1080 / 2229));max-widt
   <button class="ctrl gs" onclick="ltOpenGsPanel()">⚙ Gaya Font</button>
   <button class="ctrl rs" onclick="ltResetAll()" title="Reset ke contoh awal">↻ Reset</button>
 </div>
-<div class="hint">Header/navigasi = <b>foto asli</b> (dipotong dari screenshot Trade Anda). Kelola siklus buka/tutup posisi di bawah kanvas. Tombol <b>▶ Play</b> memutar animasi tick berjalan lalu menutup sesuai skrip — mode Play akan menampilkan <b>watermark "VIDEO EDITAN"</b> permanen dan menyembunyikan semua tombol; tekan tombol <b>back</b> HP untuk kembali ke mode edit.</div>
+<div class="hint">Header/navigasi = <b>foto asli</b> (dipotong dari screenshot Trade Anda). Kelola siklus buka/tutup posisi di bawah kanvas. Tombol <b>▶ Play</b> memutar animasi tick berjalan lalu menutup sesuai skrip — mode Play menampilkan <b>watermark permanen</b> (teks utama bisa diedit di bawah; baris kecil <b>"simulasi — bukan akun asli"</b> selalu ikut tampil) dan menyembunyikan semua tombol; tekan tombol <b>back</b> HP untuk kembali ke mode edit. Setiap siklus otomatis menghasilkan <b>Riwayat Live Trade</b> (panel paling bawah) yang bisa dikirim ke app Riwayat.</div>
 
 <div id="ltPhotowrap">
   <img id="ltTopImg" src="assets/livetrade-chrome.jpg" alt="Header Trade MT5" onload="window.ltPositionDynSpans&&ltPositionDynSpans()">
@@ -333,7 +349,8 @@ body.ltplaymode #ltPhotowrap{width:min(100vw,calc(100vh * 1080 / 2229));max-widt
   <img id="ltPosisiImg" src="assets/livetrade-posisi.jpg" alt="Posisi">
   <div id="ltPosList"></div>
   <img id="ltBotImg" src="assets/livetrade-bottom.jpg" alt="Navigasi MT5">
-  <div class="lt-watermark" id="ltWatermark">BOT BY IPI DIGITAL<br><span>NOT FOR SALE</span></div>
+  <div id="ltAiMeter"><div class="ltai-row"><span class="ltai-txt" id="ltAiText"></span><span class="ltai-pct" id="ltAiPct"></span></div><div class="ltai-barwrap"><div class="ltai-bar" id="ltAiBar"></div></div></div>
+  <div class="lt-watermark" id="ltWatermark"><span class="lt-wm-main" id="ltWmMain">INI SIMULASI</span><span class="lt-wm-sub">simulasi — bukan akun asli</span></div>
 </div>
 
 <div id="ltCycleWrap">
@@ -342,8 +359,25 @@ body.ltplaymode #ltPhotowrap{width:min(100vw,calc(100vh * 1080 / 2229));max-widt
     <span class="fieldlbl" style="margin:0;">Deposito awal</span>
   </div>
   <div style="padding:0 12px 10px;"><input id="ltDeposit" class="fld" type="text" inputmode="decimal" oninput="ltDepositChanged()"></div>
+  <div style="padding:0 12px 10px;">
+    <span class="fieldlbl" style="color:#8e8e93;">Teks watermark saat Play — baris kecil "simulasi — bukan akun asli" selalu ikut tampil (tidak bisa dihapus)</span>
+    <input id="ltWmInput" class="fld" type="text" maxlength="40" oninput="ltWmChanged()">
+    <label style="display:flex;align-items:center;gap:6px;font-size:11.5px;color:#bbb;font-weight:600;cursor:pointer;margin-top:9px;">
+      <input type="checkbox" id="ltAiToggle" onchange="ltAiToggleChanged()"> Meter "AI confidence" saat Play (scanning dinamis → entry di ±80%)
+    </label>
+  </div>
   <div id="ltCycleList"></div>
   <button class="addbtn buy" style="margin:11px 12px 12px;width:calc(100% - 24px);" onclick="ltOpenCycleForm()">+ Tambah Siklus</button>
+</div>
+
+<!-- RIWAYAT TURUNAN LIVE TRADE (2.b) — tergenerate otomatis dari siklus -->
+<div id="ltHistWrap">
+  <div class="ltcyc-head">
+    <span>Riwayat Live Trade (otomatis)</span>
+    <button class="ctrl" style="padding:5px 10px;font-size:11px;" onclick="ltGenHistory(true)">🎲 Acak ulang</button>
+  </div>
+  <div id="ltHistList"></div>
+  <button class="addbtn buy" style="margin:11px 12px 12px;width:calc(100% - 24px);" onclick="ltHistToRiwayat()">📜 Kirim ke app Riwayat (project baru)</button>
 </div>
 
 <!-- FORM SIKLUS -->
@@ -367,6 +401,11 @@ body.ltplaymode #ltPhotowrap{width:min(100vw,calc(100vh * 1080 / 2229));max-widt
     <div><span class="fieldlbl">Max Floating (opsional)</span><input id="ltfMaxFloat" class="fld" type="text" inputmode="decimal" placeholder="mis. 3 998.000"></div>
   </div>
   <div style="font-size:10.5px;color:#8e8e93;margin-top:4px;line-height:1.4;">Max Floating = titik harga terjauh yang sempat disentuh (floating rugi dulu) sebelum akhirnya ditutup di Harga Close — bikin animasinya realistis. Kosongkan kalau tidak perlu.</div>
+  <div class="grid2" style="margin-top:8px;">
+    <div><span class="fieldlbl">Waktu open (202X.MM.DD HH:MM:SS) — ketik angka saja</span><input id="ltfTime" class="fld" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="off" oninput="ltfTimeInput(this)"></div>
+    <div><span class="fieldlbl">Label close di riwayat</span><select id="ltfLabel" class="fld"><option value="auto">otomatis (sl rugi / tp untung)</option><option value="sl">[sl]</option><option value="tp">[tp]</option><option value="">tanpa label</option></select></div>
+  </div>
+  <div style="font-size:10.5px;color:#8e8e93;margin-top:4px;line-height:1.4;">Waktu jadi acuan riwayat otomatis: open &amp; close tiap layer digeser acak beberapa detik. Tahun dikunci 202X (hanya digit terakhir yang bisa diganti), bulan maks 12, tanggal maks 31.</div>
   <div class="previewline" id="ltfPreview">Hasil per layer: <b>0.00</b></div>
   <div class="epbrow"><button class="epok" onclick="ltfSubmit()">Simpan</button><button class="epcancel" onclick="ltCloseCycleForm()">Batal</button></div>
 </div>
@@ -384,7 +423,7 @@ body.ltplaymode #ltPhotowrap{width:min(100vw,calc(100vh * 1080 / 2229));max-widt
 <div class="ov-backdrop" id="ltplayBackdrop" onclick="ltClosePlayChoice()"></div>
 <div class="ov-panel" id="ltplayChoicePanel" style="max-width:320px;">
   <div class="eplbl">Mulai Play?</div>
-  <div style="font-size:12.5px;color:#555;line-height:1.6;margin-bottom:12px;">Layar akan masuk mode penuh tanpa tombol (untuk screen record), dengan watermark <b>"VIDEO EDITAN"</b> permanen di tengah. Tekan tombol <b>back</b> HP untuk keluar kapan saja.</div>
+  <div style="font-size:12.5px;color:#555;line-height:1.6;margin-bottom:12px;">Layar akan masuk mode penuh tanpa tombol (untuk screen record), dengan watermark permanen di tengah — teks utama sesuai pengaturan Anda, plus baris kecil <b>"simulasi — bukan akun asli"</b> yang selalu ikut tampil. Tekan tombol <b>back</b> HP untuk keluar kapan saja.</div>
   <button class="epok" style="width:100%;margin-bottom:9px;padding:12px 4px;" onclick="ltClosePlayChoice();ltEnterPlay();">▶ Mulai Play</button>
   <button class="epcancel" style="width:100%;" onclick="ltClosePlayChoice()">Batal</button>
 </div>
@@ -649,7 +688,8 @@ function renderTrades(){
     const pnlColor=pnl<0?GS.negColor:GS.posColor;
     const symSpan=spanTag(t.sym,GS.sym,false,`class="symtxt" onclick="openSymEdit(${i})"`);
     const dirSpan=spanTag((t.dir==='buy'?'buy':'sell')+' '+Number(t.lot).toFixed(2),Object.assign({},GS.dir,{color:dirColor}),false);
-    const priceSpan=spanTag(formatPriceNum(t.open,t.sym)+'  →  '+formatPriceNum(t.close,t.sym),GS.price,false);
+    /* mark = label penutupan [sl]/[tp] bawaan riwayat turunan Live Trade */
+    const priceSpan=spanTag(formatPriceNum(t.open,t.sym)+'  →  '+formatPriceNum(t.close,t.sym)+(t.mark?'  ['+t.mark+']':''),GS.price,false);
     const dateSpan=spanTag(t.time,GS.date,true);
     const pnlSpan=spanTag(formatMoney(pnl,2,true),Object.assign({},GS.pnl,{color:pnlColor}),true);
     return `<div class="trow"><div class="tbar ${bar}"></div><div class="tc"><div class="tleft"><div class="tsl">${symSpan}<span class="tcomma">,</span>${dirSpan}</div><div class="tprices">${priceSpan}</div></div><div class="tright"><div class="tdate">${dateSpan}</div><div class="tpnl">${pnlSpan}</div></div></div><div class="rowbtns"><button class="editbtn" onclick="openTradeForm('${t.dir}',${i})">✎</button><button class="copybtn" onclick="copyT(${i})">⧉</button><button class="delbtn" onclick="delT(${i})">✕</button></div></div>`;
@@ -754,6 +794,7 @@ function tfSubmit(){
     pnlOverride: manual ? (parseNum(document.getElementById('tfPnlValue').value)||0) : null,
   };
   if(tfEditIndex!==null){
+    trade.mark=cp().trades[tfEditIndex].mark||null; /* label [sl]/[tp] tidak hilang saat trade diedit */
     cp().trades[tfEditIndex]=trade;
   }else{
     cp().trades.unshift(trade); /* transaksi terbaru selalu di atas */
@@ -953,18 +994,23 @@ function switchApp2(which){
 
 /* ══════════════════════════════════════════════════════════════
    LIVE TRADE — simulasi "berjalan" (siklus buka→floating→tutup)
-   PENTING: mode Play SELALU menampilkan watermark "VIDEO EDITAN"
-   permanen (tidak bisa dihilangkan) dan TIDAK ada tombol on-screen
-   selain tombol back HP — ini batasan yang disengaja, bukan bug.
+   PENTING: mode Play SELALU menampilkan watermark permanen. Baris
+   utamanya boleh diedit user, tapi baris pengungkapan "simulasi —
+   bukan akun asli" terkunci di kode dan tidak bisa dihilangkan.
+   TIDAK ada tombol on-screen selain tombol back HP — ini batasan
+   yang disengaja, bukan bug.
 ═══════════════════════════════════════════════════════════════ */
 const LT_KEY='mt5_livetrade_v1';
 function ltDefault(){
   return {
     deposit:150.22,
     sym:'XAUUSDc',
+    wmText:'INI SIMULASI',
+    aiMeter:true,
+    history:[],
     cycles:[
-     {dir:'sell',layers:1,lot:0.01,open:4055.374,close:4042.916,duration:6},
-     {dir:'buy', layers:1,lot:0.01,open:4055.916,close:4042.676,duration:6},
+     {dir:'sell',layers:1,lot:0.01,open:4055.374,close:4042.916,duration:6,time:'2026.06.30 09:14:07',closeLabel:'auto'},
+     {dir:'buy', layers:1,lot:0.01,open:4055.916,close:4042.676,duration:6,time:'2026.06.30 09:22:41',closeLabel:'auto'},
     ],
   };
 }
@@ -988,12 +1034,60 @@ function ltLoad(){
     const raw=JSON.parse(localStorage.getItem(LT_KEY)||'null');
     if(raw&&raw.lt){lt=Object.assign(ltDefault(),raw.lt);ltGS=Object.assign(ltDefaultGS(),raw.ltGS||{});}
   }catch(e){}
+  /* data lama (sebelum fitur riwayat/watermark editable) belum punya field baru */
+  if(!lt.wmText) lt.wmText='INI SIMULASI';
+  if(lt.aiMeter==null) lt.aiMeter=true;
+  if(!Array.isArray(lt.history)) lt.history=[];
+  (lt.cycles||[]).forEach((cy,i)=>{
+    if(!cy.time) cy.time=ltFormatStamp(new Date(2026,5,30,9,14+i*9,7));
+    if(cy.closeLabel==null) cy.closeLabel='auto';
+  });
   _ltLoaded=true;
 }
 function ltResetAll(){
   if(!confirm('Reset semua siklus Live Trade ke contoh awal?'))return;
   lt=ltDefault();ltGS=ltDefaultGS();
+  ltGenHistory(false);
   ltRenderAll();ltSave();
+}
+
+/* ── util waktu siklus (YYYY.MM.DD HH:MM:SS) ── */
+function pad2(n){return String(n).padStart(2,'0');}
+function ltFormatStamp(d){return `${d.getFullYear()}.${pad2(d.getMonth()+1)}.${pad2(d.getDate())} ${pad2(d.getHours())}:${pad2(d.getMinutes())}:${pad2(d.getSeconds())}`;}
+function ltParseStamp(s){
+  const m=String(s||'').match(/^(\d{4})\.(\d{2})\.(\d{2}) (\d{2}):(\d{2}):(\d{2})$/);
+  if(!m) return null;
+  return new Date(+m[1],+m[2]-1,+m[3],+m[4],+m[5],+m[6]);
+}
+/* tahun dikunci 202X (hanya digit terakhir yang bebas, default 6) + clamp
+   bulan 1-12, tanggal 1-31, jam 0-23, menit/detik 0-59 */
+function ltClampStamp(s){
+  let d=String(s||'').replace(/\D/g,'');
+  const def='20260630120000';
+  if(d.length<14) d+=def.slice(d.length);
+  const clamp=(v,lo,hi)=>Math.min(hi,Math.max(lo,v));
+  const Y='202'+(/[0-9]/.test(d[3])?d[3]:'6');
+  const M=clamp(+d.slice(4,6)||1,1,12), D=clamp(+d.slice(6,8)||1,1,31);
+  const h=clamp(+d.slice(8,10)||0,0,23), mi=clamp(+d.slice(10,12)||0,0,59), sec=clamp(+d.slice(12,14)||0,0,59);
+  return `${Y}.${pad2(M)}.${pad2(D)} ${pad2(h)}:${pad2(mi)}:${pad2(sec)}`;
+}
+/* input waktu siklus: angka saja, prefiks tahun dipaksa "202" saat mengetik */
+function ltfTimeInput(el){
+  let d=el.value.replace(/\D/g,'');
+  if(d.length>=1)d='2'+d.slice(1);
+  if(d.length>=2)d=d.slice(0,1)+'0'+d.slice(2);
+  if(d.length>=3)d=d.slice(0,2)+'2'+d.slice(3);
+  el.value=formatTimeDigits(d);
+}
+/* siklus baru: default lanjut dari waktu close siklus terakhir + 1-5 menit */
+function ltNextDefaultTime(){
+  const last=lt.cycles[lt.cycles.length-1];
+  if(last&&last.time){
+    const d=ltParseStamp(last.time);
+    if(d){d.setSeconds(d.getSeconds()+(last.duration||6)+60+Math.floor(Math.random()*240));return ltFormatStamp(d);}
+  }
+  const n=new Date();n.setFullYear(2026);
+  return ltFormatStamp(n);
 }
 
 const LT_STYLE_FIELDS=[
@@ -1105,13 +1199,25 @@ function ltPositionDynSpans(){
     el.style.alignItems='center';
     el.style.justifyContent=b.align==='right'?'flex-end':'flex-start';
   });
+  /* meter AI menempel tepat di atas foto nav bawah */
+  const meter=document.getElementById('ltAiMeter');
+  if(meter) meter.style.bottom=(document.getElementById('ltBotImg').offsetHeight||0)+'px';
 }
 function ltRenderAll(){
   document.getElementById('ltDeposit').value=lt.deposit;
+  document.getElementById('ltWmInput').value=lt.wmText||'INI SIMULASI';
+  document.getElementById('ltAiToggle').checked=lt.aiMeter!==false;
+  ltRenderWatermark();
   ltApplyTheme(ltGS.theme||'dark');
   ltRenderCycleList();
   ltRenderCanvasStatic();
+  ltRenderHistList();
 }
+
+/* ── watermark: baris utama bebas diedit, baris pengungkapan terkunci di HTML ── */
+function ltRenderWatermark(){document.getElementById('ltWmMain').textContent=(lt.wmText||'').trim()||'INI SIMULASI';}
+function ltWmChanged(){lt.wmText=document.getElementById('ltWmInput').value.slice(0,40);ltRenderWatermark();ltSave();}
+function ltAiToggleChanged(){lt.aiMeter=document.getElementById('ltAiToggle').checked;ltSave();}
 
 /* ── daftar siklus (panel edit terpisah dari kanvas) ── */
 function ltRenderCycleList(){
@@ -1119,12 +1225,19 @@ function ltRenderCycleList(){
   c.innerHTML=lt.cycles.map((cy,i)=>{
     const pnl=ltCalcPnl(cy.dir,cy.lot,cy.open,cy.close);
     const totalPnl=pnl*cy.layers;
-    return `<div class="ltcyc-row"><div class="ltcyc-info">Siklus ${i+1}: <b>${cy.dir.toUpperCase()}</b> ×${cy.layers} layer @ ${Number(cy.lot).toFixed(2)} lot · ${cy.duration}d · hasil <b>${escapeHtml(formatMoney(totalPnl,2,true))}</b></div><div class="ltcyc-btns"><button onclick="ltOpenCycleForm(${i})">✎</button><button onclick="ltDuplicateCycle(${i})">⧉</button><button onclick="ltDeleteCycle(${i})">✕</button></div></div>`;
+    return `<div class="ltcyc-row"><div class="ltcyc-info">Siklus ${i+1}: <b>${cy.dir.toUpperCase()}</b> ×${cy.layers} layer @ ${Number(cy.lot).toFixed(2)} lot · ${cy.duration}d · hasil <b>${escapeHtml(formatMoney(totalPnl,2,true))}</b><br><span style="color:#8e8e93;font-size:11px;">${escapeHtml(cy.time||'')}${cy.closeLabel&&cy.closeLabel!=='auto'?' · ['+escapeHtml(cy.closeLabel)+']':''}</span></div><div class="ltcyc-btns"><button onclick="ltOpenCycleForm(${i})">✎</button><button onclick="ltDuplicateCycle(${i})">⧉</button><button onclick="ltDeleteCycle(${i})">✕</button></div></div>`;
   }).join('');
 }
 function ltDepositChanged(){lt.deposit=parseNum(document.getElementById('ltDeposit').value)||0;ltRenderCanvasStatic();ltRenderCycleList();ltSave();}
-function ltDeleteCycle(i){lt.cycles.splice(i,1);ltRenderAll();ltSave();}
-function ltDuplicateCycle(i){lt.cycles.splice(i+1,0,JSON.parse(JSON.stringify(lt.cycles[i])));ltRenderAll();ltSave();}
+function ltDeleteCycle(i){lt.cycles.splice(i,1);ltGenHistory(false);ltRenderAll();ltSave();}
+function ltDuplicateCycle(i){
+  const copy=JSON.parse(JSON.stringify(lt.cycles[i]));
+  /* geser waktu salinan supaya tidak identik dengan aslinya */
+  const d=ltParseStamp(copy.time);
+  if(d){d.setSeconds(d.getSeconds()+(copy.duration||6)+90+Math.floor(Math.random()*180));copy.time=ltFormatStamp(d);}
+  lt.cycles.splice(i+1,0,copy);
+  ltGenHistory(false);ltRenderAll();ltSave();
+}
 
 /* ── form tambah/edit siklus ── */
 let ltfEditIndex=null,ltfDir='sell';
@@ -1145,6 +1258,8 @@ function ltOpenCycleForm(editIndex){
     document.getElementById('ltfClose').value=cy.close;
     document.getElementById('ltfDuration').value=cy.duration;
     document.getElementById('ltfMaxFloat').value=cy.maxFloat!=null?cy.maxFloat:'';
+    document.getElementById('ltfTime').value=cy.time||ltNextDefaultTime();
+    document.getElementById('ltfLabel').value=cy.closeLabel!=null?cy.closeLabel:'auto';
   }else{
     ltfSetDir('sell');
     document.getElementById('ltfLayers').value=1;
@@ -1153,6 +1268,8 @@ function ltOpenCycleForm(editIndex){
     document.getElementById('ltfClose').value='';
     document.getElementById('ltfDuration').value=6;
     document.getElementById('ltfMaxFloat').value='';
+    document.getElementById('ltfTime').value=ltNextDefaultTime();
+    document.getElementById('ltfLabel').value='auto';
   }
   ltfUpdatePreview();
   document.getElementById('ltfBackdrop').style.display='block';
@@ -1177,10 +1294,76 @@ function ltfSubmit(){
     close:parseNum(document.getElementById('ltfClose').value)||0,
     duration:Math.max(1,parseInt(document.getElementById('ltfDuration').value)||6),
     maxFloat: mfRaw===''?null:parseNum(mfRaw),
+    time:ltClampStamp(document.getElementById('ltfTime').value),
+    closeLabel:document.getElementById('ltfLabel').value,
   };
   if(ltfEditIndex!==null) lt.cycles[ltfEditIndex]=cycle;
   else lt.cycles.push(cycle);
+  ltGenHistory(false);
   ltRenderAll();ltCloseCycleForm();ltSave();
+}
+
+/* ══════════════════════════════════════════════════════════════
+   RIWAYAT TURUNAN LIVE TRADE (2.b)
+   Tergenerate otomatis dari siklus: desimal .xxx open/close diacak
+   per layer (bagian bulat tetap dari input, biar kompak), waktu open/
+   close antar layer digeser acak n.n detik, PnL dihitung per layer,
+   label [sl]/[tp] otomatis dari rugi/untung (bisa dioverride di form).
+═══════════════════════════════════════════════════════════════ */
+/* acak HANYA bagian desimal, tetap dekat nilai input (kompak antar layer) */
+function ltJitterDec(p,dec){
+  const base=Math.floor(p), frac=p-base;
+  let f=frac+(Math.random()*2-1)*0.25;
+  f=Math.min(0.999,Math.max(0.001,f));
+  return +(base+f).toFixed(dec);
+}
+function ltGenHistory(standalone){
+  const entries=[];
+  const dec=priceDecimals(lt.sym);
+  lt.cycles.forEach(cy=>{
+    const base=ltParseStamp(cy.time)||new Date(2026,5,30,12,0,0);
+    const closeBase=new Date(base.getTime()+(cy.duration||6)*1000);
+    let openOfs=0, closeOfs=0;
+    for(let i=0;i<cy.layers;i++){
+      if(i>0){
+        openOfs+=300+Math.random()*1200;   /* layer masuk beruntun 0.3-1.5 dtk */
+        closeOfs+=600+Math.random()*2800;  /* jarak close antar layer 0.6-3.4 dtk */
+      }
+      const open=ltJitterDec(cy.open,dec), close=ltJitterDec(cy.close,dec);
+      const pnl=calcPnl(cy.dir,cy.lot,open,close);
+      const lbl=(cy.closeLabel==null||cy.closeLabel==='auto')?(pnl<0?'sl':'tp'):cy.closeLabel;
+      entries.push({sym:lt.sym||'XAUUSDc',dir:cy.dir,lot:cy.lot,open,close,
+        timeOpen:ltFormatStamp(new Date(base.getTime()+openOfs)),
+        timeClose:ltFormatStamp(new Date(closeBase.getTime()+closeOfs)),
+        pnl,mark:lbl||null});
+    }
+  });
+  entries.sort((a,b)=>a.timeClose<b.timeClose?1:-1); /* terbaru di atas, seperti MT5 */
+  lt.history=entries;
+  if(standalone){ltRenderHistList();ltSave();}
+}
+function ltRenderHistList(){
+  const c=document.getElementById('ltHistList');
+  if(!lt.history.length){c.innerHTML='<div class="ltcyc-row" style="color:#8e8e93;">Belum ada — tambah siklus dulu.</div>';return;}
+  c.innerHTML=lt.history.map(h=>{
+    const pnlColor=h.pnl<0?'#ff6b60':'#6de8a0';
+    return `<div class="ltcyc-row"><div class="ltcyc-info"><b>${h.dir}</b> ${Number(h.lot).toFixed(2)} ${escapeHtml(h.sym)} · ${escapeHtml(formatPriceNum(h.open,h.sym))} → ${escapeHtml(formatPriceNum(h.close,h.sym))}${h.mark?' <b>['+escapeHtml(h.mark)+']</b>':''}<br><span style="color:#8e8e93;font-size:11px;">${escapeHtml(h.timeOpen)} → ${escapeHtml(h.timeClose)}</span></div><b style="color:${pnlColor};flex-shrink:0;">${escapeHtml(formatMoney(h.pnl,2,true))}</b></div>`;
+  }).join('');
+}
+/* kirim riwayat turunan ke app Riwayat sebagai project baru — semua fitur
+   Riwayat (download HD, preview, gaya global) langsung berlaku */
+function ltHistToRiwayat(){
+  if(!lt.history.length){alert('Belum ada riwayat — tambah siklus dulu.');return;}
+  const keuntungan=lt.history.reduce((s,h)=>s+h.pnl,0);
+  const id='p'+Date.now();
+  store.projects[id]={
+    name:'Live Trade '+store.nextNum,
+    summaryData:{keuntungan,deposito:lt.deposit,swap:0,komisi:0,saldo:lt.deposit+keuntungan},
+    trades:lt.history.map(h=>({sym:h.sym,dir:h.dir,lot:h.lot,open:h.open,close:h.close,time:h.timeClose,mark:h.mark,pnlOverride:null})),
+  };
+  store.nextNum++;store.order.push(id);store.activeId=id;
+  renderProjectBar();renderSummary();renderTrades();saveProject();
+  switchApp2('riwayat');
 }
 
 /* ── panel gaya font live trade ── */
@@ -1347,12 +1530,65 @@ function ltBuildPricePath(cy,steps){
 }
 
 let _ltPlayActive=false;
+
+/* ── meter "AI confidence" (opsional) — scanning dinamis lalu entry ±80% ── */
+let _ltAiToken=0;
+function ltAiSetConf(v){
+  document.getElementById('ltAiBar').style.width=Math.max(0,Math.min(100,v))+'%';
+  const pct=document.getElementById('ltAiPct');
+  pct.textContent=v.toFixed(0)+'%';
+  pct.style.color=v>=75?'#6de8a0':'#8ea0b8';
+}
+/* efek typewriter; token membatalkan ketikan lama kalau teks baru masuk */
+async function ltTypewrite(el,text){
+  const tok=++_ltAiToken;
+  el.textContent='';
+  for(const ch of text){
+    if(tok!==_ltAiToken||!_ltPlayActive)return;
+    el.textContent+=ch;
+    await ltSleep(16+Math.random()*24);
+  }
+}
+/* fase scanning sebelum entry: confidence naik-turun acak (30→40→20→70)
+   selama beberapa detik, lalu merambat ke target entry 78-88% */
+async function ltAiScanPhase(cy){
+  if(lt.aiMeter===false){await ltSleep(1800+Math.random()*1500);return;}
+  const txt=document.getElementById('ltAiText');
+  ltAiSetConf(0);
+  ltTypewrite(txt,'Scanning '+(lt.sym||'XAUUSDc')+' …');
+  const dur=2400+Math.random()*1800, t0=Date.now();
+  let conf=22+Math.random()*12;
+  while(Date.now()-t0<dur){
+    if(!_ltPlayActive)return;
+    conf+=(Math.random()*2-1)*16;
+    conf=Math.max(8,Math.min(72,conf));
+    ltAiSetConf(conf);
+    await ltSleep(140+Math.random()*180);
+  }
+  const target=78+Math.random()*10;
+  while(conf<target){
+    if(!_ltPlayActive)return;
+    conf=Math.min(target,conf+4+Math.random()*6);
+    ltAiSetConf(conf);
+    await ltSleep(110);
+  }
+  await ltTypewrite(txt,'Sinyal '+cy.dir.toUpperCase()+' '+(lt.sym||'XAUUSDc')+' · entry');
+  await ltSleep(350);
+}
+/* setelah semua layer masuk: teks statis + equity kecil selama posisi jalan */
+function ltAiEntered(cy,realized){
+  if(lt.aiMeter===false)return;
+  ltTypewrite(document.getElementById('ltAiText'),cy.dir.toUpperCase()+' aktif · EQ '+formatMoney(lt.deposit+realized,2,false));
+}
+
 async function ltPlayLoop(){
   let realized=0;
   while(_ltPlayActive){
     for(let ci=0; ci<lt.cycles.length; ci++){
       if(!_ltPlayActive) return;
       const cy=lt.cycles[ci];
+      await ltAiScanPhase(cy);
+      if(!_ltPlayActive) return;
       const STEPS=Math.max(10,Math.min(40,cy.duration*4));
       const path=ltBuildPricePath(cy,STEPS);
       const stepMs=Math.max(120,(cy.duration*1000)/path.length);
@@ -1377,6 +1613,7 @@ async function ltPlayLoop(){
         if(i<cy.layers-1) await ltSleep(150+Math.random()*250);
       }
       if(!_ltPlayActive) return;
+      ltAiEntered(cy,realized);
       const marginTotal=layers.reduce((s,L)=>s+ltCalcMargin(L.lot,L.open),0);
       const startStep=Math.min(cy.layers-1,path.length-1)+1;
       for(let s=startStep;s<path.length;s++){
@@ -1399,7 +1636,7 @@ async function ltPlayLoop(){
       realized+=finalFloating;
       ltRenderPositionRows([]);
       ltRenderTopValues(0,realized,0);
-      await ltSleep(2000+Math.random()*2000); /* jeda close->open berikutnya: 2-4 detik acak */
+      await ltSleep(1200+Math.random()*1300); /* jeda close->siklus berikutnya (fase scanning AI menambah jedanya sendiri) */
     }
   }
 }
@@ -1407,14 +1644,20 @@ function ltEnterPlay(){
   _ltPlayActive=true;
   history.pushState({mt5LtPlay:true},'','');
   document.body.classList.add('ltplaymode');
+  document.getElementById('ltAiMeter').classList.toggle('on',lt.aiMeter!==false);
+  setTimeout(ltPositionDynSpans,60); /* layout playmode baru terpasang, ukur ulang posisi span & meter */
+  ltRenderPositionRows([]); /* bersihkan preview statis — belum ada posisi sebelum entry pertama */
+  ltRenderTopValues(0,0,0);
   ltPlayLoop();
 }
 function ltExitPlay(){
   if(!_ltPlayActive)return;
   _ltPlayActive=false;
+  _ltAiToken++; /* batalkan typewriter yang masih jalan */
   ltClearTimers();
   document.body.classList.remove('ltplaymode');
   ltRenderCanvasStatic(); /* kembali ke preview statis di mode edit */
+  setTimeout(ltPositionDynSpans,60);
 }
 window.addEventListener('popstate',()=>{
   if(_ltPlayActive) ltExitPlay();
@@ -1423,6 +1666,7 @@ window.addEventListener('resize',()=>{if(document.getElementById('liveApp').clas
 
 function ltInit(){
   ltLoad();
+  if(!lt.history.length) ltGenHistory(false); /* data lama belum punya riwayat turunan */
   ltBuildGsBody();
   ltRenderAll();
 }
