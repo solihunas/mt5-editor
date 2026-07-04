@@ -184,27 +184,38 @@ body.previewmode #ctrlbar,body.previewmode #projectbar,body.previewmode .hint{di
 .themebtn{flex:1;padding:9px;border-radius:9px;border:1.5px solid #d8d8dc;background:#f7f7f9;color:#888;font-weight:700;cursor:pointer;font-size:12.5px;}
 .themebtn.on{background:#333;border-color:#333;color:#fff;}
 
-/* watermark permanen saat Play — TIDAK boleh dihilangkan/disembunyikan */
-.lt-watermark{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) rotate(-16deg);display:none;text-align:center;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.4);border:2px solid rgba(255,255,255,.4);border-radius:10px;padding:12px 22px;font-size:16px;line-height:1.4;pointer-events:none;z-index:90;text-shadow:0 2px 8px rgba(0,0,0,.7);}
+/* watermark permanen saat Play — TIDAK boleh dihilangkan/disembunyikan.
+   Bisa di-drag vertikal (antisipasi video dicuri lalu di-crop: taruh di atas
+   angka-angka penting), tapi SELALU dikunci tetap di dalam kanvas — tidak
+   bisa digeser keluar layar. Teks = gradasi neon biru→putih→merah yang
+   bergerak terus (background-clip:text + animasi posisi background). */
+.lt-watermark{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) rotate(-16deg);display:none;text-align:center;font-weight:800;letter-spacing:2px;text-transform:uppercase;
+  background-image:linear-gradient(100deg,#3d7bff 0%,#bcd6ff 18%,#ffffff 38%,#ffc2bd 58%,#ff3b30 78%,#3d7bff 100%);
+  background-size:300% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;
+  animation:wmneon 3.2s linear infinite;
+  border:2px solid rgba(150,190,255,.55);border-radius:10px;padding:12px 22px;font-size:16px;line-height:1.4;
+  box-shadow:0 0 16px rgba(90,140,255,.35),inset 0 0 10px rgba(90,140,255,.15);
+  filter:drop-shadow(0 1px 6px rgba(0,0,0,.55));
+  pointer-events:auto;touch-action:none;cursor:grab;user-select:none;z-index:90;}
+@keyframes wmneon{from{background-position:0% 50%;}to{background-position:300% 50%;}}
 .lt-watermark .lt-wm-main{display:block;}
 /* baris pengungkapan: teksnya terkunci di kode (bukan dari input) dan SELALU
    ikut tampil saat Play — hanya baris utama di atasnya yang bisa diedit */
 .lt-watermark .lt-wm-sub{display:block;font-size:10px;letter-spacing:1px;font-weight:600;margin-top:3px;}
 body.ltplaymode .lt-watermark{display:block;}
-/* watermark WAJIB tetap jelas terbaca di tema terang juga (putih lawan
-   putih nyaris tak kelihatan) — balik warnanya jadi gelap translusen */
-#ltPhotowrap.theme-white .lt-watermark{color:rgba(20,20,20,.38);border-color:rgba(20,20,20,.38);text-shadow:0 2px 8px rgba(255,255,255,.85);}
+/* watermark WAJIB tetap jelas terbaca di tema terang juga — bagian putih
+   gradasi diganti abu kebiruan biar tidak tenggelam di latar putih */
+#ltPhotowrap.theme-white .lt-watermark{background-image:linear-gradient(100deg,#1856ff 0%,#7fa4d8 22%,#96a4b4 40%,#f09a94 60%,#e0322e 78%,#1856ff 100%);border-color:rgba(40,80,200,.4);box-shadow:0 0 14px rgba(40,80,200,.2),inset 0 0 10px rgba(40,80,200,.1);filter:drop-shadow(0 1px 4px rgba(255,255,255,.8));}
 
-/* meter "AI confidence" (opsional) — overlay tipis di atas nav bawah saat Play */
-#ltAiMeter{position:absolute;left:0;width:100%;display:none;z-index:80;padding:8px 14px 10px;background:rgba(8,10,14,.82);pointer-events:none;}
+/* meter "AI confidence" (opsional) — kotak hitam melayang di tengah saat
+   Play, bisa di-drag vertikal (posisi tersimpan), dikunci di dalam kanvas */
+#ltAiMeter{position:absolute;left:50%;top:70%;transform:translate(-50%,-50%);width:86%;display:none;z-index:80;padding:9px 14px 11px;background:rgba(0,0,0,.92);border:1px solid rgba(255,255,255,.08);border-radius:12px;pointer-events:auto;touch-action:none;cursor:grab;user-select:none;}
 body.ltplaymode #ltAiMeter.on{display:block;}
 .ltai-row{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px;}
 .ltai-txt{font-size:11px;color:#8ea0b8;letter-spacing:.4px;font-weight:600;min-height:13px;}
 .ltai-pct{font-size:12px;font-weight:700;color:#8ea0b8;}
 .ltai-barwrap{height:4px;border-radius:2px;background:rgba(255,255,255,.12);overflow:hidden;}
 .ltai-bar{height:100%;width:0%;background:linear-gradient(90deg,#3d7bff,#6de8a0);transition:width .15s ease;}
-#ltPhotowrap.theme-white #ltAiMeter{background:rgba(255,255,255,.88);}
-#ltPhotowrap.theme-white .ltai-barwrap{background:rgba(0,0,0,.12);}
 
 body.ltplaymode #ltCtrlbar,body.ltplaymode .hint,body.ltplaymode #ltCycleWrap,body.ltplaymode #ltHistWrap,body.ltplaymode #appSwitch{display:none!important;}
 /* mode Play: perbesar "layar hp" mockup sampai memenuhi layar penuh —
@@ -423,7 +434,7 @@ body.ltplaymode #ltPhotowrap{width:min(100vw,calc(100vh * 1080 / 2229));max-widt
 <div class="ov-backdrop" id="ltplayBackdrop" onclick="ltClosePlayChoice()"></div>
 <div class="ov-panel" id="ltplayChoicePanel" style="max-width:320px;">
   <div class="eplbl">Mulai Play?</div>
-  <div style="font-size:12.5px;color:#555;line-height:1.6;margin-bottom:12px;">Layar akan masuk mode penuh tanpa tombol (untuk screen record), dengan watermark permanen di tengah — teks utama sesuai pengaturan Anda, plus baris kecil <b>"simulasi — bukan akun asli"</b> yang selalu ikut tampil. Tekan tombol <b>back</b> HP untuk keluar kapan saja.</div>
+  <div style="font-size:12.5px;color:#555;line-height:1.6;margin-bottom:12px;">Layar akan masuk mode penuh tanpa tombol (untuk screen record), dengan watermark permanen — teks utama sesuai pengaturan Anda, plus baris kecil <b>"simulasi — bukan akun asli"</b> yang selalu ikut tampil. Watermark &amp; meter AI bisa <b>di-drag naik/turun</b> (posisi tersimpan; watermark tidak bisa digeser keluar layar — taruh di atas angka penting biar video tidak bisa dicuri lalu di-crop). Tekan tombol <b>back</b> HP untuk keluar kapan saja.</div>
   <button class="epok" style="width:100%;margin-bottom:9px;padding:12px 4px;" onclick="ltClosePlayChoice();ltEnterPlay();">▶ Mulai Play</button>
   <button class="epcancel" style="width:100%;" onclick="ltClosePlayChoice()">Batal</button>
 </div>
@@ -1006,7 +1017,9 @@ function ltDefault(){
     deposit:150.22,
     sym:'XAUUSDc',
     wmText:'INI SIMULASI',
+    wmTop:50,   /* posisi vertikal watermark (% tinggi kanvas, hasil drag) */
     aiMeter:true,
+    aiTop:70,   /* posisi vertikal meter AI (% tinggi kanvas, hasil drag) */
     history:[],
     cycles:[
      {dir:'sell',layers:1,lot:0.01,open:4055.374,close:4042.916,duration:6,time:'2026.06.30 09:14:07',closeLabel:'auto'},
@@ -1036,7 +1049,9 @@ function ltLoad(){
   }catch(e){}
   /* data lama (sebelum fitur riwayat/watermark editable) belum punya field baru */
   if(!lt.wmText) lt.wmText='INI SIMULASI';
+  if(lt.wmTop==null||isNaN(lt.wmTop)) lt.wmTop=50;
   if(lt.aiMeter==null) lt.aiMeter=true;
+  if(lt.aiTop==null||isNaN(lt.aiTop)) lt.aiTop=70;
   if(!Array.isArray(lt.history)) lt.history=[];
   (lt.cycles||[]).forEach((cy,i)=>{
     if(!cy.time) cy.time=ltFormatStamp(new Date(2026,5,30,9,14+i*9,7));
@@ -1199,9 +1214,36 @@ function ltPositionDynSpans(){
     el.style.alignItems='center';
     el.style.justifyContent=b.align==='right'?'flex-end':'flex-start';
   });
-  /* meter AI menempel tepat di atas foto nav bawah */
+  /* terapkan posisi hasil drag (persen tinggi kanvas) untuk meter & watermark */
   const meter=document.getElementById('ltAiMeter');
-  if(meter) meter.style.bottom=(document.getElementById('ltBotImg').offsetHeight||0)+'px';
+  if(meter&&lt.aiTop!=null) meter.style.top=lt.aiTop+'%';
+  const wm=document.getElementById('ltWatermark');
+  if(wm&&lt.wmTop!=null) wm.style.top=lt.wmTop+'%';
+}
+
+/* ── drag vertikal (watermark & meter AI) saat Play — posisi dikunci agar
+   elemen SELALU utuh di dalam kanvas, tidak bisa digeser keluar layar ── */
+function ltMakeDragY(el,apply){
+  let dragging=false,startY=0,startPct=0;
+  el.addEventListener('pointerdown',e=>{
+    dragging=true;startY=e.clientY;
+    const wrap=document.getElementById('ltPhotowrap').getBoundingClientRect();
+    const r=el.getBoundingClientRect();
+    startPct=((r.top+r.height/2)-wrap.top)/wrap.height*100;
+    try{el.setPointerCapture(e.pointerId);}catch(_){}
+    e.preventDefault();
+  });
+  el.addEventListener('pointermove',e=>{
+    if(!dragging)return;
+    const wrap=document.getElementById('ltPhotowrap').getBoundingClientRect();
+    const half=el.getBoundingClientRect().height/2/wrap.height*100;
+    let pct=startPct+(e.clientY-startY)/wrap.height*100;
+    pct=Math.max(half+1,Math.min(99-half,pct));
+    apply(pct);
+  });
+  const up=()=>{if(dragging){dragging=false;ltSave();}};
+  el.addEventListener('pointerup',up);
+  el.addEventListener('pointercancel',up);
 }
 function ltRenderAll(){
   document.getElementById('ltDeposit').value=lt.deposit;
@@ -1669,6 +1711,8 @@ function ltInit(){
   if(!lt.history.length) ltGenHistory(false); /* data lama belum punya riwayat turunan */
   ltBuildGsBody();
   ltRenderAll();
+  ltMakeDragY(document.getElementById('ltWatermark'),pct=>{lt.wmTop=pct;document.getElementById('ltWatermark').style.top=pct+'%';});
+  ltMakeDragY(document.getElementById('ltAiMeter'),pct=>{lt.aiTop=pct;document.getElementById('ltAiMeter').style.top=pct+'%';});
 }
 
 /* Muat dulu bobot font yang benar-benar dipakai SEBELUM render pertama,
