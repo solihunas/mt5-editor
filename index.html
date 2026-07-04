@@ -1071,11 +1071,14 @@ function ltDefault(){
 }
 function ltDefaultGS(){
   return {
-    sym:  {fs:15,fw:700,sx:100,color:'#ffffff'},
-    dir:  {fs:15,fw:400,sx:100},
-    price:{fs:12.5,fw:400,sx:100,color:'#8e8e93'},
-    pnl:  {fs:15,fw:700,sx:100},
-    val:  {fs:15,fw:700,sx:100,color:'#ffffff'},
+    /* default dikalibrasi dari screenshot MT5 asli (1220px) — kerapatan sx=100
+       (normal), ukuran/ketebalan mengikuti teks asli; semua tetap bisa diatur
+       lewat panel "Gaya Font" */
+    sym:  {fs:15.5,fw:700,sx:100,color:'#ffffff'},
+    dir:  {fs:15,  fw:400,sx:100},
+    price:{fs:13,  fw:400,sx:100,color:'#8e8e93'},
+    pnl:  {fs:15,  fw:700,sx:100},
+    val:  {fs:14.5,fw:700,sx:100,color:'#ffffff'},
     posColor:'#0a84ff', negColor:'#ff453a',
     theme:'dark', pnlColWidth:34, rowPadY:6, showMargin:true, lineGap:1,
   };
@@ -1099,6 +1102,14 @@ function ltLoad(){
     if(!cy.time) cy.time=ltFormatStamp(new Date(2026,5,30,9,14+i*9,7));
     delete cy.closeLabel; /* field lama tak dipakai lagi (loss otomatis [sl]) */
   });
+  /* kalibrasi font satu kali: reset UKURAN/KETEBALAN/KERAPATAN ke default
+     terkalibrasi (dari screenshot MT5 asli), TAPI pertahankan WARNA & TEMA &
+     tata letak yang sudah diatur user. Setelah ini tetap bisa diubah manual. */
+  if(!ltGS._fontcalV2){
+    const d=ltDefaultGS();
+    ['sym','dir','price','pnl','val'].forEach(k=>{ltGS[k].fs=d[k].fs;ltGS[k].fw=d[k].fw;ltGS[k].sx=d[k].sx;});
+    ltGS._fontcalV2=true;
+  }
   _ltLoaded=true;
 }
 function ltResetAll(){
