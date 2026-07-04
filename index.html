@@ -225,20 +225,24 @@ body.ltplaymode .lt-watermark{display:block;}
    RUNNING). Di bawahnya keterangan Entry (fix) + SL/TP ikut momentum. */
 #ltAiMeter{position:absolute;left:50%;top:70%;transform:translate(-50%,-50%);width:46%;aspect-ratio:3/4;display:none;flex-direction:column;z-index:80;padding:12px 13px;background:rgba(0,0,0,.92);border:1px solid rgba(255,255,255,.08);border-radius:12px;pointer-events:auto;touch-action:none;cursor:grab;user-select:none;overflow:hidden;}
 body.ltplaymode #ltAiMeter.on{display:flex;}
-.ltai-log{flex:1 1 auto;min-height:0;overflow:hidden;display:flex;flex-direction:column;justify-content:flex-end;gap:5px;padding-bottom:3px;}
-.ltai-line{white-space:nowrap;line-height:1.05;font-family:'Roboto Condensed',monospace;}
-.ltai-line.dots{font-size:12px;letter-spacing:3px;color:#54627a;}
-.ltai-line.phase{font-size:13.5px;font-weight:800;letter-spacing:2px;}
-.ltai-stick{height:4px;border-radius:2px;overflow:hidden;background:rgba(255,255,255,.1);margin-top:2px;}
-.ltai-stick>i{display:block;height:100%;width:100%;background:linear-gradient(90deg,#ff3b30,#2d6bff,#ffffff,#2d6bff,#ff3b30);background-size:250% 100%;}
-.ltai-stick.run>i{animation:ltairun 1.05s linear infinite;}
-.ltai-stick.blink{animation:ltaiblink .8s ease-in-out infinite;}
+/* log fase menumpuk ke bawah: SCANNING/EXECUTE/RUNNING/CLOSE. fase aktif
+   punya stick neon runner (SCANNING & RUNNING); fase lewat diberi ✓. */
+.ltai-log{flex:1 1 auto;min-height:0;overflow:hidden;display:flex;flex-direction:column;justify-content:flex-start;gap:7px;}
+.ltai-prow{display:flex;align-items:center;gap:7px;line-height:1;}
+.ltai-plabel{font-size:14px;font-weight:800;letter-spacing:2px;font-family:'Roboto Condensed',sans-serif;}
+.ltai-check{font-size:13px;font-weight:800;color:#5fe0a0;}
+.ltai-stick{height:5px;border-radius:3px;overflow:hidden;background:rgba(255,255,255,.08);width:72%;margin:1px 0 2px;}
+/* stick = neon runner (SELALU bergerak, tidak berkedip) */
+.ltai-stick>i{display:block;height:100%;width:100%;background:linear-gradient(90deg,#ff3b30,#2d6bff,#ffffff,#2d6bff,#ff3b30);background-size:250% 100%;animation:ltairun 1.05s linear infinite;filter:drop-shadow(0 0 3px rgba(90,140,255,.7));}
 @keyframes ltairun{from{background-position:0 0;}to{background-position:250% 0;}}
-@keyframes ltaiblink{0%,100%{opacity:1;}50%{opacity:.2;}}
+/* reset futuristik: kilat terang lalu memudar ke atas sebelum balik ke scan */
+.ltai-log.ltai-reset{animation:ltaireset .48s ease forwards;}
+@keyframes ltaireset{0%{opacity:1;filter:brightness(1);}35%{opacity:1;filter:brightness(2.3) drop-shadow(0 0 10px #7d9bff);}100%{opacity:0;filter:brightness(1);transform:translateY(-8px);}}
 .ltai-info{margin-top:auto;border-top:1px solid rgba(255,255,255,.08);padding-top:8px;display:flex;flex-direction:column;gap:6px;}
 .ltai-irow{display:flex;justify-content:space-between;align-items:baseline;}
 .ltai-ilbl{font-size:10.5px;color:#8e8e93;font-weight:600;letter-spacing:.5px;}
-.ltai-ival{font-size:11.5px;color:#e8e8ea;font-weight:700;}
+/* Entry/SL/TP: putih bercahaya (glow), SL & TP bergerak ikut momentum */
+.ltai-ival{font-size:11.5px;color:#ffffff;font-weight:700;text-shadow:0 0 6px rgba(255,255,255,.55);}
 
 body.ltplaymode #ltCtrlbar,body.ltplaymode .hint,body.ltplaymode #ltCycleWrap,body.ltplaymode #ltHistWrap,body.ltplaymode #appSwitch{display:none!important;}
 
@@ -406,10 +410,10 @@ body.ltplaymode #ltPhotowrap{width:min(100vw,calc(100vh * 1080 / 2229));max-widt
   </div>
   <div id="ltAiMeter">
     <div class="ltai-log" id="ltAiLog"></div>
-    <div class="ltai-info">
-      <div class="ltai-irow"><span class="ltai-ilbl">Entry</span><span class="ltai-ival" id="ltAiEntry">—</span></div>
-      <div class="ltai-irow"><span class="ltai-ilbl">SL</span><span class="ltai-ival" id="ltAiSL" style="color:#ff6b60;">—</span></div>
-      <div class="ltai-irow"><span class="ltai-ilbl">TP</span><span class="ltai-ival" id="ltAiTP" style="color:#6de8a0;">—</span></div>
+    <div class="ltai-info" id="ltAiInfo">
+      <div class="ltai-irow"><span class="ltai-ilbl">ENTRY</span><span class="ltai-ival" id="ltAiEntry">—</span></div>
+      <div class="ltai-irow"><span class="ltai-ilbl">SL</span><span class="ltai-ival" id="ltAiSL">—</span></div>
+      <div class="ltai-irow"><span class="ltai-ilbl">TP</span><span class="ltai-ival" id="ltAiTP">—</span></div>
     </div>
   </div>
   <div class="lt-watermark" id="ltWatermark"><span class="lt-wm-main" id="ltWmMain">INI SIMULASI</span><span class="lt-wm-sub">simulasi — bukan akun asli</span></div>
@@ -1693,29 +1697,41 @@ function ltTogglePlayHist(){
   }else document.body.classList.remove('lthistmode');
 }
 
-/* ── meter "AI" (opsional) — log fase SCAN/ENTRY/RUNNING/CLOSE + 1 stick ── */
+/* ── meter "AI" (opsional) — fase menumpuk + stick neon runner + ✓ ── */
 let _ltAiToken=0;
 let _ltAiSL=null,_ltAiTP=null,_ltAiPrev=null;
-function ltAiDots(n){return '·'.repeat(Math.max(2,n||5));}
-/* render log overlay dari array baris:
-   {phase,color} | {dots:1,n,indent,op} | {stick:'run'|'blink'} */
-function ltAiSetLog(lines){
-  document.getElementById('ltAiLog').innerHTML=lines.map(L=>{
-    if(L.stick) return `<div class="ltai-stick ${L.stick}"><i></i></div>`;
-    if(L.phase) return `<div class="ltai-line phase" style="color:${L.color||'#9fb3cc'}">${L.phase}</div>`;
-    return `<div class="ltai-line dots" style="opacity:${L.op==null?1:L.op};${L.indent?'padding-left:'+L.indent+'px;':''}">${ltAiDots(L.n)}</div>`;
-  }).join('');
+/* urutan fase; hanya SCANNING & RUNNING punya stick (fase yg 'berjalan') */
+const LTAI_PHASES=[
+  {k:'SCANNING',c:'#7d9bff',stick:true},
+  {k:'EXECUTE', c:'#ff9f43',stick:false},
+  {k:'RUNNING', c:'#7d9bff',stick:true},
+  {k:'CLOSE',   c:'#ff9f43',stick:false},
+];
+/* render tumpukan fase: fase <activeIdx = selesai (✓); fase =activeIdx = aktif
+   (label + stick kalau punya). allDone=true → semua termasuk CLOSE dicentang. */
+function ltAiRenderPhases(activeIdx,allDone){
+  const rows=[];
+  LTAI_PHASES.forEach((p,i)=>{
+    if(i>activeIdx)return;
+    const done=allDone||i<activeIdx;
+    rows.push(`<div class="ltai-prow"><span class="ltai-plabel" style="color:${p.c}">${p.k}</span>${done?'<span class="ltai-check">✓</span>':''}</div>`);
+    if(!done&&p.stick) rows.push('<div class="ltai-stick"><i></i></div>');
+  });
+  document.getElementById('ltAiLog').innerHTML=rows.join('');
 }
-/* SCANNING: HANYA 1 tulisan SCAN + 1 stick degradasi yang bergerak */
+function ltAiInfoShow(v){document.getElementById('ltAiInfo').style.visibility=v?'visible':'hidden';}
+/* SCANNING: hanya SCANNING + stick neon runner; Entry/SL/TP disembunyikan */
 async function ltAiScanPhase(cy){
   if(lt.aiMeter===false){await ltSleep(1800+Math.random()*1500);return;}
+  document.getElementById('ltAiLog').classList.remove('ltai-reset');
+  ltAiInfoShow(false);
   document.getElementById('ltAiEntry').textContent='—';
   document.getElementById('ltAiSL').textContent='—';
   document.getElementById('ltAiTP').textContent='—';
-  ltAiSetLog([{phase:'SCAN',color:'#9fb3cc'},{stick:'run'}]);
+  ltAiRenderPhases(0);
   await ltSleep(2600+Math.random()*1600);
 }
-/* ENTRY: Entry(fix)+SL/TP di-set; log jadi  SCAN / ..... / ENTRY (stick stop) */
+/* EXECUTE: SCANNING dicentang, EXECUTE aktif; Entry(fix)+SL/TP muncul */
 function ltAiEntryPhase(cy){
   if(lt.aiMeter===false)return;
   const dist=Math.max(Math.abs(cy.open-cy.close)*0.9, cy.open*0.0008);
@@ -1726,12 +1742,13 @@ function ltAiEntryPhase(cy){
   document.getElementById('ltAiEntry').textContent=formatPriceNum(cy.open,lt.sym);
   document.getElementById('ltAiSL').textContent=formatPriceNum(_ltAiSL,lt.sym);
   document.getElementById('ltAiTP').textContent=formatPriceNum(_ltAiTP,lt.sym);
-  ltAiSetLog([{phase:'SCAN',color:'#566579'},{dots:1,n:5,op:.7},{phase:'ENTRY',color:'#ffd60a'}]);
+  ltAiInfoShow(true);
+  ltAiRenderPhases(1);
 }
-/* RUNNING: log bertumpuk + stick BERKEDIP */
+/* RUNNING: SCANNING & EXECUTE dicentang, RUNNING aktif + stick neon runner */
 function ltAiRunPhase(cy,realized){
   if(lt.aiMeter===false)return;
-  ltAiSetLog([{dots:1,n:6,op:.35},{dots:1,n:5,op:.5},{dots:1,n:5,indent:12,op:.68},{phase:'RUNNING',color:'#6de8a0'},{stick:'blink'}]);
+  ltAiRenderPhases(2);
 }
 /* tiap tick harga: SL/TP ikut momentum — bisa naik/turun, tapi SL selalu di
    sisi rugi & TP di sisi untung dari harga berjalan */
@@ -1747,11 +1764,16 @@ function ltAiTick(cy,cur){
   document.getElementById('ltAiSL').textContent=formatPriceNum(_ltAiSL,lt.sym);
   document.getElementById('ltAiTP').textContent=formatPriceNum(_ltAiTP,lt.sym);
 }
-/* CLOSE: log bertumpuk lebih panjang + CLOSE (tanpa stick) */
+/* CLOSE aktif (SCANNING/EXECUTE/RUNNING dicentang), tanpa stick */
 function ltAiClosePhase(pnl){
   if(lt.aiMeter===false)return;
   _ltAiSL=null;_ltAiTP=null;
-  ltAiSetLog([{dots:1,n:5,op:.3},{dots:1,n:5,op:.42},{dots:1,n:4,op:.55},{dots:1,n:3,op:.7},{dots:1,n:3,indent:12,op:.85},{phase:'CLOSE',color:'#ff9f0a'}]);
+  ltAiRenderPhases(3);
+}
+/* CLOSE dicentang (semua ✓) — dipanggil 0.3s setelah posisi benar2 close */
+function ltAiCloseChecked(){
+  if(lt.aiMeter===false)return;
+  ltAiRenderPhases(3,true);
 }
 async function ltPlayLoop(){
   let realized=0;
@@ -1818,7 +1840,21 @@ async function ltPlayLoop(){
       ltSessPush(cy,finalRows); /* posisi baru saja close → masuk riwayat sesi */
       ltRenderPositionRows([]);
       ltRenderTopValues(0,realized,0);
-      await ltSleep(1200+Math.random()*1300); /* jeda close->siklus berikutnya (fase scanning AI menambah jedanya sendiri) */
+      /* 0.3s setelah posisi close → CLOSE dicentang, lalu animasi reset
+         futuristik, baru balik ke SCANNING siklus berikutnya */
+      if(lt.aiMeter!==false){
+        await ltSleep(300);if(!_ltPlayActive)return;
+        ltAiCloseChecked();
+        await ltSleep(250);if(!_ltPlayActive)return;
+        const log=document.getElementById('ltAiLog');
+        log.classList.add('ltai-reset');
+        await ltSleep(480);if(!_ltPlayActive)return;
+        log.innerHTML='';log.classList.remove('ltai-reset');
+        ltAiInfoShow(false);
+        await ltSleep(500+Math.random()*400);
+      }else{
+        await ltSleep(1200+Math.random()*1300);
+      }
     }
   }
 }
