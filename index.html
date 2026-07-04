@@ -211,8 +211,8 @@ body.previewmode #ctrlbar,body.previewmode #projectbar,body.previewmode .hint{di
 @keyframes wmrunner{to{--wmang:360deg;}}
 .lt-watermark .lt-wm-main{display:block;}
 /* baris pengungkapan: teksnya terkunci di kode & SELALU tampil saat Play.
-   Ukuran 3:5 terhadap tulisan utama (0.6em), lebih tebal supaya terbaca. */
-.lt-watermark .lt-wm-sub{display:block;font-size:0.6em;letter-spacing:1.4px;font-weight:700;margin-top:4px;}
+   Ukuran 3:4 terhadap tulisan utama (0.75em) — beda ukuran tidak ekstrem. */
+.lt-watermark .lt-wm-sub{display:block;font-size:0.75em;letter-spacing:1.4px;font-weight:700;margin-top:4px;}
 body.ltplaymode .lt-watermark{display:block;}
 /* watermark WAJIB tetap jelas terbaca di tema terang juga — bagian putih
    gradasi diganti abu kebiruan biar tidak tenggelam di latar putih */
@@ -428,6 +428,12 @@ body.ltplaymode #ltPhotowrap{width:min(100vw,calc(100vh * 1080 / 2229));max-widt
   <div style="padding:0 12px 10px;">
     <span class="fieldlbl" style="color:#8e8e93;">Teks watermark saat Play — baris kecil "simulasi — bukan akun asli" selalu ikut tampil (tidak bisa dihapus)</span>
     <input id="ltWmInput" class="fld" type="text" maxlength="40" oninput="ltWmChanged()">
+    <div style="display:flex;gap:9px;align-items:center;margin-top:10px;">
+      <span class="fieldlbl" style="margin:0;color:#8e8e93;flex-shrink:0;">Ukuran</span>
+      <input id="ltWmSize" type="range" min="12" max="36" step="1" style="flex:1;min-width:0;" oninput="ltWmSizeChanged()">
+      <button type="button" id="ltWmTiltBtn" onclick="ltWmSetTilt(true)" style="padding:6px 10px;border-radius:7px;border:1px solid #3a3a3e;font-size:11px;font-weight:700;cursor:pointer;">Miring</button>
+      <button type="button" id="ltWmHorizBtn" onclick="ltWmSetTilt(false)" style="padding:6px 10px;border-radius:7px;border:1px solid #3a3a3e;font-size:11px;font-weight:700;cursor:pointer;">Horizontal</button>
+    </div>
     <label style="display:flex;align-items:center;gap:6px;font-size:11.5px;color:#bbb;font-weight:600;cursor:pointer;margin-top:9px;">
       <input type="checkbox" id="ltAiToggle" onchange="ltAiToggleChanged()"> Meter "AI confidence" saat Play (scanning dinamis → entry di ±80%)
     </label>
@@ -1070,6 +1076,8 @@ function ltDefault(){
     sym:'XAUUSDc',
     wmText:'INI SIMULASI',
     wmTop:50,   /* posisi vertikal watermark (% tinggi kanvas, hasil drag) */
+    wmSize:18,  /* ukuran dasar huruf watermark (px); sub ikut 0.75x */
+    wmTilt:true,/* true = miring -16deg, false = horizontal */
     aiMeter:true,
     aiTop:70,   /* posisi vertikal meter AI (% tinggi kanvas, hasil drag) */
     history:[],
@@ -1105,6 +1113,8 @@ function ltLoad(){
   /* data lama (sebelum fitur riwayat/watermark editable) belum punya field baru */
   if(!lt.wmText) lt.wmText='INI SIMULASI';
   if(lt.wmTop==null||isNaN(lt.wmTop)) lt.wmTop=50;
+  if(lt.wmSize==null||isNaN(lt.wmSize)) lt.wmSize=18;
+  if(lt.wmTilt==null) lt.wmTilt=true;
   if(lt.aiMeter==null) lt.aiMeter=true;
   if(lt.aiTop==null||isNaN(lt.aiTop)) lt.aiTop=70;
   if(!Array.isArray(lt.history)) lt.history=[];
@@ -1313,8 +1323,11 @@ function ltMakeDragY(el,apply){
 function ltRenderAll(){
   document.getElementById('ltDeposit').value=lt.deposit;
   document.getElementById('ltWmInput').value=lt.wmText||'INI SIMULASI';
+  document.getElementById('ltWmSize').value=lt.wmSize||18;
   document.getElementById('ltAiToggle').checked=lt.aiMeter!==false;
   ltRenderWatermark();
+  ltApplyWmStyle();
+  ltWmRenderModeBtns();
   ltApplyTheme(ltGS.theme||'dark');
   ltRenderCycleList();
   ltRenderCanvasStatic();
@@ -1324,6 +1337,20 @@ function ltRenderAll(){
 /* ── watermark: baris utama bebas diedit, baris pengungkapan terkunci di HTML ── */
 function ltRenderWatermark(){document.getElementById('ltWmMain').textContent=(lt.wmText||'').trim()||'INI SIMULASI';}
 function ltWmChanged(){lt.wmText=document.getElementById('ltWmInput').value.slice(0,40);ltRenderWatermark();ltSave();}
+/* ukuran & orientasi watermark — huruf utama = wmSize, sub = 0.75x (3:4) */
+function ltApplyWmStyle(){
+  const wm=document.getElementById('ltWatermark');
+  wm.style.fontSize=(lt.wmSize||18)+'px';
+  wm.style.transform='translate(-50%,-50%) rotate('+((lt.wmTilt===false)?0:-16)+'deg)';
+}
+function ltWmRenderModeBtns(){
+  const tilt=lt.wmTilt!==false;
+  const on=document.getElementById('ltWmTiltBtn'), off=document.getElementById('ltWmHorizBtn');
+  on.style.background=tilt?'#3d5bd0':'#232326'; on.style.color=tilt?'#fff':'#ccc';
+  off.style.background=!tilt?'#3d5bd0':'#232326'; off.style.color=!tilt?'#fff':'#ccc';
+}
+function ltWmSizeChanged(){lt.wmSize=parseInt(document.getElementById('ltWmSize').value)||18;ltApplyWmStyle();ltSave();}
+function ltWmSetTilt(v){lt.wmTilt=v;ltApplyWmStyle();ltWmRenderModeBtns();ltSave();}
 function ltAiToggleChanged(){lt.aiMeter=document.getElementById('ltAiToggle').checked;ltSave();}
 
 /* ── daftar siklus (panel edit terpisah dari kanvas) ── */
