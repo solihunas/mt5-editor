@@ -230,6 +230,16 @@ body.ltplaymode #ltAiMeter.on{display:flex;}
 .ltai-ival{font-size:11.5px;color:#e8e8ea;font-weight:700;}
 
 body.ltplaymode #ltCtrlbar,body.ltplaymode .hint,body.ltplaymode #ltCycleWrap,body.ltplaymode #ltHistWrap,body.ltplaymode #appSwitch{display:none!important;}
+
+/* kanvas Riwayat saat Play (di-tap untuk transisi) — menutup penuh kanvas
+   Live Trade (opaque, z-index 40) tapi tetap di BAWAH overlay (80) &
+   watermark (90) supaya keduanya ikut kelihatan di halaman riwayat juga.
+   Header foto & nav foto paten, hanya daftar tengah yang discroll. */
+#ltHistCanvas{position:absolute;inset:0;display:none;flex-direction:column;background:#fff;z-index:40;overflow:hidden;cursor:pointer;}
+body.lthistmode #ltHistCanvas{display:flex;}
+#ltHistCanvas>img{display:block;width:100%;height:auto;flex-shrink:0;user-select:none;-webkit-user-drag:none;pointer-events:none;}
+#ltHistScroll{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;background:#fff;}
+body.ltplaymode #ltPhotowrap{cursor:pointer;} /* isyarat: tap untuk pindah halaman */
 /* mode Play: perbesar "layar hp" mockup sampai memenuhi layar penuh —
    mentok atas-bawah ATAU kiri-kanan (mana yang lebih dulu kena), bukan
    tetap kecil 360px seperti mode edit, supaya hasil rekaman layar terlihat
@@ -372,6 +382,17 @@ body.ltplaymode #ltPhotowrap{width:min(100vw,calc(100vh * 1080 / 2229));max-widt
   <img id="ltPosisiImg" src="assets/livetrade-posisi.jpg" alt="Posisi">
   <div id="ltPosList"></div>
   <img id="ltBotImg" src="assets/livetrade-bottom.jpg" alt="Navigasi MT5">
+  <!-- kanvas Riwayat full-screen saat Play (muncul saat layar di-tap) —
+       datanya dari riwayat turunan Live Trade; watermark & overlay tetap di
+       atasnya karena z-index-nya lebih tinggi dari kanvas ini -->
+  <div id="ltHistCanvas">
+    <img id="ltHistTop" src="assets/riwayat-top.jpg" alt="Header Riwayat MT5">
+    <div id="ltHistScroll">
+      <div class="summary" id="ltHistSummary"></div>
+      <div id="ltHistTrades"></div>
+    </div>
+    <img id="ltHistBot" src="assets/riwayat-bottom.jpg" alt="Navigasi MT5">
+  </div>
   <div id="ltAiMeter">
     <div class="ltai-row"><span class="ltai-phase" id="ltAiPhase">SCANNING</span><span class="ltai-pct" id="ltAiPct"></span></div>
     <div class="ltai-barwrap" id="ltAiBarWrap"><div class="ltai-bar" id="ltAiBar"></div></div>
@@ -455,7 +476,7 @@ body.ltplaymode #ltPhotowrap{width:min(100vw,calc(100vh * 1080 / 2229));max-widt
 <div class="ov-backdrop" id="ltplayBackdrop" onclick="ltClosePlayChoice()"></div>
 <div class="ov-panel" id="ltplayChoicePanel" style="max-width:320px;">
   <div class="eplbl">Mulai Play?</div>
-  <div style="font-size:12.5px;color:#555;line-height:1.6;margin-bottom:12px;">Layar akan masuk mode penuh tanpa tombol (untuk screen record), dengan watermark permanen — teks utama sesuai pengaturan Anda, plus baris kecil <b>"simulasi — bukan akun asli"</b> yang selalu ikut tampil. Watermark &amp; meter AI bisa <b>di-drag naik/turun</b> (posisi tersimpan; watermark tidak bisa digeser keluar layar — taruh di atas angka penting biar video tidak bisa dicuri lalu di-crop). Tekan tombol <b>back</b> HP untuk keluar kapan saja.</div>
+  <div style="font-size:12.5px;color:#555;line-height:1.6;margin-bottom:12px;">Layar akan masuk mode penuh tanpa tombol (untuk screen record), dengan watermark permanen — teks utama sesuai pengaturan Anda, plus baris kecil <b>"simulasi — bukan akun asli"</b> yang selalu ikut tampil. Watermark &amp; meter AI bisa <b>di-drag naik/turun</b> (posisi tersimpan; watermark tidak bisa digeser keluar layar — taruh di atas angka penting biar video tidak bisa dicuri lalu di-crop). <b>Tap layar</b> (di luar watermark/overlay) untuk berpindah ke halaman <b>Riwayat</b> (dari data Live Trade) lalu tap lagi untuk kembali — watermark &amp; overlay tetap tampil. Tekan tombol <b>back</b> HP untuk keluar kapan saja.</div>
   <button class="epok" style="width:100%;margin-bottom:9px;padding:12px 4px;" onclick="ltClosePlayChoice();ltEnterPlay();">▶ Mulai Play</button>
   <button class="epcancel" style="width:100%;" onclick="ltClosePlayChoice()">Batal</button>
 </div>
@@ -1257,13 +1278,14 @@ function ltMakeDragY(el,apply){
   });
   el.addEventListener('pointermove',e=>{
     if(!dragging)return;
+    if(Math.abs(e.clientY-startY)>3) _ltSuppressTap=true; /* jangan sampai drag memicu transisi tap */
     const wrap=document.getElementById('ltPhotowrap').getBoundingClientRect();
     const half=el.getBoundingClientRect().height/2/wrap.height*100;
     let pct=startPct+(e.clientY-startY)/wrap.height*100;
     pct=Math.max(half+1,Math.min(99-half,pct));
     apply(pct);
   });
-  const up=()=>{if(dragging){dragging=false;ltSave();}};
+  const up=()=>{if(dragging){dragging=false;ltSave();setTimeout(()=>{_ltSuppressTap=false;},60);}};
   el.addEventListener('pointerup',up);
   el.addEventListener('pointercancel',up);
 }
@@ -1594,6 +1616,53 @@ function ltBuildPricePath(cy,steps){
 }
 
 let _ltPlayActive=false;
+let _ltHistMode=false, _ltSuppressTap=false;
+
+/* ── kanvas Riwayat full-screen saat Play (di-tap untuk transisi) ──
+   dirender dari riwayat turunan Live Trade (lt.history) memakai gaya global
+   Riwayat (GS) supaya identik dengan app Riwayat asli */
+function ltRenderPlayHistory(){
+  const trades=lt.history||[];
+  const keuntungan=trades.reduce((s,h)=>s+h.pnl,0);
+  const d={keuntungan,deposito:lt.deposit,swap:0,komisi:0,saldo:lt.deposit+keuntungan};
+  const sc=document.getElementById('ltHistSummary');
+  sc.innerHTML=SUMMARY_ROWS.map(r=>{
+    const raw=d[r.key]||0;
+    const color=r.key==='keuntungan'?(raw<0?GS.negColor:(raw>0?GS.posColor:GS.val.color)):GS.val.color;
+    const st=Object.assign({},GS.val,{color});
+    const span=spanTag(formatMoney(raw,2,r.signed),st,true,'class="sval sval-ro"');
+    return `<div class="srow"><span class="slbl">${r.label}</span><span class="sdot"></span>${span}</div>`;
+  }).join('');
+  applyStretchBoxes(sc);
+  const tc=document.getElementById('ltHistTrades');
+  tc.innerHTML=trades.map(h=>{
+    const pnl=h.pnl;
+    const bar=pnl>0?'pr':(pnl<0?'lo':'no');
+    const dirColor=h.dir==='buy'?GS.posColor:GS.negColor;
+    const pnlColor=pnl<0?GS.negColor:GS.posColor;
+    const symSpan=spanTag(h.sym,GS.sym,false);
+    const dirSpan=spanTag((h.dir==='buy'?'buy':'sell')+' '+Number(h.lot).toFixed(2),Object.assign({},GS.dir,{color:dirColor}),false);
+    const priceSpan=spanTag(formatPriceNum(h.open,h.sym)+'  →  '+formatPriceNum(h.close,h.sym)+(h.mark?'  ['+h.mark+']':''),GS.price,false);
+    const dateSpan=spanTag(h.timeClose,GS.date,true);
+    const pnlSpan=spanTag(formatMoney(pnl,2,true),Object.assign({},GS.pnl,{color:pnlColor}),true);
+    return `<div class="trow"><div class="tbar ${bar}"></div><div class="tc"><div class="tleft"><div class="tsl">${symSpan}<span class="tcomma">,</span>${dirSpan}</div><div class="tprices">${priceSpan}</div></div><div class="tright"><div class="tdate">${dateSpan}</div><div class="tpnl">${pnlSpan}</div></div></div></div>`;
+  }).join('');
+  applyStretchBoxes(tc);
+}
+/* tap layar saat Play: transisi Live Trade ⇄ Riwayat (watermark & overlay
+   tetap tampil). Tidak aktif kalau yang di-tap watermark/overlay, atau
+   barusan drag. */
+function ltTogglePlayHist(){
+  if(!_ltPlayActive)return;
+  _ltHistMode=!_ltHistMode;
+  if(_ltHistMode){
+    /* tampilkan dulu BARU render — applyStretchBoxes butuh elemen terlihat
+       untuk mengukur offsetWidth (kalau masih display:none, lebar terukur 0
+       dan teks jadi tumpang-tindih) */
+    document.body.classList.add('lthistmode');
+    ltRenderPlayHistory();
+  }else document.body.classList.remove('lthistmode');
+}
 
 /* ── meter "AI" (opsional) — 4 fase: SCANNING / ENTRY / RUNNING / CLOSE ── */
 let _ltAiToken=0;
@@ -1768,6 +1837,8 @@ async function ltPlayLoop(){
 }
 function ltEnterPlay(){
   _ltPlayActive=true;
+  _ltHistMode=false;
+  document.body.classList.remove('lthistmode'); /* selalu mulai dari kanvas Live Trade */
   history.pushState({mt5LtPlay:true},'','');
   document.body.classList.add('ltplaymode');
   document.getElementById('ltAiMeter').classList.toggle('on',lt.aiMeter!==false);
@@ -1779,9 +1850,10 @@ function ltEnterPlay(){
 function ltExitPlay(){
   if(!_ltPlayActive)return;
   _ltPlayActive=false;
+  _ltHistMode=false;
   _ltAiToken++; /* batalkan typewriter yang masih jalan */
   ltClearTimers();
-  document.body.classList.remove('ltplaymode');
+  document.body.classList.remove('ltplaymode','lthistmode');
   ltRenderCanvasStatic(); /* kembali ke preview statis di mode edit */
   setTimeout(ltPositionDynSpans,60);
 }
@@ -1797,6 +1869,13 @@ function ltInit(){
   ltRenderAll();
   ltMakeDragY(document.getElementById('ltWatermark'),pct=>{lt.wmTop=pct;document.getElementById('ltWatermark').style.top=pct+'%';});
   ltMakeDragY(document.getElementById('ltAiMeter'),pct=>{lt.aiTop=pct;document.getElementById('ltAiMeter').style.top=pct+'%';});
+  /* tap kanvas (bukan watermark/overlay, bukan setelah drag) → transisi
+     Live Trade ⇄ Riwayat saat Play */
+  document.getElementById('ltPhotowrap').addEventListener('click',e=>{
+    if(!_ltPlayActive||_ltSuppressTap)return;
+    if(e.target.closest('#ltWatermark')||e.target.closest('#ltAiMeter'))return;
+    ltTogglePlayHist();
+  });
 }
 
 /* Muat dulu bobot font yang benar-benar dipakai SEBELUM render pertama,
