@@ -207,15 +207,27 @@ body.ltplaymode .lt-watermark{display:block;}
    gradasi diganti abu kebiruan biar tidak tenggelam di latar putih */
 #ltPhotowrap.theme-white .lt-watermark{background-image:linear-gradient(100deg,#1856ff 0%,#7fa4d8 22%,#96a4b4 40%,#f09a94 60%,#e0322e 78%,#1856ff 100%);border-color:rgba(40,80,200,.4);box-shadow:0 0 14px rgba(40,80,200,.2),inset 0 0 10px rgba(40,80,200,.1);filter:drop-shadow(0 1px 4px rgba(255,255,255,.8));}
 
-/* meter "AI confidence" (opsional) — kotak hitam melayang di tengah saat
-   Play, bisa di-drag vertikal (posisi tersimpan), dikunci di dalam kanvas */
-#ltAiMeter{position:absolute;left:50%;top:70%;transform:translate(-50%,-50%);width:86%;display:none;z-index:80;padding:9px 14px 11px;background:rgba(0,0,0,.92);border:1px solid rgba(255,255,255,.08);border-radius:12px;pointer-events:auto;touch-action:none;cursor:grab;user-select:none;}
-body.ltplaymode #ltAiMeter.on{display:block;}
-.ltai-row{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px;}
-.ltai-txt{font-size:11px;color:#8ea0b8;letter-spacing:.4px;font-weight:600;min-height:13px;}
+/* meter "AI" (opsional) — kartu hitam potret rasio 3:4 melayang di tengah
+   saat Play, bisa di-drag vertikal (posisi tersimpan), dikunci di kanvas.
+   4 fase: SCANNING (stick loading conf%), ENTRY (tanpa stick), RUNNING
+   (stick neon biru-putih-merah berjalan horizontal), CLOSE. Di bawahnya
+   keterangan Entry (angka fix) + SL/TP yang bergerak ikut momentum. */
+#ltAiMeter{position:absolute;left:50%;top:70%;transform:translate(-50%,-50%);width:46%;aspect-ratio:3/4;display:none;flex-direction:column;z-index:80;padding:12px 13px;background:rgba(0,0,0,.92);border:1px solid rgba(255,255,255,.08);border-radius:12px;pointer-events:auto;touch-action:none;cursor:grab;user-select:none;overflow:hidden;}
+body.ltplaymode #ltAiMeter.on{display:flex;}
+.ltai-row{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:7px;}
+.ltai-phase{font-size:11px;font-weight:800;letter-spacing:1.5px;color:#8ea0b8;}
+.ltai-txt{font-size:10.5px;color:#8ea0b8;letter-spacing:.4px;font-weight:600;min-height:13px;margin-top:7px;}
 .ltai-pct{font-size:12px;font-weight:700;color:#8ea0b8;}
-.ltai-barwrap{height:4px;border-radius:2px;background:rgba(255,255,255,.12);overflow:hidden;}
+.ltai-barwrap{height:4px;border-radius:2px;background:rgba(255,255,255,.12);overflow:hidden;flex-shrink:0;}
 .ltai-bar{height:100%;width:0%;background:linear-gradient(90deg,#3d7bff,#6de8a0);transition:width .15s ease;}
+/* fase RUNNING: stick indeterminate — gradasi neon biru→putih→merah yang
+   terus berjalan horizontal (senada dengan watermark) */
+.ltai-bar.run{width:100%;transition:none;background:linear-gradient(90deg,#3d7bff,#bcd6ff,#ffffff,#ff8f88,#ff3b30,#3d7bff);background-size:250% 100%;animation:ltairun 1.1s linear infinite;}
+@keyframes ltairun{from{background-position:0% 0;}to{background-position:250% 0;}}
+.ltai-info{margin-top:auto;border-top:1px solid rgba(255,255,255,.08);padding-top:8px;display:flex;flex-direction:column;gap:6px;}
+.ltai-irow{display:flex;justify-content:space-between;align-items:baseline;}
+.ltai-ilbl{font-size:10.5px;color:#8e8e93;font-weight:600;letter-spacing:.5px;}
+.ltai-ival{font-size:11.5px;color:#e8e8ea;font-weight:700;}
 
 body.ltplaymode #ltCtrlbar,body.ltplaymode .hint,body.ltplaymode #ltCycleWrap,body.ltplaymode #ltHistWrap,body.ltplaymode #appSwitch{display:none!important;}
 /* mode Play: perbesar "layar hp" mockup sampai memenuhi layar penuh —
@@ -360,7 +372,16 @@ body.ltplaymode #ltPhotowrap{width:min(100vw,calc(100vh * 1080 / 2229));max-widt
   <img id="ltPosisiImg" src="assets/livetrade-posisi.jpg" alt="Posisi">
   <div id="ltPosList"></div>
   <img id="ltBotImg" src="assets/livetrade-bottom.jpg" alt="Navigasi MT5">
-  <div id="ltAiMeter"><div class="ltai-row"><span class="ltai-txt" id="ltAiText"></span><span class="ltai-pct" id="ltAiPct"></span></div><div class="ltai-barwrap"><div class="ltai-bar" id="ltAiBar"></div></div></div>
+  <div id="ltAiMeter">
+    <div class="ltai-row"><span class="ltai-phase" id="ltAiPhase">SCANNING</span><span class="ltai-pct" id="ltAiPct"></span></div>
+    <div class="ltai-barwrap" id="ltAiBarWrap"><div class="ltai-bar" id="ltAiBar"></div></div>
+    <div class="ltai-txt" id="ltAiText"></div>
+    <div class="ltai-info">
+      <div class="ltai-irow"><span class="ltai-ilbl">Entry</span><span class="ltai-ival" id="ltAiEntry">—</span></div>
+      <div class="ltai-irow"><span class="ltai-ilbl">SL</span><span class="ltai-ival" id="ltAiSL" style="color:#ff6b60;">—</span></div>
+      <div class="ltai-irow"><span class="ltai-ilbl">TP</span><span class="ltai-ival" id="ltAiTP" style="color:#6de8a0;">—</span></div>
+    </div>
+  </div>
   <div class="lt-watermark" id="ltWatermark"><span class="lt-wm-main" id="ltWmMain">INI SIMULASI</span><span class="lt-wm-sub">simulasi — bukan akun asli</span></div>
 </div>
 
@@ -1168,10 +1189,11 @@ function ltRenderTopValues(floating,realized,marginTotal){
   const marginBebas=equity-marginTotal; /* margin dikunci dari posisi terbuka */
   const levelMargin=marginTotal>0?(equity/marginTotal*100):0;
   const topColor=floating<0?ltGS.negColor:ltGS.posColor;
-  /* MT5 asli: baris PnL di bawah "Trade" KOSONG total (bukan "0.00 USC")
-     kalau tidak ada posisi terbuka/floating persis 0 — bukan cuma warnanya
-     yang dinetralkan */
-  document.getElementById('ltTopPnl').innerHTML=Math.abs(floating)<0.005?'':`<span style="${ltFieldCss(ltGS.pnl,topColor)}">${escapeHtml(formatMoney(floating,2,true))} USC</span>`;
+  /* MT5 asli: baris PnL di bawah "Trade" KOSONG total kalau tidak ada
+     posisi terbuka/floating persis 0 — bukan cuma warnanya yang
+     dinetralkan. Format angka polos: untung (biru) "1 234.00" tanpa
+     tanda +, rugi (merah) "-1 234.56" — tanpa akhiran "USC". */
+  document.getElementById('ltTopPnl').innerHTML=Math.abs(floating)<0.005?'':`<span style="${ltFieldCss(ltGS.pnl,topColor)}">${escapeHtml(formatMoney(floating,2,false))}</span>`;
   ltRenderBalanceRows(saldo,equity,marginTotal,marginBebas,levelMargin);
   ltPositionDynSpans();
 }
@@ -1573,13 +1595,70 @@ function ltBuildPricePath(cy,steps){
 
 let _ltPlayActive=false;
 
-/* ── meter "AI confidence" (opsional) — scanning dinamis lalu entry ±80% ── */
+/* ── meter "AI" (opsional) — 4 fase: SCANNING / ENTRY / RUNNING / CLOSE ── */
 let _ltAiToken=0;
+let _ltAiSL=null,_ltAiTP=null,_ltAiPrev=null;
 function ltAiSetConf(v){
   document.getElementById('ltAiBar').style.width=Math.max(0,Math.min(100,v))+'%';
   const pct=document.getElementById('ltAiPct');
   pct.textContent=v.toFixed(0)+'%';
   pct.style.color=v>=75?'#6de8a0':'#8ea0b8';
+}
+function ltAiPhaseSet(name,color){
+  const ph=document.getElementById('ltAiPhase');
+  ph.textContent=name;ph.style.color=color;
+}
+/* stick: 'conf' = loading conf% (SCANNING), 'run' = neon berjalan
+   horizontal (RUNNING), 'off' = disembunyikan (ENTRY & CLOSE) */
+function ltAiStick(mode){
+  document.getElementById('ltAiBarWrap').style.visibility=mode==='off'?'hidden':'visible';
+  document.getElementById('ltAiBar').classList.toggle('run',mode==='run');
+}
+/* ENTRY: angka entry FIX dari input siklus; SL/TP awal digenerate di sisi
+   yang benar (SL sisi rugi, TP sisi untung) */
+function ltAiEntryPhase(cy){
+  if(lt.aiMeter===false)return;
+  ltAiPhaseSet('ENTRY','#ffd60a');
+  ltAiStick('off');
+  document.getElementById('ltAiPct').textContent='';
+  const dist=Math.max(Math.abs(cy.open-cy.close)*0.9, cy.open*0.0008);
+  const s=cy.dir==='buy'?-1:1;
+  _ltAiSL=cy.open+s*dist*(0.9+Math.random()*0.4);
+  _ltAiTP=cy.open-s*dist*(1.1+Math.random()*0.5);
+  _ltAiPrev=null;
+  document.getElementById('ltAiEntry').textContent=formatPriceNum(cy.open,lt.sym);
+  document.getElementById('ltAiSL').textContent=formatPriceNum(_ltAiSL,lt.sym);
+  document.getElementById('ltAiTP').textContent=formatPriceNum(_ltAiTP,lt.sym);
+  ltTypewrite(document.getElementById('ltAiText'),'Entry '+cy.dir.toUpperCase()+' '+(lt.sym||'XAUUSDc'));
+}
+/* RUNNING: stick neon jalan + equity kecil */
+function ltAiRunPhase(cy,realized){
+  if(lt.aiMeter===false)return;
+  ltAiPhaseSet('RUNNING','#6de8a0');
+  ltAiStick('run');
+  ltTypewrite(document.getElementById('ltAiText'),'Running · EQ '+formatMoney(lt.deposit+realized,2,false));
+}
+/* tiap tick harga: SL/TP ikut momentum — bisa naik bisa turun, tapi SL
+   selalu di sisi rugi & TP di sisi untung dari harga berjalan */
+function ltAiTick(cy,cur){
+  if(lt.aiMeter===false||_ltAiSL==null)return;
+  const mom=_ltAiPrev==null?0:cur-_ltAiPrev;
+  _ltAiPrev=cur;
+  const j=()=> (Math.random()-0.5)*Math.max(0.08,Math.abs(mom)*0.8);
+  _ltAiSL+=mom*0.55+j();
+  _ltAiTP+=mom*0.35+j();
+  if(cy.dir==='buy'){_ltAiSL=Math.min(_ltAiSL,cur-0.2);_ltAiTP=Math.max(_ltAiTP,cur+0.2);}
+  else{_ltAiSL=Math.max(_ltAiSL,cur+0.2);_ltAiTP=Math.min(_ltAiTP,cur-0.2);}
+  document.getElementById('ltAiSL').textContent=formatPriceNum(_ltAiSL,lt.sym);
+  document.getElementById('ltAiTP').textContent=formatPriceNum(_ltAiTP,lt.sym);
+}
+/* CLOSE: tanpa stick, tampilkan hasil */
+function ltAiClosePhase(pnl){
+  if(lt.aiMeter===false)return;
+  ltAiPhaseSet('CLOSE','#ff9f0a');
+  ltAiStick('off');
+  _ltAiSL=null;_ltAiTP=null;
+  ltTypewrite(document.getElementById('ltAiText'),'Close '+formatMoney(pnl,2,true));
 }
 /* efek typewriter; token membatalkan ketikan lama kalau teks baru masuk */
 async function ltTypewrite(el,text){
@@ -1596,6 +1675,11 @@ async function ltTypewrite(el,text){
 async function ltAiScanPhase(cy){
   if(lt.aiMeter===false){await ltSleep(1800+Math.random()*1500);return;}
   const txt=document.getElementById('ltAiText');
+  ltAiPhaseSet('SCANNING','#8ea0b8');
+  ltAiStick('conf');
+  document.getElementById('ltAiEntry').textContent='—';
+  document.getElementById('ltAiSL').textContent='—';
+  document.getElementById('ltAiTP').textContent='—';
   ltAiSetConf(0);
   ltTypewrite(txt,'Scanning '+(lt.sym||'XAUUSDc')+' …');
   const dur=2400+Math.random()*1800, t0=Date.now();
@@ -1617,12 +1701,6 @@ async function ltAiScanPhase(cy){
   await ltTypewrite(txt,'Sinyal '+cy.dir.toUpperCase()+' '+(lt.sym||'XAUUSDc')+' · entry');
   await ltSleep(350);
 }
-/* setelah semua layer masuk: teks statis + equity kecil selama posisi jalan */
-function ltAiEntered(cy,realized){
-  if(lt.aiMeter===false)return;
-  ltTypewrite(document.getElementById('ltAiText'),cy.dir.toUpperCase()+' aktif · EQ '+formatMoney(lt.deposit+realized,2,false));
-}
-
 async function ltPlayLoop(){
   let realized=0;
   while(_ltPlayActive){
@@ -1631,6 +1709,10 @@ async function ltPlayLoop(){
       const cy=lt.cycles[ci];
       await ltAiScanPhase(cy);
       if(!_ltPlayActive) return;
+      ltAiEntryPhase(cy);
+      /* tahan sebentar biar fase ENTRY sempat terbaca (siklus 1 layer
+         langsung lompat ke RUNNING kalau tanpa jeda) */
+      if(lt.aiMeter!==false){await ltSleep(650+Math.random()*450);if(!_ltPlayActive)return;}
       const STEPS=Math.max(10,Math.min(40,cy.duration*4));
       const path=ltBuildPricePath(cy,STEPS);
       const stepMs=Math.max(120,(cy.duration*1000)/path.length);
@@ -1655,7 +1737,7 @@ async function ltPlayLoop(){
         if(i<cy.layers-1) await ltSleep(150+Math.random()*250);
       }
       if(!_ltPlayActive) return;
-      ltAiEntered(cy,realized);
+      ltAiRunPhase(cy,realized);
       const marginTotal=layers.reduce((s,L)=>s+ltCalcMargin(L.lot,L.open),0);
       const startStep=Math.min(cy.layers-1,path.length-1)+1;
       for(let s=startStep;s<path.length;s++){
@@ -1665,6 +1747,7 @@ async function ltPlayLoop(){
         const floating=rows.reduce((sum,r)=>sum+r.pnl,0);
         ltRenderPositionRows(rows);
         ltRenderTopValues(floating,realized,marginTotal);
+        ltAiTick(cy,cur);
         await ltSleep(stepMs);
       }
       if(!_ltPlayActive) return;
@@ -1676,6 +1759,7 @@ async function ltPlayLoop(){
       await ltSleep(600);
       if(!_ltPlayActive) return;
       realized+=finalFloating;
+      ltAiClosePhase(finalFloating);
       ltRenderPositionRows([]);
       ltRenderTopValues(0,realized,0);
       await ltSleep(1200+Math.random()*1300); /* jeda close->siklus berikutnya (fase scanning AI menambah jedanya sendiri) */
