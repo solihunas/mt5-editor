@@ -138,7 +138,12 @@ input[type=number]{-moz-appearance:textfield;}
 
 /* mode preview murni: TIDAK ada tombol apapun (ctrlbar/project bar/hint/
    tombol edit baris disembunyikan), cuma tombol back HP yang bisa keluar */
-body.previewmode #ctrlbar,body.previewmode #projectbar,body.previewmode .hint{display:none!important;}
+body.previewmode #ctrlbar,body.previewmode #projectbar,body.previewmode .hint,body.previewmode #appSwitch{display:none!important;}
+/* mode Preview: layar penuh — header & footer (foto) mentok tepi atas/bawah
+   viewport, statis (bukan dikunci rasio mockup kecil lagi); hanya area
+   tengah (ringkasan+daftar) yang menyesuaikan tinggi & tetap discroll. */
+body.previewmode{justify-content:center;overflow:hidden;background:#fff;align-self:stretch;}
+body.previewmode #photowrap{width:100vw;max-width:none;height:100vh;aspect-ratio:auto;}
 .spin{display:inline-block;width:13px;height:13px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:sp .7s linear infinite;vertical-align:-2px;margin-right:5px;}
 @keyframes sp{to{transform:rotate(360deg);}}
 
@@ -696,7 +701,7 @@ function deleteProject(id,event){
 /* Deposito & Keuntungan = input manual. Saldo = HASIL (Deposito + Keuntungan),
    dihitung otomatis dan tidak bisa diketik langsung. */
 const SUMMARY_ROWS=[
- {key:'keuntungan',label:'Keuntungan:',signed:true, editable:true},
+ {key:'keuntungan',label:'Keuntungan:',signed:false,editable:true},
  {key:'deposito',  label:'Deposito',   signed:false,editable:true},
  {key:'swap',      label:'Swap:',      signed:false,editable:true},
  {key:'komisi',    label:'Komisi:',    signed:false,editable:true},
