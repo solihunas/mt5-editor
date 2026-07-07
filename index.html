@@ -431,6 +431,10 @@ body.ltplaymode #ltPhotowrap{width:min(100vw,calc(100vh * 1080 / 2229));max-widt
   </div>
   <div style="padding:0 12px 10px;"><input id="ltDeposit" class="fld" type="text" inputmode="decimal" oninput="ltDepositChanged()"></div>
   <div style="padding:0 12px 10px;">
+    <span class="fieldlbl" style="color:#8e8e93;">Tambahan Keuntungan di Riwayat (2.b) — opsional, boleh + atau -, dikosongkan/0 = tidak ada tambahan</span>
+    <input id="ltKeuntunganOffset" class="fld" type="text" inputmode="decimal" oninput="ltKeuntunganOffsetChanged()">
+  </div>
+  <div style="padding:0 12px 10px;">
     <span class="fieldlbl" style="color:#8e8e93;">Teks watermark saat Play — baris kecil "BY: IPI DIGITAL" selalu ikut tampil (tidak bisa dihapus)</span>
     <input id="ltWmInput" class="fld" type="text" maxlength="40" oninput="ltWmChanged()">
     <div style="display:flex;gap:9px;align-items:center;margin-top:10px;">
@@ -1085,6 +1089,7 @@ function ltDefault(){
     wmTilt:true,/* true = miring -16deg, false = horizontal */
     aiMeter:true,
     aiTop:70,   /* posisi vertikal meter AI (% tinggi kanvas, hasil drag) */
+    keuntunganOffset:0, /* opsional: tambahan statis ke total Keuntungan di 2.b (bisa +/-) */
     history:[],
     cycles:[
      {dir:'sell',layers:1,lot:0.01,open:4055.374,close:4042.916,duration:6,time:'2026.06.30 09:14:07'},
@@ -1327,6 +1332,7 @@ function ltMakeDragY(el,apply){
 }
 function ltRenderAll(){
   document.getElementById('ltDeposit').value=lt.deposit;
+  document.getElementById('ltKeuntunganOffset').value=lt.keuntunganOffset||0;
   document.getElementById('ltWmInput').value=lt.wmText||'AUTOTRADE';
   document.getElementById('ltWmSize').value=lt.wmSize||18;
   document.getElementById('ltAiToggle').checked=lt.aiMeter!==false;
@@ -1368,6 +1374,11 @@ function ltRenderCycleList(){
   }).join('');
 }
 function ltDepositChanged(){lt.deposit=parseNum(document.getElementById('ltDeposit').value)||0;ltRenderCanvasStatic();ltRenderCycleList();ltSave();}
+function ltKeuntunganOffsetChanged(){
+  lt.keuntunganOffset=parseNum(document.getElementById('ltKeuntunganOffset').value)||0;
+  if(_ltHistMode) ltRenderPlayHistory(); /* sinkron langsung kalau lagi dilihat */
+  ltSave();
+}
 function ltDeleteCycle(i){lt.cycles.splice(i,1);ltGenHistory(false);ltRenderAll();ltSave();}
 function ltDuplicateCycle(i){
   const copy=JSON.parse(JSON.stringify(lt.cycles[i]));
@@ -1687,7 +1698,7 @@ function ltSessPush(cy,finalRows){
    Riwayat (GS) supaya identik dengan app Riwayat asli */
 function ltRenderPlayHistory(){
   const trades=_ltSessHist;
-  const keuntungan=trades.reduce((s,h)=>s+h.pnl,0);
+  const keuntungan=(lt.keuntunganOffset||0)+trades.reduce((s,h)=>s+h.pnl,0);
   const d={keuntungan,deposito:lt.deposit,swap:0,komisi:0,saldo:lt.deposit+keuntungan};
   const sc=document.getElementById('ltHistSummary');
   sc.innerHTML=SUMMARY_ROWS.map(r=>{
