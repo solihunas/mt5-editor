@@ -465,25 +465,21 @@ body.ltplaymode #ltPhotowrap{width:min(100vw,calc(100vh * 1080 / 2229));max-widt
 <div class="ov-backdrop" id="ltfBackdrop" onclick="ltCloseCycleForm()"></div>
 <div class="ov-panel" id="ltfPanel">
   <div class="eplbl">Siklus</div>
-  <div class="dirtoggle">
-    <button class="dirbtn buy" id="ltfBuyBtn" onclick="ltfSetDir('buy')">BUY</button>
-    <button class="dirbtn sell" id="ltfSellBtn" onclick="ltfSetDir('sell')">SELL</button>
-  </div>
+  <div style="margin-bottom:12px;"><span class="fieldlbl">Arah</span><select id="ltfDir" class="fld" onchange="ltfSetDir(this.value)"><option value="buy">BUY</option><option value="sell">SELL</option></select></div>
   <div class="grid2">
-    <div><span class="fieldlbl">Total Layer</span><input id="ltfLayers" class="fld" type="number" step="1" min="1" oninput="ltfUpdatePreview()"></div>
+    <div><span class="fieldlbl">Total Layer</span><select id="ltfLayers" class="fld" onchange="ltfUpdatePreview()"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option></select></div>
     <div><span class="fieldlbl">Lot / layer</span><input id="ltfLot" class="fld" type="number" step="0.01" oninput="ltfUpdatePreview()"></div>
   </div>
   <div class="grid2" style="margin-top:8px;">
     <div><span class="fieldlbl">Harga Open</span><input id="ltfOpen" class="fld" type="text" inputmode="decimal" oninput="ltfUpdatePreview()"></div>
-    <div><span class="fieldlbl">Harga Close</span><input id="ltfClose" class="fld" type="text" inputmode="decimal" oninput="ltfUpdatePreview()"></div>
+    <div><span class="fieldlbl">Close (poin dari Open)</span><input id="ltfClose" class="fld" type="text" inputmode="decimal" placeholder="mis. 0.123 / -0.123" oninput="ltfUpdatePreview()"></div>
   </div>
   <div class="grid2" style="margin-top:8px;">
-    <div><span class="fieldlbl">Durasi berjalan saat Play (detik)</span><input id="ltfDuration" class="fld" type="number" step="1" min="1"></div>
-    <div><span class="fieldlbl">Max Floating (opsional)</span><input id="ltfMaxFloat" class="fld" type="text" inputmode="decimal" placeholder="mis. 3 998.000"></div>
+    <div><span class="fieldlbl">Durasi berjalan saat Play (detik)</span><select id="ltfDuration" class="fld"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option><option value="11">11</option><option value="12">12</option><option value="13">13</option><option value="14">14</option><option value="15">15</option><option value="16">16</option><option value="17">17</option><option value="18">18</option><option value="19">19</option><option value="20">20</option></select></div>
+    <div><span class="fieldlbl">Max Floating (poin dari Open, opsional)</span><input id="ltfMaxFloat" class="fld" type="text" inputmode="decimal" placeholder="mis. 0.123 atau -0.123"></div>
   </div>
-  <div style="font-size:10.5px;color:#8e8e93;margin-top:4px;line-height:1.4;">Max Floating = titik harga terjauh yang sempat disentuh (floating rugi dulu) sebelum akhirnya ditutup di Harga Close — bikin animasinya realistis. Kosongkan kalau tidak perlu.</div>
-  <div style="margin-top:8px;"><span class="fieldlbl">Waktu open (202X.MM.DD HH:MM:SS) — ketik angka saja</span><input id="ltfTime" class="fld" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="off" oninput="ltfTimeInput(this)"></div>
-  <div style="font-size:10.5px;color:#8e8e93;margin-top:4px;line-height:1.4;">Waktu jadi acuan riwayat otomatis: open &amp; close tiap layer digeser acak beberapa detik. Tahun dikunci 202X (hanya digit terakhir yang bisa diganti), bulan maks 12, tanggal maks 31. Posisi rugi otomatis bertanda <b>[sl]</b> di riwayat.</div>
+  <div id="ltfTimeWrap" style="margin-top:8px;"><span class="fieldlbl">Waktu open (202X.MM.DD HH:MM:SS) — ketik angka saja</span><input id="ltfTime" class="fld" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="off" oninput="ltfTimeInput(this)"></div>
+  <div id="ltfGapWrap" style="margin-top:8px;"><span class="fieldlbl">Jarak waktu dari siklus sebelumnya (mm:ss)</span><input id="ltfGap" class="fld" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="off" oninput="ltfGapInput(this)"></div>
   <div class="previewline" id="ltfPreview">Hasil per layer: <b>0.00</b></div>
   <div class="epbrow"><button class="epok" onclick="ltfSubmit()">Simpan</button><button class="epcancel" onclick="ltCloseCycleForm()">Batal</button></div>
 </div>
@@ -767,7 +763,7 @@ function renderTrades(){
     const symSpan=spanTag(t.sym,GS.sym,false,`class="symtxt" onclick="openSymEdit(${i})"`);
     const dirSpan=spanTag((t.dir==='buy'?'buy':'sell')+' '+Number(t.lot).toFixed(2),Object.assign({},GS.dir,{color:dirColor}),false);
     /* mark = label penutupan [sl]/[tp] bawaan riwayat turunan Live Trade */
-    const priceSpan=spanTag(formatPriceNum(t.open,t.sym)+'  →  '+formatPriceNum(t.close,t.sym)+(t.mark?'  ['+t.mark+']':''),GS.price,false);
+    const priceSpan=spanTag(formatPriceNum(t.open,t.sym)+'  →  '+formatPriceNum(t.close,t.sym),GS.price,false);
     const dateSpan=spanTag(t.time,GS.date,true);
     const pnlSpan=spanTag(formatMoney(pnl,2,true),Object.assign({},GS.pnl,{color:pnlColor}),true);
     return `<div class="trow"><div class="tbar ${bar}"></div><div class="tc"><div class="tleft"><div class="tsl">${symSpan}<span class="tcomma">,</span>${dirSpan}</div><div class="tprices">${priceSpan}</div></div><div class="tright"><div class="tdate">${dateSpan}</div><div class="tpnl">${pnlSpan}</div></div></div><div class="rowbtns"><button class="editbtn" onclick="openTradeForm('${t.dir}',${i})">✎</button><button class="copybtn" onclick="copyT(${i})">⧉</button><button class="delbtn" onclick="delT(${i})">✕</button></div></div>`;
@@ -1393,31 +1389,59 @@ function ltDuplicateCycle(i){
 let ltfEditIndex=null,ltfDir='sell';
 function ltfSetDir(d){
   ltfDir=d;
-  document.getElementById('ltfBuyBtn').classList.toggle('on',d==='buy');
-  document.getElementById('ltfSellBtn').classList.toggle('on',d==='sell');
+  document.getElementById('ltfDir').value=d;
   ltfUpdatePreview();
+}
+/* jarak waktu antar siklus (mm:ss) — typo diclamp otomatis, maks 59:59 */
+function ltGapToStr(totalSec){
+  totalSec=Math.max(0,Math.round(totalSec));
+  const mi=Math.min(59,Math.floor(totalSec/60)), ss=Math.min(59,totalSec%60);
+  return `${pad2(mi)}:${pad2(ss)}`;
+}
+function ltGapToSec(s){
+  const d=String(s||'').replace(/\D/g,'').padEnd(4,'0').slice(0,4);
+  const mi=Math.min(59,+d.slice(0,2)||0), ss=Math.min(59,+d.slice(2,4)||0);
+  return mi*60+ss;
+}
+function ltfGapInput(el){
+  let d=el.value.replace(/\D/g,'').slice(0,4);
+  if(d.length>2) d=d.slice(0,2)+':'+d.slice(2);
+  el.value=d;
 }
 function ltOpenCycleForm(editIndex){
   ltfEditIndex=(typeof editIndex==='number')?editIndex:null;
+  const idx=(ltfEditIndex!==null)?ltfEditIndex:lt.cycles.length;
+  document.getElementById('ltfTimeWrap').style.display=idx===0?'':'none';
+  document.getElementById('ltfGapWrap').style.display=idx===0?'none':'';
   if(ltfEditIndex!==null){
     const cy=lt.cycles[ltfEditIndex];
     ltfSetDir(cy.dir);
     document.getElementById('ltfLayers').value=cy.layers;
     document.getElementById('ltfLot').value=cy.lot;
     document.getElementById('ltfOpen').value=cy.open;
-    document.getElementById('ltfClose').value=cy.close;
+    document.getElementById('ltfClose').value=+(cy.close-cy.open).toFixed(3);
     document.getElementById('ltfDuration').value=cy.duration;
-    document.getElementById('ltfMaxFloat').value=cy.maxFloat!=null?cy.maxFloat:'';
-    document.getElementById('ltfTime').value=cy.time||ltNextDefaultTime();
+    document.getElementById('ltfMaxFloat').value=cy.maxFloat!=null?+(cy.maxFloat-cy.open).toFixed(3):'';
+    if(idx===0){
+      document.getElementById('ltfTime').value=cy.time||ltNextDefaultTime();
+    }else{
+      const prev=lt.cycles[idx-1];
+      document.getElementById('ltfGap').value=ltGapToStr((ltParseStamp(cy.time)-ltParseStamp(prev.time))/1000);
+    }
   }else{
     ltfSetDir('sell');
-    document.getElementById('ltfLayers').value=1;
+    document.getElementById('ltfLayers').value=4;
     document.getElementById('ltfLot').value=0.01;
     document.getElementById('ltfOpen').value='';
     document.getElementById('ltfClose').value='';
     document.getElementById('ltfDuration').value=6;
     document.getElementById('ltfMaxFloat').value='';
-    document.getElementById('ltfTime').value=ltNextDefaultTime();
+    if(idx===0){
+      document.getElementById('ltfTime').value=ltNextDefaultTime();
+    }else{
+      const prev=lt.cycles[idx-1];
+      document.getElementById('ltfGap').value=ltGapToStr((ltParseStamp(ltNextDefaultTime())-ltParseStamp(prev.time))/1000);
+    }
   }
   ltfUpdatePreview();
   document.getElementById('ltfBackdrop').style.display='block';
@@ -1427,22 +1451,32 @@ function ltCloseCycleForm(){document.getElementById('ltfBackdrop').style.display
 function ltfUpdatePreview(){
   const lot=parseNum(document.getElementById('ltfLot').value)||0;
   const open=parseNum(document.getElementById('ltfOpen').value)||0;
-  const close=parseNum(document.getElementById('ltfClose').value)||0;
+  const close=open+(parseNum(document.getElementById('ltfClose').value)||0);
   const pnl=ltCalcPnl(ltfDir,lot,open,close);
   const color=pnl<0?ltGS.negColor:ltGS.posColor;
   document.getElementById('ltfPreview').innerHTML=`Hasil per layer: <b style="color:${color}">${escapeHtml(formatMoney(pnl,2,true))}</b>`;
 }
 function ltfSubmit(){
+  const idx=(ltfEditIndex!==null)?ltfEditIndex:lt.cycles.length;
+  const open=parseNum(document.getElementById('ltfOpen').value)||0;
   const mfRaw=document.getElementById('ltfMaxFloat').value.trim();
+  let time;
+  if(idx===0){
+    time=ltClampStamp(document.getElementById('ltfTime').value);
+  }else{
+    const prev=lt.cycles[idx-1];
+    const gapSec=ltGapToSec(document.getElementById('ltfGap').value);
+    time=ltFormatStamp(new Date(ltParseStamp(prev.time).getTime()+gapSec*1000));
+  }
   const cycle={
     dir:ltfDir,
     layers:Math.max(1,parseInt(document.getElementById('ltfLayers').value)||1),
     lot:parseNum(document.getElementById('ltfLot').value)||0.01,
-    open:parseNum(document.getElementById('ltfOpen').value)||0,
-    close:parseNum(document.getElementById('ltfClose').value)||0,
+    open,
+    close:open+(parseNum(document.getElementById('ltfClose').value)||0),
     duration:Math.max(1,parseInt(document.getElementById('ltfDuration').value)||6),
-    maxFloat: mfRaw===''?null:parseNum(mfRaw),
-    time:ltClampStamp(document.getElementById('ltfTime').value),
+    maxFloat: mfRaw===''?null:open+parseNum(mfRaw),
+    time,
   };
   if(ltfEditIndex!==null) lt.cycles[ltfEditIndex]=cycle;
   else lt.cycles.push(cycle);
@@ -1493,7 +1527,7 @@ function ltRenderHistList(){
   if(!lt.history.length){c.innerHTML='<div class="ltcyc-row" style="color:#8e8e93;">Belum ada — tambah siklus dulu.</div>';return;}
   c.innerHTML=lt.history.map(h=>{
     const pnlColor=h.pnl<0?'#ff6b60':'#6de8a0';
-    return `<div class="ltcyc-row"><div class="ltcyc-info"><b>${h.dir}</b> ${Number(h.lot).toFixed(2)} ${escapeHtml(h.sym)} · ${escapeHtml(formatPriceNum(h.open,h.sym))} → ${escapeHtml(formatPriceNum(h.close,h.sym))}${h.mark?' <b>['+escapeHtml(h.mark)+']</b>':''}<br><span style="color:#8e8e93;font-size:11px;">${escapeHtml(h.timeOpen)} → ${escapeHtml(h.timeClose)}</span></div><b style="color:${pnlColor};flex-shrink:0;">${escapeHtml(formatMoney(h.pnl,2,true))}</b></div>`;
+    return `<div class="ltcyc-row"><div class="ltcyc-info"><b>${h.dir}</b> ${Number(h.lot).toFixed(2)} ${escapeHtml(h.sym)} · ${escapeHtml(formatPriceNum(h.open,h.sym))} → ${escapeHtml(formatPriceNum(h.close,h.sym))}<br><span style="color:#8e8e93;font-size:11px;">${escapeHtml(h.timeOpen)} → ${escapeHtml(h.timeClose)}</span></div><b style="color:${pnlColor};flex-shrink:0;">${escapeHtml(formatMoney(h.pnl,2,true))}</b></div>`;
   }).join('');
 }
 /* kirim riwayat turunan ke app Riwayat sebagai project baru — semua fitur
@@ -1717,7 +1751,7 @@ function ltRenderPlayHistory(){
     const pnlColor=pnl<0?GS.negColor:GS.posColor;
     const symSpan=spanTag(h.sym,GS.sym,false);
     const dirSpan=spanTag((h.dir==='buy'?'buy':'sell')+' '+Number(h.lot).toFixed(2),Object.assign({},GS.dir,{color:dirColor}),false);
-    const priceSpan=spanTag(formatPriceNum(h.open,h.sym)+'  →  '+formatPriceNum(h.close,h.sym)+(h.mark==='sl'?'  [sl]':''),GS.price,false);
+    const priceSpan=spanTag(formatPriceNum(h.open,h.sym)+'  →  '+formatPriceNum(h.close,h.sym),GS.price,false);
     const dateSpan=spanTag(h.timeClose,GS.date,true);
     /* hasil history TANPA tanda + untuk profit (biru); rugi tetap '-' */
     const pnlSpan=spanTag(formatMoney(pnl,2,false),Object.assign({},GS.pnl,{color:pnlColor}),true);
