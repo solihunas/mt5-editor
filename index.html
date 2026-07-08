@@ -1104,7 +1104,7 @@ function ltDefaultGS(){
     pnl:  {fs:15,  fw:700,sx:100},
     val:  {fs:14.5,fw:700,sx:100,color:'#ffffff'},
     posColor:'#0a84ff', negColor:'#ff453a',
-    theme:'dark', pnlColWidth:34, rowPadY:6, showMargin:true, lineGap:1,
+    theme:'dark', pnlColWidth:34, rowPadY:6, lineGap:1,
   };
 }
 let lt=ltDefault();
@@ -1238,7 +1238,7 @@ function ltRenderBalanceRows(saldo,equity,marginTotal,marginBebas,levelMargin){
   const rows=[['Saldo:',formatMoney(saldo,2,false)],['Equity:',formatMoney(equity,2,false)],['Margin Bebas:',formatMoney(marginBebas,2,false)]];
   /* Margin & Level Margin (%) cuma tampil kalau ada posisi terbuka — sama
      seperti header/bar Posisi, biar konsisten dengan fase scanning */
-  if(ltGS.showMargin && _ltHasPosisi){
+  if(_ltHasPosisi){
     rows.push(['Margin:',formatMoney(marginTotal,2,false)]);
     rows.push(['Level Margin (%):',formatMoney(levelMargin,2,false)]);
   }
@@ -1579,10 +1579,7 @@ function ltBuildGsBody(){
     </div>
     <div style="font-size:10.5px;color:#8e8e93;margin-bottom:10px;">Kolom harga Open → Current/Close otomatis mengisi sisa lebar. Kecilkan padding/jarak biar baris lebih tipis/ceper seperti aslinya.</div>
     <div class="epsec">Margin</div>
-    <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:#333;font-weight:600;cursor:pointer;margin-bottom:10px;">
-      <input type="checkbox" id="ltgsShowMargin"> Tampilkan baris "Margin:" &amp; "Level Margin (%):"
-    </label>
-    <div style="font-size:10.5px;color:#8e8e93;margin-top:-6px;margin-bottom:10px;">Dihitung otomatis dari posisi terbuka (kontrak 100 oz/lot, leverage 1:2000) — Margin Bebas &amp; Level Margin ikut menyesuaikan.</div>
+    <div style="font-size:10.5px;color:#8e8e93;margin-bottom:10px;">Baris "Margin:" &amp; "Level Margin (%):" otomatis muncul kalau ada posisi terbuka, dan hilang kalau tidak ada — dihitung dari posisi terbuka (kontrak 100 oz/lot, leverage 1:2000).</div>
   `+LT_STYLE_FIELDS.map(f=>`
     <div class="epsec">${f.label}</div>
     <div class="${f.hasColor?'grid4':'grid3'}">
@@ -1626,7 +1623,6 @@ function ltOpenGsPanel(){
   document.getElementById('ltgsPnlColWidth').value=ltGS.pnlColWidth||34;
   document.getElementById('ltgsRowPadY').value=ltGS.rowPadY!=null?ltGS.rowPadY:6;
   document.getElementById('ltgsLineGap').value=ltGS.lineGap!=null?ltGS.lineGap:1;
-  document.getElementById('ltgsShowMargin').checked=ltGS.showMargin!==false;
   LT_STYLE_FIELDS.forEach(f=>{
     const st=ltGS[f.key];
     document.getElementById(`ltgs-${f.key}-fs`).value=st.fs;
@@ -1661,7 +1657,6 @@ function ltGsSubmit(){
   ltGS.rowPadY=isNaN(rp)?6:Math.min(20,Math.max(2,rp));
   const lg=parseFloat(document.getElementById('ltgsLineGap').value);
   ltGS.lineGap=isNaN(lg)?1:Math.min(16,Math.max(0,lg));
-  ltGS.showMargin=document.getElementById('ltgsShowMargin').checked;
   ltApplyTheme(ltGS.theme);
   ltRenderAll();ltSave();ltCloseGsPanel();
 }
