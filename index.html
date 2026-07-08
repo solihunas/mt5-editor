@@ -1218,6 +1218,7 @@ function ltRenderCanvasStatic(){
   ltRenderTopValues(0,totalPnl,0); /* floating=0 (semua dianggap sudah close), realized=totalPnl, margin=0 (tidak ada posisi terbuka di preview statis) */
 }
 function ltRenderPositionRows(rows){
+  ltUpdateHeaderState(rows.length>0);
   const c=document.getElementById('ltPosList');
   const pad=Math.min(20,Math.max(2,ltGS.rowPadY!=null?ltGS.rowPadY:6));
   const pnlW=Math.min(60,Math.max(15,ltGS.pnlColWidth||34));
@@ -1265,15 +1266,26 @@ const LT_THEMES={
     textDefaultColor:'#ffffff',
   },
   white:{
-    topImg:'assets/livetrade-chrome-white.jpg', posisiImg:'assets/livetrade-posisi-white.jpg', botImg:'assets/livetrade-bottom-white.jpg',
+    topImg:'assets/livetrade-header-posisi.jpg', topImgNoPos:'assets/livetrade-header-noposisi.jpg',
+    posisiImg:'assets/livetrade-posisi-white.jpg', botImg:'assets/livetrade-bottom-white.jpg',
     topW:1220, topH:190,
     boxes:{ ltTopPnl:{l:118,t:64,w:260,h:42,align:'left'} },
     textDefaultColor:'#1c1c1e',
   },
 };
+/* apakah sedang ada posisi terbuka — dipakai untuk pilih header A (tidak
+   ada posisi: judul "Trade" turun & sedikit besar, bar "Posisi" sembunyi)
+   vs header B (ada posisi: judul kecil geser atas, ada bar "Posisi") */
+let _ltHasPosisi=false;
+function ltUpdateHeaderState(hasPosisi){
+  _ltHasPosisi=hasPosisi;
+  const cfg=LT_THEMES[ltGS.theme||'dark']||LT_THEMES.dark;
+  document.getElementById('ltTopImg').src=hasPosisi?cfg.topImg:(cfg.topImgNoPos||cfg.topImg);
+  document.getElementById('ltPosisiImg').style.display=hasPosisi?'':'none';
+}
 function ltApplyTheme(theme){
   const cfg=LT_THEMES[theme]||LT_THEMES.dark;
-  document.getElementById('ltTopImg').src=cfg.topImg;
+  document.getElementById('ltTopImg').src=_ltHasPosisi?cfg.topImg:(cfg.topImgNoPos||cfg.topImg);
   document.getElementById('ltPosisiImg').src=cfg.posisiImg;
   document.getElementById('ltBotImg').src=cfg.botImg;
   document.getElementById('ltPhotowrap').classList.toggle('theme-white',theme==='white');
