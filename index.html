@@ -1235,10 +1235,13 @@ function ltRenderPositionRows(rows){
 function ltRenderBalanceRows(saldo,equity,marginTotal,marginBebas,levelMargin){
   const wrap=document.getElementById('ltBalanceRows');
   const valSty=ltFieldCss(ltGS.val);
-  const rows=[['Saldo:',formatMoney(saldo,2,false)],['Equity:',formatMoney(equity,2,false)]];
-  if(ltGS.showMargin) rows.push(['Margin:',formatMoney(marginTotal,2,false)]);
-  rows.push(['Margin Bebas:',formatMoney(marginBebas,2,false)]);
-  if(ltGS.showMargin) rows.push(['Level Margin (%):',formatMoney(levelMargin,2,false)]);
+  const rows=[['Saldo:',formatMoney(saldo,2,false)],['Equity:',formatMoney(equity,2,false)],['Margin Bebas:',formatMoney(marginBebas,2,false)]];
+  /* Margin & Level Margin (%) cuma tampil kalau ada posisi terbuka — sama
+     seperti header/bar Posisi, biar konsisten dengan fase scanning */
+  if(ltGS.showMargin && _ltHasPosisi){
+    rows.push(['Margin:',formatMoney(marginTotal,2,false)]);
+    rows.push(['Level Margin (%):',formatMoney(levelMargin,2,false)]);
+  }
   wrap.innerHTML=rows.map(([lbl,val])=>`<div class="ltbal-row"><span class="ltbal-lbl">${escapeHtml(lbl)}</span><span class="ltbal-dots"></span><span style="${valSty}">${escapeHtml(val)}</span></div>`).join('');
 }
 function ltRenderTopValues(floating,realized,marginTotal){
