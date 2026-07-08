@@ -171,6 +171,10 @@ body.previewmode #photowrap{width:100vw;max-width:none;height:100vh;aspect-ratio
    (bukan foto) supaya jumlah barisnya bisa fleksibel (3 atau 5 baris) */
 #ltBalanceRows{background:#000;flex-shrink:0;padding:13px 14px 4px;}
 #ltPhotowrap.theme-white #ltBalanceRows{background:#fff;}
+/* garis redup penutup blok Saldo/Equity/dll — cuma tampil kalau TIDAK ada
+   posisi terbuka (kalau ada posisi, bar "Posisi" sudah jadi pembatasnya) */
+#ltBalanceRows.bal-bottom-line{border-bottom:1px solid #1c1c1e;padding-bottom:13px;}
+#ltPhotowrap.theme-white #ltBalanceRows.bal-bottom-line{border-bottom-color:#e5e5ea;}
 .ltbal-row{display:flex;align-items:baseline;margin-bottom:10px;}
 .ltbal-lbl{font-weight:700;font-size:15px;font-family:'Roboto Condensed',sans-serif;color:#fff;white-space:nowrap;}
 #ltPhotowrap.theme-white .ltbal-lbl{color:#1c1c1e;}
@@ -1285,6 +1289,7 @@ function ltUpdateHeaderState(hasPosisi){
   const cfg=LT_THEMES[ltGS.theme||'dark']||LT_THEMES.dark;
   document.getElementById('ltTopImg').src=hasPosisi?cfg.topImg:(cfg.topImgNoPos||cfg.topImg);
   document.getElementById('ltPosisiImg').style.display=hasPosisi?'':'none';
+  document.getElementById('ltBalanceRows').classList.toggle('bal-bottom-line',!hasPosisi);
 }
 function ltApplyTheme(theme){
   const cfg=LT_THEMES[theme]||LT_THEMES.dark;
