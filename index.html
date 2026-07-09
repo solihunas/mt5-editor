@@ -223,7 +223,7 @@ body.previewmode #photowrap{width:100vw;max-width:none;height:100vh;aspect-ratio
   background:repeating-conic-gradient(from var(--wmang),#ff2d2d 0deg 5deg,transparent 5deg 11deg,#2d6bff 11deg 16deg,transparent 16deg 22deg,#ffffff 22deg 27deg,transparent 27deg 33deg);
   -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;
   mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);mask-composite:exclude;
-  animation:wmrunner 5s linear infinite;filter:drop-shadow(0 0 4px rgba(90,140,255,.8));pointer-events:none;}
+  animation:wmrunner var(--wm-runner-dur,5s) linear infinite;filter:drop-shadow(0 0 4px rgba(90,140,255,.8));pointer-events:none;}
 @keyframes wmneon{from{background-position:0% 50%;}to{background-position:300% 50%;}}
 @keyframes wmrunner{to{--wmang:360deg;}}
 .lt-watermark .lt-wm-main{display:block;}
@@ -255,11 +255,10 @@ body.ltplaymode #ltAiMeter.on{display:flex;}
 /* reset futuristik: kilat terang lalu memudar ke atas sebelum balik ke scan */
 .ltai-log.ltai-reset{animation:ltaireset .48s ease forwards;}
 @keyframes ltaireset{0%{opacity:1;filter:brightness(1);}35%{opacity:1;filter:brightness(2.3) drop-shadow(0 0 10px #7d9bff);}100%{opacity:0;filter:brightness(1);transform:translateY(-8px);}}
-.ltai-info{margin-top:auto;border-top:1px solid rgba(255,255,255,.08);padding-top:8px;display:flex;flex-direction:column;gap:6px;}
-.ltai-irow{display:flex;justify-content:space-between;align-items:baseline;}
-.ltai-ilbl{font-size:10.5px;color:#8e8e93;font-weight:600;letter-spacing:.5px;}
-/* Entry/SL/TP: putih bercahaya (glow), SL & TP bergerak ikut momentum */
-.ltai-ival{font-size:11.5px;color:#ffffff;font-weight:700;text-shadow:0 0 6px rgba(255,255,255,.55);}
+/* judul overlay — background beda dari hitam (kartu) & putih (kanvas),
+   dibatasi garis dari area log fase (scanning/execute/dll) di bawahnya.
+   Ukuran huruf mengikuti lebar kartu (clamp thd vw), elegan & ringkas. */
+.ltai-title{margin:-12px -13px 10px;padding:9px 13px;background:linear-gradient(135deg,#3a1f6b,#7a3fd8);color:#fff;text-align:center;font-weight:800;letter-spacing:2px;text-transform:uppercase;font-size:clamp(11px,3.8vw,19px);border-radius:12px 12px 0 0;border-bottom:1px solid rgba(255,255,255,.14);text-shadow:0 1px 3px rgba(0,0,0,.4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 
 body.ltplaymode #ltCtrlbar,body.ltplaymode .hint,body.ltplaymode #ltCycleWrap,body.ltplaymode #ltHistWrap,body.ltplaymode #appSwitch{display:none!important;}
 
@@ -426,12 +425,8 @@ body.ltplaymode #ltPhotowrap{width:min(100vw,calc(100vh * 1080 / 2229));max-widt
     <img id="ltHistBot" src="assets/livetrade-rw-bottom.jpg" alt="Navigasi MT5">
   </div>
   <div id="ltAiMeter">
+    <div class="ltai-title">CLAUDE AI</div>
     <div class="ltai-log" id="ltAiLog"></div>
-    <div class="ltai-info" id="ltAiInfo">
-      <div class="ltai-irow"><span class="ltai-ilbl">ENTRY</span><span class="ltai-ival" id="ltAiEntry">—</span></div>
-      <div class="ltai-irow"><span class="ltai-ilbl">SL</span><span class="ltai-ival" id="ltAiSL">—</span></div>
-      <div class="ltai-irow"><span class="ltai-ilbl">TP</span><span class="ltai-ival" id="ltAiTP">—</span></div>
-    </div>
   </div>
   <div class="lt-watermark" id="ltWatermark"><span class="lt-wm-main" id="ltWmMain">AUTOTRADE</span><span class="lt-wm-sub">BY: IPI DIGITAL</span></div>
 </div>
@@ -454,6 +449,7 @@ body.ltplaymode #ltPhotowrap{width:min(100vw,calc(100vh * 1080 / 2229));max-widt
   <div id="ltCycleList"></div>
   <button class="addbtn buy" style="margin:11px 12px 12px;width:calc(100% - 24px);" onclick="ltOpenCycleForm()">+ Tambah Siklus</button>
   <button class="addbtn adv" style="margin:0 12px 12px;width:calc(100% - 24px);" onclick="ltOpenAdvPanel()">📋 Input Advance (paste banyak siklus)</button>
+  <button class="addbtn sell" style="margin:0 12px 12px;width:calc(100% - 24px);" onclick="ltDeleteAllCycles()">🗑 Hapus Semua Siklus</button>
 </div>
 
 <!-- RIWAYAT TURUNAN LIVE TRADE (2.b) — tergenerate otomatis dari siklus -->
@@ -1105,6 +1101,7 @@ function ltDefault(){
     wmTop:50,   /* posisi vertikal watermark (% tinggi kanvas, hasil drag) */
     wmSize:18,  /* ukuran dasar huruf watermark (px); sub ikut 0.75x */
     wmTilt:true,/* true = miring -16deg, false = horizontal */
+    wmOpacity:100,/* opacity watermark 0-100 */
     aiMeter:true,
     aiTop:70,   /* posisi vertikal meter AI (% tinggi kanvas, hasil drag) */
     keuntunganOffset:0, /* opsional: tambahan statis ke total Keuntungan di 2.b (bisa +/-) */
@@ -1384,6 +1381,15 @@ function ltApplyWmStyle(){
   const wm=document.getElementById('ltWatermark');
   wm.style.fontSize=(lt.wmSize||18)+'px';
   wm.style.transform='translate(-50%,-50%) rotate('+((lt.wmTilt===false)?0:-16)+'deg)';
+  wm.style.opacity=(lt.wmOpacity!=null?lt.wmOpacity:100)/100;
+  /* putaran bingkai degradasi mengikuti Kecepatan Tick — rasio 10:1
+     (tick/detik: 10 -> 1 putaran/detik) */
+  wm.style.setProperty('--wm-runner-dur',(10/Math.max(1,ltGS.tickSpeed||4))+'s');
+}
+function ltWmOpacityChanged(){
+  lt.wmOpacity=parseInt(document.getElementById('ltWmOpacity').value);
+  if(isNaN(lt.wmOpacity))lt.wmOpacity=100;
+  ltApplyWmStyle();ltSave();
 }
 function ltWmRenderModeBtns(){
   const tilt=lt.wmTilt!==false;
@@ -1411,6 +1417,13 @@ function ltKeuntunganOffsetChanged(){
   ltSave();
 }
 function ltDeleteCycle(i){lt.cycles.splice(i,1);ltGenHistory(false);ltRenderAll();ltSave();}
+function ltDeleteAllCycles(){
+  if(!lt.cycles.length){alert('Tidak ada siklus untuk dihapus.');return;}
+  if(!confirm(`Yakin hapus SEMUA ${lt.cycles.length} siklus? Tindakan ini tidak bisa dibatalkan.`))return;
+  lt.cycles=[];
+  ltGenHistory(false);
+  ltRenderAll();ltSave();
+}
 function ltDuplicateCycle(i){
   const copy=JSON.parse(JSON.stringify(lt.cycles[i]));
   /* geser waktu salinan supaya tidak identik dengan aslinya */
@@ -1710,6 +1723,10 @@ function ltBuildGsBody(){
       <button type="button" id="ltWmTiltBtn" onclick="ltWmSetTilt(true)" style="padding:6px 10px;border-radius:7px;border:1px solid #3a3a3e;font-size:11px;font-weight:700;cursor:pointer;">Miring</button>
       <button type="button" id="ltWmHorizBtn" onclick="ltWmSetTilt(false)" style="padding:6px 10px;border-radius:7px;border:1px solid #3a3a3e;font-size:11px;font-weight:700;cursor:pointer;">Horizontal</button>
     </div>
+    <div style="display:flex;gap:9px;align-items:center;margin-bottom:12px;">
+      <span class="fieldlbl" style="margin:0;color:#8e8e93;flex-shrink:0;">Opacity</span>
+      <input id="ltWmOpacity" type="range" min="0" max="100" step="1" style="flex:1;min-width:0;" oninput="ltWmOpacityChanged()">
+    </div>
     <div class="epsec">Kehalusan Animasi</div>
     <div><span class="fieldlbl">Kecepatan tick (per detik)</span><input class="numinp" id="ltgsTickSpeed" type="number" step="1" min="1" max="30" style="width:100%;"></div>
     <div style="font-size:10.5px;color:#8e8e93;margin-bottom:10px;line-height:1.4;">Makin tinggi = harga bergerak makin halus (tick lebih sering, langkah lebih kecil). Kalau jarak Harga Open→Close/Max Floating cukup jauh, jumlah tick otomatis ditambah supaya tiap langkah maksimal berubah ±0.2 (kalau memungkinkan).</div>
@@ -1764,6 +1781,7 @@ function ltOpenGsPanel(){
   ltgsTheme=ltGS.theme||'dark';
   document.getElementById('ltWmInput').value=lt.wmText||'AUTOTRADE';
   document.getElementById('ltWmSize').value=lt.wmSize||18;
+  document.getElementById('ltWmOpacity').value=lt.wmOpacity!=null?lt.wmOpacity:100;
   ltWmRenderModeBtns();
   document.getElementById('ltgsTickSpeed').value=ltGS.tickSpeed||4;
   document.getElementById('ltgsPnlColWidth').value=ltGS.pnlColWidth||34;
@@ -1947,7 +1965,6 @@ function ltTogglePlayHist(){
 
 /* ── meter "AI" (opsional) — fase menumpuk + stick neon runner + ✓ ── */
 let _ltAiToken=0;
-let _ltAiSL=null,_ltAiTP=null,_ltAiPrev=null;
 /* urutan fase; hanya SCANNING & RUNNING punya stick (fase yg 'berjalan') */
 const LTAI_PHASES=[
   {k:'SCANNING',c:'#7d9bff',stick:true},
@@ -1967,33 +1984,19 @@ function ltAiRenderPhases(activeIdx,allDone){
   });
   document.getElementById('ltAiLog').innerHTML=rows.join('');
 }
-function ltAiInfoShow(v){document.getElementById('ltAiInfo').style.visibility=v?'visible':'hidden';}
-/* SCANNING: hanya SCANNING + stick neon runner; Entry/SL/TP disembunyikan */
+/* SCANNING: hanya SCANNING + stick neon runner */
 async function ltAiScanPhase(cy){
   /* cy.scanSec (dari Input Advance, "Gap Scan") kalau ada dipakai persis;
      kalau tidak ada (siklus dari form klasik) tetap pakai jeda acak lama */
   const scanMs=(cy.scanSec!=null && !isNaN(cy.scanSec))?cy.scanSec*1000:null;
   if(lt.aiMeter===false){await ltSleep(scanMs!=null?scanMs:1800+Math.random()*1500);return;}
   document.getElementById('ltAiLog').classList.remove('ltai-reset');
-  ltAiInfoShow(false);
-  document.getElementById('ltAiEntry').textContent='—';
-  document.getElementById('ltAiSL').textContent='—';
-  document.getElementById('ltAiTP').textContent='—';
   ltAiRenderPhases(0);
   await ltSleep(scanMs!=null?scanMs:2600+Math.random()*1600);
 }
-/* EXECUTE: SCANNING dicentang, EXECUTE aktif; Entry(fix)+SL/TP muncul */
+/* EXECUTE: SCANNING dicentang, EXECUTE aktif */
 function ltAiEntryPhase(cy){
   if(lt.aiMeter===false)return;
-  const dist=Math.max(Math.abs(cy.open-cy.close)*0.9, cy.open*0.0008);
-  const s=cy.dir==='buy'?-1:1;
-  _ltAiSL=cy.open+s*dist*(0.9+Math.random()*0.4);
-  _ltAiTP=cy.open-s*dist*(1.1+Math.random()*0.5);
-  _ltAiPrev=null;
-  document.getElementById('ltAiEntry').textContent=formatPriceNum(cy.open,lt.sym);
-  document.getElementById('ltAiSL').textContent=formatPriceNum(_ltAiSL,lt.sym);
-  document.getElementById('ltAiTP').textContent=formatPriceNum(_ltAiTP,lt.sym);
-  ltAiInfoShow(true);
   ltAiRenderPhases(1);
 }
 /* RUNNING: SCANNING & EXECUTE dicentang, RUNNING aktif + stick neon runner */
@@ -2001,24 +2004,9 @@ function ltAiRunPhase(cy,realized){
   if(lt.aiMeter===false)return;
   ltAiRenderPhases(2);
 }
-/* tiap tick harga: SL/TP ikut momentum — bisa naik/turun, tapi SL selalu di
-   sisi rugi & TP di sisi untung dari harga berjalan */
-function ltAiTick(cy,cur){
-  if(lt.aiMeter===false||_ltAiSL==null)return;
-  const mom=_ltAiPrev==null?0:cur-_ltAiPrev;
-  _ltAiPrev=cur;
-  const j=()=> (Math.random()-0.5)*Math.max(0.08,Math.abs(mom)*0.8);
-  _ltAiSL+=mom*0.55+j();
-  _ltAiTP+=mom*0.35+j();
-  if(cy.dir==='buy'){_ltAiSL=Math.min(_ltAiSL,cur-0.2);_ltAiTP=Math.max(_ltAiTP,cur+0.2);}
-  else{_ltAiSL=Math.max(_ltAiSL,cur+0.2);_ltAiTP=Math.min(_ltAiTP,cur-0.2);}
-  document.getElementById('ltAiSL').textContent=formatPriceNum(_ltAiSL,lt.sym);
-  document.getElementById('ltAiTP').textContent=formatPriceNum(_ltAiTP,lt.sym);
-}
 /* CLOSE aktif (SCANNING/EXECUTE/RUNNING dicentang), tanpa stick */
 function ltAiClosePhase(pnl){
   if(lt.aiMeter===false)return;
-  _ltAiSL=null;_ltAiTP=null;
   ltAiRenderPhases(3);
 }
 /* CLOSE dicentang (semua ✓) — dipanggil 0.3s setelah posisi benar2 close */
@@ -2072,7 +2060,6 @@ async function ltPlayLoop(){
         const floating=rows.reduce((sum,r)=>sum+r.pnl,0);
         ltRenderPositionRows(rows);
         ltRenderTopValues(floating,realized,marginTotal);
-        ltAiTick(cy,cur);
         await ltSleep(stepMs);
       }
       if(!_ltPlayActive) return;
@@ -2101,7 +2088,6 @@ async function ltPlayLoop(){
         log.classList.add('ltai-reset');
         await ltSleep(480);if(!_ltPlayActive)return;
         log.innerHTML='';log.classList.remove('ltai-reset');
-        ltAiInfoShow(false);
         await ltSleep(500+Math.random()*400);
       }else{
         await ltSleep(1200+Math.random()*1300);
