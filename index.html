@@ -209,7 +209,6 @@ body.previewmode #photowrap{width:100vw;max-width:none;height:100vh;aspect-ratio
    angka-angka penting), tapi SELALU dikunci tetap di dalam kanvas — tidak
    bisa digeser keluar layar. Teks = gradasi neon biru→putih→merah yang
    bergerak terus (background-clip:text + animasi posisi background). */
-@property --wmang{syntax:'<angle>';inherits:false;initial-value:0deg;}
 .lt-watermark{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) rotate(-16deg);display:none;text-align:center;font-weight:800;letter-spacing:2px;text-transform:uppercase;
   background-image:linear-gradient(100deg,#3d7bff 0%,#bcd6ff 18%,#ffffff 38%,#ffc2bd 58%,#ff3b30 78%,#3d7bff 100%);
   background-size:300% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;
@@ -217,15 +216,18 @@ body.previewmode #photowrap{width:100vw;max-width:none;height:100vh;aspect-ratio
   border-radius:13px;padding:13px 24px;font-size:18px;line-height:1.4;
   filter:drop-shadow(0 1px 6px rgba(0,0,0,.55));
   pointer-events:auto;touch-action:none;cursor:grab;user-select:none;z-index:90;}
-/* bingkai TEBAL 'neon runner': titik-titik degradasi merah-biru-putih yang
-   berlari mengelilingi watermark (sudut conic dianimasikan via @property) */
+/* bingkai gradasi merah-putih-biru MEMBAUR HALUS, statis (tidak berputar) —
+   cuma glow-nya yang berdenyut pelan (breathing), bukan lagi dash berlari */
 .lt-watermark::before{content:'';position:absolute;inset:-2px;border-radius:15px;padding:5px;
-  background:repeating-conic-gradient(from var(--wmang),#ff2d2d 0deg 5deg,transparent 5deg 11deg,#2d6bff 11deg 16deg,transparent 16deg 22deg,#ffffff 22deg 27deg,transparent 27deg 33deg);
+  background:linear-gradient(120deg,#ff3b30 0%,#ffffff 50%,#2d6bff 100%);
   -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;
   mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);mask-composite:exclude;
-  animation:wmrunner var(--wm-runner-dur,5s) linear infinite;filter:drop-shadow(0 0 4px rgba(90,140,255,.8));pointer-events:none;}
+  animation:wmbreathe var(--wm-runner-dur,3s) ease-in-out infinite;pointer-events:none;}
 @keyframes wmneon{from{background-position:0% 50%;}to{background-position:300% 50%;}}
-@keyframes wmrunner{to{--wmang:360deg;}}
+@keyframes wmbreathe{
+  0%,100%{filter:drop-shadow(0 0 3px rgba(255,255,255,.35));opacity:.8;}
+  50%{filter:drop-shadow(0 0 10px rgba(255,255,255,.8));opacity:1;}
+}
 .lt-watermark .lt-wm-main{display:block;}
 /* baris pengungkapan: teksnya terkunci di kode & SELALU tampil saat Play.
    Ukuran 3:4 terhadap tulisan utama (0.75em) — beda ukuran tidak ekstrem. */
@@ -1382,8 +1384,8 @@ function ltApplyWmStyle(){
   wm.style.fontSize=(lt.wmSize||18)+'px';
   wm.style.transform='translate(-50%,-50%) rotate('+((lt.wmTilt===false)?0:-16)+'deg)';
   wm.style.opacity=(lt.wmOpacity!=null?lt.wmOpacity:100)/100;
-  /* putaran bingkai degradasi mengikuti Kecepatan Tick — rasio 10:1
-     (tick/detik: 10 -> 1 putaran/detik) */
+  /* kecepatan denyut (breathing) bingkai mengikuti Kecepatan Tick — rasio
+     10:1 (tick/detik: 10 -> 1 denyut/detik) */
   wm.style.setProperty('--wm-runner-dur',(10/Math.max(1,ltGS.tickSpeed||4))+'s');
 }
 function ltWmOpacityChanged(){
