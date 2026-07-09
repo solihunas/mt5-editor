@@ -218,15 +218,16 @@ body.previewmode #photowrap{width:100vw;max-width:none;height:100vh;aspect-ratio
   perspective:600px;
   pointer-events:auto;touch-action:none;cursor:grab;user-select:none;z-index:90;}
 /* bingkai gradasi merah-putih-biru MEMBAUR HALUS (glow berdenyut) DAN
-   berayun 3D di sumbu diagonal kiri-atas/kanan-bawah (2 titik itu diam,
-   2 sudut lain maju-mundur) — HANYA bingkai, tulisan di dalamnya tidak
-   ikut goyang karena animasi ini cuma di pseudo-element ::before. */
+   berputar PENUH 360° di sumbu diagonal kiri-atas/kanan-bawah (2 titik
+   itu diam, sudut kanan-atas↔kiri-bawah muter kayak baling-baling) —
+   HANYA bingkai, tulisan di dalamnya tidak ikut karena animasi ini cuma
+   di pseudo-element ::before. */
 .lt-watermark::before{content:'';position:absolute;inset:-2px;border-radius:15px;padding:5px;
   background:linear-gradient(120deg,#ff3b30 0%,#ffffff 50%,#2d6bff 100%);
   -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;
   mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);mask-composite:exclude;
   transform-origin:center;
-  animation:wmbreathe var(--wm-runner-dur,3s) ease-in-out infinite,wmswing var(--wm-runner-dur,3s) ease-in-out infinite;
+  animation:wmbreathe var(--wm-runner-dur,3s) ease-in-out infinite,wmswing var(--wm-runner-dur,3s) linear infinite;
   pointer-events:none;}
 @keyframes wmneon{from{background-position:0% 50%;}to{background-position:300% 50%;}}
 @keyframes wmbreathe{
@@ -234,10 +235,11 @@ body.previewmode #photowrap{width:100vw;max-width:none;height:100vh;aspect-ratio
   50%{filter:drop-shadow(0 0 10px rgba(255,255,255,.8));opacity:1;}
 }
 /* rotate3d sumbu (1,1,0) = garis diagonal kiri-atas↔kanan-bawah — titik di
-   sumbu itu tetap diam, sisi lain bingkai maju/mundur (ilusi 3D berayun) */
+   sumbu itu tetap diam, sudut kanan-atas↔kiri-bawah berputar PENUH 360°
+   terus-menerus 1 arah (kayak baling-baling), bukan bolak-balik */
 @keyframes wmswing{
-  0%,100%{transform:rotate3d(1,1,0,-18deg);}
-  50%{transform:rotate3d(1,1,0,18deg);}
+  from{transform:rotate3d(1,1,0,0deg);}
+  to{transform:rotate3d(1,1,0,360deg);}
 }
 .lt-watermark .lt-wm-main{display:block;}
 /* baris pengungkapan: teksnya terkunci di kode & SELALU tampil saat Play.
