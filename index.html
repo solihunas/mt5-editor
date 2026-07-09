@@ -95,6 +95,14 @@ body:not(.cap) .symtxt:hover{outline:1.5px dashed rgba(10,132,255,.5);outline-of
 .addbtn{flex:1;padding:11px 4px;border:1.5px dashed;background:#fff;font-size:13.5px;font-weight:600;border-radius:8px;cursor:pointer;text-align:center;}
 .addbtn.buy{border-color:#a8d2ff;color:#0a84ff;}
 .addbtn.sell{border-color:#f4b8b0;color:#e0322e;}
+.addbtn.adv{border-color:#c8b8f0;color:#5a5aa0;}
+.ltadv-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;margin-top:10px;border:1px solid #eee;border-radius:8px;max-height:260px;overflow-y:auto;}
+.ltadv-wrap table{width:100%;border-collapse:collapse;font-size:10.5px;white-space:nowrap;}
+.ltadv-wrap th{background:#f7f7f9;color:#5a5aa0;font-weight:700;text-align:left;padding:6px 8px;position:sticky;top:0;}
+.ltadv-wrap td{padding:6px 8px;border-top:1px solid #f0f0f0;color:#1c1c1c;}
+.ltadv-wrap tr.err td{background:rgba(224,50,46,.08);color:#e0322e;white-space:normal;}
+.ltadv-summary{margin-top:12px;background:#f7f7f9;border-radius:8px;padding:10px 12px;font-size:12px;color:#333;line-height:1.7;}
+.ltadv-summary b{color:#1c1c1c;}
 
 body.cap .rowbtns,body.cap .addrow{display:none!important;}
 
@@ -445,6 +453,7 @@ body.ltplaymode #ltPhotowrap{width:min(100vw,calc(100vh * 1080 / 2229));max-widt
   </div>
   <div id="ltCycleList"></div>
   <button class="addbtn buy" style="margin:11px 12px 12px;width:calc(100% - 24px);" onclick="ltOpenCycleForm()">+ Tambah Siklus</button>
+  <button class="addbtn adv" style="margin:0 12px 12px;width:calc(100% - 24px);" onclick="ltOpenAdvPanel()">📋 Input Advance (paste banyak siklus)</button>
 </div>
 
 <!-- RIWAYAT TURUNAN LIVE TRADE (2.b) — tergenerate otomatis dari siklus -->
@@ -478,6 +487,23 @@ body.ltplaymode #ltPhotowrap{width:min(100vw,calc(100vh * 1080 / 2229));max-widt
   <div id="ltfGapWrap" style="margin-top:8px;"><span class="fieldlbl">Jarak waktu dari siklus sebelumnya (mm:ss)</span><input id="ltfGap" class="fld" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="off" oninput="ltfGapInput(this)"></div>
   <div class="previewline" id="ltfPreview">Hasil per layer: <b>0.00</b></div>
   <div class="epbrow"><button class="epok" onclick="ltfSubmit()">Simpan</button><button class="epcancel" onclick="ltCloseCycleForm()">Batal</button></div>
+</div>
+
+<!-- PANEL INPUT ADVANCE -->
+<div class="ov-backdrop" id="ltadvBackdrop" onclick="ltCloseAdvPanel()"></div>
+<div class="ov-panel" id="ltadvPanel" style="max-width:520px;">
+  <div class="eplbl">📋 Input Advance — Paste Banyak Siklus</div>
+  <div style="font-size:10.5px;color:#8e8e93;margin-bottom:8px;line-height:1.5;">Satu baris = satu siklus, 9 kolom dipisah <b>" - "</b> (spasi-strip-spasi): Gap Scan, Arah, Total Layer, Lot/Layer, Harga Entry, Hasil Close, Durasi Siklus, Max Floating, Timestamp.</div>
+  <textarea id="ltAdvInput" class="fld" rows="10" style="font-family:monospace;font-size:11px;resize:vertical;" placeholder="6.2 - SELL - 2 - 1 - 4127.383 - +0.645 - 19.8 - 1.068 - 2026.07.08 03:02:03"></textarea>
+  <div class="epbrow">
+    <button class="epok" onclick="ltAdvParse()">⚙ Proses</button>
+    <button class="epcancel" onclick="ltAdvClear()">Bersihkan</button>
+  </div>
+  <div id="ltAdvResult"></div>
+  <div class="epbrow">
+    <button class="epok" id="ltAdvSaveBtn" style="display:none;background:#2e9e5b;" onclick="ltAdvSave()">💾 Simpan ke Siklus</button>
+    <button class="epcancel" onclick="ltCloseAdvPanel()">Tutup</button>
+  </div>
 </div>
 
 <!-- PANEL GAYA FONT LIVE TRADE -->
@@ -1500,6 +1526,116 @@ function ltfSubmit(){
    close antar layer digeser acak n.n detik, PnL dihitung per layer,
    label [sl]/[tp] otomatis dari rugi/untung (bisa dioverride di form).
 ═══════════════════════════════════════════════════════════════ */
+/* ══════════════════════════════════════════════════════════════
+   INPUT ADVANCE — paste banyak baris siklus sekaligus (9 kolom
+   dipisah " - "), parsing + validasi per baris + ringkasan winrate.
+   Baris error tetap ditampilkan (ditandai merah) tapi tidak dihitung
+   ke statistik & tidak ikut disimpan.
+═══════════════════════════════════════════════════════════════ */
+let _ltAdvParsed=[];
+function ltOpenAdvPanel(){
+  document.getElementById('ltadvBackdrop').style.display='block';
+  document.getElementById('ltadvPanel').style.display='block';
+}
+function ltCloseAdvPanel(){
+  document.getElementById('ltadvBackdrop').style.display='none';
+  document.getElementById('ltadvPanel').style.display='none';
+}
+function ltAdvClear(){
+  document.getElementById('ltAdvInput').value='';
+  document.getElementById('ltAdvResult').innerHTML='';
+  document.getElementById('ltAdvSaveBtn').style.display='none';
+  _ltAdvParsed=[];
+}
+function ltAdvParseLine(line){
+  const raw=line.split(' - ').map(s=>s.trim());
+  if(raw.length!==9) return {error:`Jumlah kolom harus 9 (dapat ${raw.length})`,raw};
+  const [gapRaw,dirRaw,layersRaw,lotRaw,openRaw,closeRaw,durRaw,mfRaw,timeRaw]=raw;
+  const gap=parseFloat(gapRaw);
+  const dir=(dirRaw||'').toUpperCase();
+  const layers=parseInt(layersRaw,10);
+  const lot=parseFloat(lotRaw);
+  const open=parseFloat(openRaw);
+  const closeDelta=parseFloat(closeRaw);
+  const dur=parseFloat(durRaw);
+  const mfDelta=parseFloat(mfRaw);
+  const time=(timeRaw||'').trim();
+
+  if(isNaN(gap)||gap<0) return {error:'Gap Scan bukan angka valid',raw};
+  if(dir!=='BUY'&&dir!=='SELL') return {error:'Arah harus BUY atau SELL',raw};
+  if(!Number.isInteger(layers)||layers<1) return {error:'Total Layer harus bilangan bulat ≥1',raw};
+  if(isNaN(lot)||lot<=0) return {error:'Lot per Layer tidak valid',raw};
+  if(isNaN(open)||open<=0) return {error:'Harga Entry tidak valid',raw};
+  if(isNaN(closeDelta)) return {error:'Hasil Close bukan angka valid',raw};
+  if(isNaN(dur)||dur<=0) return {error:'Durasi Siklus tidak valid',raw};
+  if(isNaN(mfDelta)) return {error:'Max Floating bukan angka valid',raw};
+  if(!/^\d{4}\.\d{2}\.\d{2} \d{2}:\d{2}:\d{2}$/.test(time)||!ltParseStamp(time)) return {error:'Format Timestamp harus YYYY.MM.DD HH:MM:SS',raw};
+
+  const dirLower=dir.toLowerCase();
+  const close=open+closeDelta;
+  const maxFloat=open+mfDelta;
+  const pnl=calcPnl(dirLower,lot,open,close)*layers;
+  return {error:null,raw,gap,dir:dirLower,layers,lot,open,close,closeDelta,duration:dur,maxFloat,mfDelta,time,pnl};
+}
+function ltAdvParse(){
+  const text=document.getElementById('ltAdvInput').value;
+  const lines=text.split('\n').map(l=>l.trim()).filter(l=>l.length>0);
+  const results=lines.map(ltAdvParseLine);
+  _ltAdvParsed=results.filter(r=>!r.error);
+
+  const rowsHtml=results.map(r=>{
+    if(r.error) return `<tr class="err"><td colspan="9">⚠ ${escapeHtml(r.error)} — <span style="opacity:.75;">${escapeHtml(r.raw.join(' | '))}</span></td></tr>`;
+    return `<tr>
+      <td>${escapeHtml(r.raw[0])}</td><td>${escapeHtml(r.raw[1].toUpperCase())}</td><td>${escapeHtml(r.raw[2])}</td><td>${escapeHtml(r.raw[3])}</td>
+      <td>${escapeHtml(r.raw[4])}</td>
+      <td style="color:${r.closeDelta<0?'#e0322e':'#0a84ff'};font-weight:700;">${escapeHtml(r.raw[5])}</td>
+      <td>${escapeHtml(r.raw[6])}</td><td>${escapeHtml(r.raw[7])}</td><td>${escapeHtml(r.raw[8])}</td>
+    </tr>`;
+  }).join('');
+
+  const total=_ltAdvParsed.length;
+  const errCount=results.length-total;
+  const buyCount=_ltAdvParsed.filter(r=>r.dir==='buy').length;
+  const sellCount=total-buyCount;
+  const wins=_ltAdvParsed.filter(r=>r.pnl>0);
+  const losses=_ltAdvParsed.filter(r=>r.pnl<0);
+  const winrate=total>0?(wins.length/total*100):0;
+  const avgProfit=wins.length?wins.reduce((s,r)=>s+r.pnl,0)/wins.length:0;
+  const avgLoss=losses.length?losses.reduce((s,r)=>s+r.pnl,0)/losses.length:0;
+  const ratio=avgLoss!==0?Math.abs(avgProfit/avgLoss):0;
+
+  document.getElementById('ltAdvResult').innerHTML=`
+    <div class="ltadv-wrap"><table>
+      <thead><tr><th>Gap Scan</th><th>Arah</th><th>Layer</th><th>Lot</th><th>Entry</th><th>Hasil Close</th><th>Durasi</th><th>Max Float</th><th>Timestamp</th></tr></thead>
+      <tbody>${rowsHtml||'<tr><td colspan="9" style="color:#8e8e93;">Belum ada data — paste dulu di atas.</td></tr>'}</tbody>
+    </table></div>
+    <div class="ltadv-summary">
+      Total valid: <b>${total}</b>${errCount?` &nbsp;·&nbsp; error: <b style="color:#e0322e;">${errCount}</b>`:''}<br>
+      BUY: <b>${buyCount}</b> &nbsp;·&nbsp; SELL: <b>${sellCount}</b><br>
+      Winrate: <b>${winrate.toFixed(1)}%</b><br>
+      Rata-rata profit: <b style="color:#0a84ff;">${total?escapeHtml(formatMoney(avgProfit,2,false)):'—'}</b><br>
+      Rata-rata rugi: <b style="color:#e0322e;">${total?escapeHtml(formatMoney(avgLoss,2,false)):'—'}</b><br>
+      Rasio profit:rugi: <b>${ratio?ratio.toFixed(2)+' : 1':'—'}</b>
+    </div>
+  `;
+  document.getElementById('ltAdvSaveBtn').style.display=total>0?'':'none';
+}
+function ltAdvSave(){
+  if(!_ltAdvParsed.length){alert('Tidak ada data valid untuk disimpan.');return;}
+  _ltAdvParsed.forEach(r=>{
+    lt.cycles.push({
+      dir:r.dir,layers:r.layers,lot:r.lot,open:r.open,close:r.close,
+      duration:r.duration,maxFloat:r.maxFloat,scanSec:r.gap,
+      time:ltClampStamp(r.time),
+    });
+  });
+  const n=_ltAdvParsed.length;
+  ltGenHistory(false);
+  ltRenderAll();ltSave();
+  ltAdvClear();
+  ltCloseAdvPanel();
+  alert(n+' siklus berhasil ditambahkan ke Kelola Siklus.');
+}
 /* acak HANYA bagian desimal, tetap dekat nilai input (kompak antar layer) */
 function ltJitterDec(p,dec){
   const base=Math.floor(p), frac=p-base;
@@ -1834,14 +1970,17 @@ function ltAiRenderPhases(activeIdx,allDone){
 function ltAiInfoShow(v){document.getElementById('ltAiInfo').style.visibility=v?'visible':'hidden';}
 /* SCANNING: hanya SCANNING + stick neon runner; Entry/SL/TP disembunyikan */
 async function ltAiScanPhase(cy){
-  if(lt.aiMeter===false){await ltSleep(1800+Math.random()*1500);return;}
+  /* cy.scanSec (dari Input Advance, "Gap Scan") kalau ada dipakai persis;
+     kalau tidak ada (siklus dari form klasik) tetap pakai jeda acak lama */
+  const scanMs=(cy.scanSec!=null && !isNaN(cy.scanSec))?cy.scanSec*1000:null;
+  if(lt.aiMeter===false){await ltSleep(scanMs!=null?scanMs:1800+Math.random()*1500);return;}
   document.getElementById('ltAiLog').classList.remove('ltai-reset');
   ltAiInfoShow(false);
   document.getElementById('ltAiEntry').textContent='—';
   document.getElementById('ltAiSL').textContent='—';
   document.getElementById('ltAiTP').textContent='—';
   ltAiRenderPhases(0);
-  await ltSleep(2600+Math.random()*1600);
+  await ltSleep(scanMs!=null?scanMs:2600+Math.random()*1600);
 }
 /* EXECUTE: SCANNING dicentang, EXECUTE aktif; Entry(fix)+SL/TP muncul */
 function ltAiEntryPhase(cy){
