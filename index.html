@@ -215,18 +215,29 @@ body.previewmode #photowrap{width:100vw;max-width:none;height:100vh;aspect-ratio
   animation:wmneon 3.2s linear infinite;
   border-radius:13px;padding:13px 24px;font-size:18px;line-height:1.4;
   filter:drop-shadow(0 1px 6px rgba(0,0,0,.55));
+  perspective:600px;
   pointer-events:auto;touch-action:none;cursor:grab;user-select:none;z-index:90;}
-/* bingkai gradasi merah-putih-biru MEMBAUR HALUS, statis (tidak berputar) —
-   cuma glow-nya yang berdenyut pelan (breathing), bukan lagi dash berlari */
+/* bingkai gradasi merah-putih-biru MEMBAUR HALUS (glow berdenyut) DAN
+   berayun 3D di sumbu diagonal kiri-atas/kanan-bawah (2 titik itu diam,
+   2 sudut lain maju-mundur) — HANYA bingkai, tulisan di dalamnya tidak
+   ikut goyang karena animasi ini cuma di pseudo-element ::before. */
 .lt-watermark::before{content:'';position:absolute;inset:-2px;border-radius:15px;padding:5px;
   background:linear-gradient(120deg,#ff3b30 0%,#ffffff 50%,#2d6bff 100%);
   -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;
   mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);mask-composite:exclude;
-  animation:wmbreathe var(--wm-runner-dur,3s) ease-in-out infinite;pointer-events:none;}
+  transform-origin:center;
+  animation:wmbreathe var(--wm-runner-dur,3s) ease-in-out infinite,wmswing var(--wm-runner-dur,3s) ease-in-out infinite;
+  pointer-events:none;}
 @keyframes wmneon{from{background-position:0% 50%;}to{background-position:300% 50%;}}
 @keyframes wmbreathe{
   0%,100%{filter:drop-shadow(0 0 3px rgba(255,255,255,.35));opacity:.8;}
   50%{filter:drop-shadow(0 0 10px rgba(255,255,255,.8));opacity:1;}
+}
+/* rotate3d sumbu (1,1,0) = garis diagonal kiri-atas↔kanan-bawah — titik di
+   sumbu itu tetap diam, sisi lain bingkai maju/mundur (ilusi 3D berayun) */
+@keyframes wmswing{
+  0%,100%{transform:rotate3d(1,1,0,-18deg);}
+  50%{transform:rotate3d(1,1,0,18deg);}
 }
 .lt-watermark .lt-wm-main{display:block;}
 /* baris pengungkapan: teksnya terkunci di kode & SELALU tampil saat Play.
@@ -1267,7 +1278,10 @@ function ltRenderBalanceRows(saldo,equity,marginTotal,marginBebas,levelMargin){
 }
 function ltRenderTopValues(floating,realized,marginTotal){
   marginTotal=marginTotal||0;
-  const saldo=lt.deposit+realized;
+  /* Tambahan Keuntungan (lt.keuntunganOffset) ikut disini juga supaya Saldo
+     halaman Trade selalu sinkron dengan Keuntungan di Riwayat (2.b) —
+     keduanya pakai basis realized yang sama + tambahan yang sama */
+  const saldo=lt.deposit+realized+(lt.keuntunganOffset||0);
   const equity=saldo+floating;
   const marginBebas=equity-marginTotal; /* margin dikunci dari posisi terbuka */
   const levelMargin=marginTotal>0?(equity/marginTotal*100):0;
