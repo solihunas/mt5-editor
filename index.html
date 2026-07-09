@@ -215,31 +215,28 @@ body.previewmode #photowrap{width:100vw;max-width:none;height:100vh;aspect-ratio
   animation:wmneon 3.2s linear infinite;
   border-radius:13px;padding:13px 24px;font-size:18px;line-height:1.4;
   filter:drop-shadow(0 1px 6px rgba(0,0,0,.55));
-  perspective:600px;
   pointer-events:auto;touch-action:none;cursor:grab;user-select:none;z-index:90;}
-/* bingkai gradasi merah-putih-biru MEMBAUR HALUS (glow berdenyut) DAN
-   berputar PENUH 360° di sumbu diagonal kiri-atas/kanan-bawah (2 titik
-   itu diam, sudut kanan-atas↔kiri-bawah muter kayak baling-baling) —
-   HANYA bingkai, tulisan di dalamnya tidak ikut karena animasi ini cuma
-   di pseudo-element ::before. */
+/* bingkai gradasi DIAM (tidak berputar/berayun lagi) — cuma "berkedip"
+   halus: warna di kedua ujung gradasi bertukar merah<->biru melalui ungu
+   di tengah siklus, dibarengi glow berdenyut pelan. HANYA bingkai, tulisan
+   di dalamnya tidak ikut karena animasi ini cuma di pseudo-element ::before. */
 .lt-watermark::before{content:'';position:absolute;inset:-2px;border-radius:15px;padding:5px;
   background:linear-gradient(120deg,#ff3b30 0%,#ffffff 50%,#2d6bff 100%);
   -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;
   mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);mask-composite:exclude;
-  transform-origin:center;
-  animation:wmbreathe var(--wm-runner-dur,3s) ease-in-out infinite,wmswing var(--wm-runner-dur,3s) linear infinite;
+  animation:wmbreathe var(--wm-runner-dur,3s) ease-in-out infinite,wmcolorshift var(--wm-runner-dur,3s) ease-in-out infinite;
   pointer-events:none;}
 @keyframes wmneon{from{background-position:0% 50%;}to{background-position:300% 50%;}}
 @keyframes wmbreathe{
   0%,100%{filter:drop-shadow(0 0 3px rgba(255,255,255,.35));opacity:.8;}
   50%{filter:drop-shadow(0 0 10px rgba(255,255,255,.8));opacity:1;}
 }
-/* rotate3d sumbu (1,1,0) = garis diagonal kiri-atas↔kanan-bawah — titik di
-   sumbu itu tetap diam, sudut kanan-atas↔kiri-bawah berputar PENUH 360°
-   terus-menerus 1 arah (kayak baling-baling), bukan bolak-balik */
-@keyframes wmswing{
-  from{transform:rotate3d(1,1,0,0deg);}
-  to{transform:rotate3d(1,1,0,360deg);}
+/* merah (kiri) <-> biru (kanan) bertukar tempat tiap setengah siklus —
+   interpolasi warna otomatis lewat nuansa ungu di tengah transisi, jadi
+   kesannya "berkedip" merah->ungu->biru lalu biru->ungu->merah, berulang */
+@keyframes wmcolorshift{
+  0%,100%{background:linear-gradient(120deg,#ff3b30 0%,#ffffff 50%,#2d6bff 100%);}
+  50%{background:linear-gradient(120deg,#2d6bff 0%,#ffffff 50%,#ff3b30 100%);}
 }
 .lt-watermark .lt-wm-main{display:block;}
 /* baris pengungkapan: teksnya terkunci di kode & SELALU tampil saat Play.
