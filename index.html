@@ -41,6 +41,11 @@ html,body{background:radial-gradient(ellipse at top left,#1a0830 0%,#08000f 55%,
 .ptab .pdel{opacity:.75;font-size:10px;padding:2px 5px;border-radius:50%;}
 .ptab .pdel:hover{background:rgba(255,255,255,.3);}
 .paddbtn{flex-shrink:0;padding:6px 14px;border-radius:16px;background:rgba(40,140,90,0.35);border:1px solid rgba(60,200,120,0.4);color:#8ef0b0;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;}
+/* mode 2 dropdown: PROJECT (kiri) & LIVE TRADE (kanan) — cuma salah satu
+   yang terisi sesuai kategori project yang sedang aktif */
+.pdrop{display:flex;flex-direction:column;gap:2px;flex-shrink:0;min-width:0;}
+.pdroplbl{font-size:9.5px;font-weight:800;color:#9a85c0;letter-spacing:.5px;padding-left:2px;}
+.pdropsel{max-width:110px;background:rgba(120,50,220,0.16);border:1px solid rgba(140,60,255,0.3);color:#e8dcff;font-size:12px;font-weight:700;border-radius:10px;padding:5px 6px;}
 
 .hint{color:#9a85c0;font-size:11px;padding:8px 12px;text-align:center;max-width:420px;background:rgba(5,0,15,.6);line-height:1.5;}
 .hint b{color:#d0b0ff;}
@@ -668,7 +673,7 @@ function migrateFromV3(){
         const priceParts=priceTxt.split('→').map(s=>parseNum(s));
         return {sym:(d.sym&&d.sym.t)||'XAUUSDc',dir,lot,open:priceParts[0]||0,close:priceParts[1]||0,time:(d.date&&d.date.t)||''};
       });
-      projects[id]={name:p.name,summaryData,trades};
+      projects[id]={name:p.name,type:/^Live Trade /.test(p.name)?'livetrade':'project',summaryData,trades};
     });
     localStorage.removeItem(OLD_KEY_V3);
     return {projects,order:old.order,activeId:old.activeId,nextNum:old.nextNum||2};
@@ -687,26 +692,47 @@ function initStore(){
       store=migrated;
     }else{
       const id='p1';
-      store={projects:{[id]:{name:'Project 1',...defaultTemplate()}},order:[id],activeId:id,nextNum:2};
+      store={projects:{[id]:{name:'Project 1',type:'project',...defaultTemplate()}},order:[id],activeId:id,nextNum:2};
     }
   }
   renderProjectBar();renderSummary();renderTrades();
   _projectLoaded=true;
 }
 
+/* kategori project: field type kalau ada (project baru), fallback tebak
+   dari nama (project lama sebelum field ini ada) — "Live Trade N" vs sisanya */
+function projCategory(id){
+  const p=store.projects[id];
+  return p.type||(/^Live Trade /.test(p.name)?'livetrade':'project');
+}
 function renderProjectBar(){
   const c=document.getElementById('projectbar');
-  c.innerHTML=store.order.map(id=>{
-    const p=store.projects[id];
-    const delBtn=store.order.length>1?`<span class="pdel" onclick="deleteProject('${id}',event)">✕</span>`:'';
-    return `<div class="ptab ${id===store.activeId?'on':''}" onclick="switchProject('${id}')">${escapeHtml(p.name)}${delBtn}</div>`;
-  }).join('')+`<button class="paddbtn" onclick="addProject()">+ Project Baru</button>`;
+  const opt=id=>`<option value="${id}" ${id===store.activeId?'selected':''}>${escapeHtml(store.projects[id].name)}</option>`;
+  const projectOpts=store.order.filter(id=>projCategory(id)==='project').map(opt).join('');
+  const liveOpts=store.order.filter(id=>projCategory(id)==='livetrade').map(opt).join('');
+  c.innerHTML=`
+    <div class="pdrop">
+      <span class="pdroplbl">PROJECT</span>
+      <select class="pdropsel" onchange="this.value&&switchProject(this.value)">
+        <option value=""></option>${projectOpts}
+      </select>
+    </div>
+    <div class="pdrop">
+      <span class="pdroplbl">LIVE TRADE</span>
+      <select class="pdropsel" onchange="this.value&&switchProject(this.value)">
+        <option value=""></option>${liveOpts}
+      </select>
+    </div>
+    <button class="paddbtn" style="background:rgba(40,90,150,0.35);border-color:rgba(60,150,220,0.4);color:#7dc4ff;" onclick="renameActiveProject()">✎ Nama</button>
+    <button class="paddbtn" onclick="addProject()">+ Project</button>
+    ${store.order.length>1?`<button class="paddbtn" style="background:rgba(50,15,25,0.6);border-color:rgba(180,60,80,0.3);color:#e09098;" onclick="deleteProject(store.activeId,event)">✕</button>`:''}
+  `;
 }
 function addProject(){
   const id='p'+Date.now();
   const name='Project '+store.nextNum;
   store.nextNum++;
-  store.projects[id]={name,...defaultTemplate()};
+  store.projects[id]={name,type:'project',...defaultTemplate()};
   store.order.push(id);
   store.activeId=id;
   renderProjectBar();renderSummary();renderTrades();saveProject();
@@ -717,13 +743,22 @@ function switchProject(id){
   renderProjectBar();renderSummary();renderTrades();saveProject();
 }
 function deleteProject(id,event){
-  event.stopPropagation();
+  if(event)event.stopPropagation();
   if(store.order.length<=1){alert('Minimal harus ada 1 project.');return;}
   if(!confirm('Hapus "'+store.projects[id].name+'"? Tindakan ini tidak bisa dibatalkan.'))return;
   store.order=store.order.filter(x=>x!==id);
   delete store.projects[id];
   if(store.activeId===id) store.activeId=store.order[0];
   renderProjectBar();renderSummary();renderTrades();saveProject();
+}
+function renameActiveProject(){
+  const p=store.projects[store.activeId];
+  const newName=prompt('Ubah nama project:',p.name);
+  if(newName===null)return;
+  const trimmed=newName.trim();
+  if(!trimmed)return;
+  p.name=trimmed;
+  renderProjectBar();saveProject();
 }
 
 /* ══════════════════════════════════════════════
@@ -1713,6 +1748,7 @@ function ltHistToRiwayat(){
   const id='p'+Date.now();
   store.projects[id]={
     name:'Live Trade '+store.nextNum,
+    type:'livetrade',
     summaryData:{keuntungan,deposito:lt.deposit,swap:0,komisi:0,saldo:lt.deposit+keuntungan},
     trades:lt.history.map(h=>({sym:h.sym,dir:h.dir,lot:h.lot,open:h.open,close:h.close,time:h.timeClose,mark:h.mark,pnlOverride:null})),
   };
