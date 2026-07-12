@@ -2070,6 +2070,13 @@ async function ltPlayLoop(){
       ltAiRunPhase(cy,realized);
       const marginTotal=layers.reduce((s,L)=>s+ltCalcMargin(L.lot,L.open),0);
       const startStep=Math.min(cy.layers-1,path.length-1)+1;
+      /* CLOSE muncul di overlay dengan lead ~0.5 detik SEBELUM posisi
+         benar-benar ditutup (lead normal, sama seperti ENTRY) — TAPI PnL
+         tetap jalan/ticking normal selama lead itu, tidak freeze dulu
+         seperti sebelumnya (dulu overlay CLOSE baru muncul SETELAH harga
+         berhenti di titik close, jadi kelihatan macet). */
+      const closeLeadStep=Math.max(startStep,path.length-Math.ceil(500/stepMs));
+      let closeShown=false;
       for(let s=startStep;s<path.length;s++){
         if(!_ltPlayActive) return;
         const cur=path[s];
@@ -2077,6 +2084,7 @@ async function ltPlayLoop(){
         const floating=rows.reduce((sum,r)=>sum+r.pnl,0);
         ltRenderPositionRows(rows);
         ltRenderTopValues(floating,realized,marginTotal);
+        if(!closeShown && s>=closeLeadStep){ltAiClosePhase(floating);closeShown=true;}
         await ltSleep(stepMs);
       }
       if(!_ltPlayActive) return;
@@ -2085,12 +2093,9 @@ async function ltPlayLoop(){
       const finalFloating=finalRows.reduce((s,r)=>s+r.pnl,0);
       ltRenderPositionRows(finalRows);
       ltRenderTopValues(finalFloating,realized,marginTotal);
-      await ltSleep(600);
+      if(!closeShown)ltAiClosePhase(finalFloating);
+      await ltSleep(150);
       if(!_ltPlayActive) return;
-      /* CLOSE muncul di overlay 0.5 detik SEBELUM posisi benar-benar ditutup
-         (lead normal) — baru setelah itu posisi hilang & masuk riwayat */
-      ltAiClosePhase(finalFloating);
-      if(lt.aiMeter!==false){await ltSleep(500);if(!_ltPlayActive)return;}
       realized+=finalFloating;
       ltSessPush(cy,finalRows); /* posisi baru saja close → masuk riwayat sesi */
       ltRenderPositionRows([]);
