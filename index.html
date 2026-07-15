@@ -324,6 +324,7 @@ body.ltplaymode #ltPhotowrap{width:min(100vw,calc(100vh * 1080 / 2229));max-widt
 <div id="ctrlbar">
   <button class="ctrl dl" id="dlbtn" onclick="openDlChoice()">⬇ HD</button>
   <button class="ctrl gs" onclick="openGsPanel()">⚙ Gaya Global</button>
+  <button class="ctrl" style="background:rgba(90,60,180,0.35);border-color:rgba(120,80,220,0.4);color:#c8b0ff;" onclick="openAdvPanel()">📋 Input Advance</button>
   <button class="ctrl rs" onclick="resetProject()" title="Reset project aktif ke contoh awal">↻ Reset</button>
 </div>
 
@@ -410,6 +411,25 @@ body.ltplaymode #ltPhotowrap{width:min(100vw,calc(100vh * 1080 / 2229));max-widt
   <button class="epok" style="width:100%;padding:12px 4px;background:#7a3fd8;" onclick="closeDlChoice();enterPreviewMode();">👁 Preview (bisa discroll — untuk screen record)</button>
   <div style="font-size:11px;color:#8e8e93;text-align:center;margin-top:8px;line-height:1.5;">Saat Preview, semua tombol disembunyikan. Tekan tombol <b>back</b> di HP untuk keluar.</div>
   <button class="epcancel" style="width:100%;margin-top:10px;" onclick="closeDlChoice()">Batal</button>
+</div>
+
+<!-- PANEL INPUT ADVANCE (Riwayat) — format input SAMA seperti Live Trade,
+     tapi cuma Arah/Lot/Harga/Waktu yang dipakai (Riwayat statis, tidak ada
+     animasi jadi Gap Scan/Durasi/Max Floating diabaikan) -->
+<div class="ov-backdrop" id="advBackdrop" onclick="closeAdvPanel()"></div>
+<div class="ov-panel" id="advPanel" style="max-width:520px;">
+  <div class="eplbl">📋 Input Advance — Paste Banyak Riwayat</div>
+  <div style="font-size:10.5px;color:#8e8e93;margin-bottom:8px;line-height:1.5;">Format sama seperti Live Trade, 9 kolom dipisah <b>" - "</b>: Gap Scan, Arah, Total Layer, Lot/Layer, Harga Entry, Hasil Close, Durasi Siklus, Max Floating, Timestamp. Yang dipakai cuma Arah, Lot (Total Layer×Lot/Layer), Harga Entry, Hasil Close, Timestamp — sisanya diabaikan.</div>
+  <textarea id="advInput" class="fld" rows="10" style="font-family:monospace;font-size:11px;resize:vertical;" placeholder="18.2 - BUY - 1 - 1 - 4089.692 - -5.002 - 14.8 - 5.002 - 2026.07.13 00:11:03"></textarea>
+  <div class="epbrow">
+    <button class="epok" onclick="advParse()">⚙ Proses</button>
+    <button class="epcancel" onclick="advClear()">Bersihkan</button>
+  </div>
+  <div id="advResult"></div>
+  <div class="epbrow">
+    <button class="epok" id="advSaveBtn" style="display:none;background:#2e9e5b;" onclick="advSave()">💾 + Tambah ke Riwayat</button>
+    <button class="epcancel" onclick="closeAdvPanel()">Tutup</button>
+  </div>
 </div>
 
 </div><!-- end #riwayatApp -->
@@ -836,6 +856,115 @@ function renderTrades(){
     return `<div class="trow"><div class="tbar ${bar}"></div><div class="tc"><div class="tleft"><div class="tsl">${symSpan}<span class="tcomma">,</span>${dirSpan}</div><div class="tprices">${priceSpan}</div></div><div class="tright"><div class="tdate">${dateSpan}</div><div class="tpnl">${pnlSpan}</div></div></div><div class="rowbtns"><button class="editbtn" onclick="openTradeForm('${t.dir}',${i})">✎</button><button class="copybtn" onclick="copyT(${i})">⧉</button><button class="delbtn" onclick="delT(${i})">✕</button></div></div>`;
   }).join('');
   applyStretchBoxes(c);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   INPUT ADVANCE (Riwayat) — paste banyak baris format SAMA seperti
+   Live Trade (9 kolom), tapi cuma Arah/Lot/Harga/Waktu yang disimpan
+   jadi trade Riwayat (statis, tidak ada layer/durasi/floating).
+   Simpan bersifat MENAMBAHKAN ke trades project aktif (append), jadi
+   bisa paste bertahap (20 lalu +10 = 30 total).
+═══════════════════════════════════════════════════════════════ */
+let _advParsed=[];
+function openAdvPanel(){
+  document.getElementById('advBackdrop').style.display='block';
+  document.getElementById('advPanel').style.display='block';
+}
+function closeAdvPanel(){
+  document.getElementById('advBackdrop').style.display='none';
+  document.getElementById('advPanel').style.display='none';
+}
+function advClear(){
+  document.getElementById('advInput').value='';
+  document.getElementById('advResult').innerHTML='';
+  document.getElementById('advSaveBtn').style.display='none';
+  _advParsed=[];
+}
+function advParseLine(line){
+  const raw=line.split(' - ').map(s=>s.trim());
+  if(raw.length!==9) return {error:`Jumlah kolom harus 9 (dapat ${raw.length})`,raw};
+  const [gapRaw,dirRaw,layersRaw,lotRaw,openRaw,closeRaw,durRaw,mfRaw,timeRaw]=raw;
+  const gap=parseFloat(gapRaw);
+  const dir=(dirRaw||'').toUpperCase();
+  const layers=parseInt(layersRaw,10);
+  const lot=parseFloat(lotRaw);
+  const open=parseFloat(openRaw);
+  const closeDelta=parseFloat(closeRaw);
+  const dur=parseFloat(durRaw);
+  const mfDelta=parseFloat(mfRaw);
+  const time=(timeRaw||'').trim();
+
+  if(isNaN(gap)||gap<0) return {error:'Gap Scan bukan angka valid',raw};
+  if(dir!=='BUY'&&dir!=='SELL') return {error:'Arah harus BUY atau SELL',raw};
+  if(!Number.isInteger(layers)||layers<1) return {error:'Total Layer harus bilangan bulat ≥1',raw};
+  if(isNaN(lot)||lot<=0) return {error:'Lot per Layer tidak valid',raw};
+  if(isNaN(open)||open<=0) return {error:'Harga Entry tidak valid',raw};
+  if(isNaN(closeDelta)) return {error:'Hasil Close bukan angka valid',raw};
+  if(isNaN(dur)||dur<=0) return {error:'Durasi Siklus tidak valid',raw};
+  if(isNaN(mfDelta)) return {error:'Max Floating bukan angka valid',raw};
+  if(!/^\d{4}\.\d{2}\.\d{2} \d{2}:\d{2}:\d{2}$/.test(time)||!ltParseStamp(time)) return {error:'Format Timestamp harus YYYY.MM.DD HH:MM:SS',raw};
+
+  const dirLower=dir.toLowerCase();
+  const totalLot=+(layers*lot).toFixed(2);
+  const close=open+closeDelta;
+  const pnl=calcPnl(dirLower,totalLot,open,close);
+  return {error:null,raw,dir:dirLower,lot:totalLot,open,close,time,pnl};
+}
+function advParse(){
+  const text=document.getElementById('advInput').value;
+  const lines=text.split('\n').map(l=>l.trim()).filter(l=>l.length>0);
+  const results=lines.map(advParseLine);
+  _advParsed=results.filter(r=>!r.error);
+
+  const rowsHtml=results.map(r=>{
+    if(r.error) return `<tr class="err"><td colspan="5">⚠ ${escapeHtml(r.error)} — <span style="opacity:.75;">${escapeHtml(r.raw.join(' | '))}</span></td></tr>`;
+    const pnlColor=r.pnl<0?'#e0322e':'#0a84ff';
+    return `<tr>
+      <td>${escapeHtml(r.dir.toUpperCase())}</td><td>${r.lot.toFixed(2)}</td>
+      <td>${escapeHtml(formatPriceNum(r.open,'XAUUSDc'))} → ${escapeHtml(formatPriceNum(r.close,'XAUUSDc'))}</td>
+      <td style="color:${pnlColor};font-weight:700;">${escapeHtml(formatMoney(r.pnl,2,true))}</td>
+      <td>${escapeHtml(r.time)}</td>
+    </tr>`;
+  }).join('');
+
+  const total=_advParsed.length;
+  const errCount=results.length-total;
+  const buyCount=_advParsed.filter(r=>r.dir==='buy').length;
+  const sellCount=total-buyCount;
+  const wins=_advParsed.filter(r=>r.pnl>0);
+  const losses=_advParsed.filter(r=>r.pnl<0);
+  const winrate=total>0?(wins.length/total*100):0;
+  const avgProfit=wins.length?wins.reduce((s,r)=>s+r.pnl,0)/wins.length:0;
+  const avgLoss=losses.length?losses.reduce((s,r)=>s+r.pnl,0)/losses.length:0;
+  const ratio=avgLoss!==0?Math.abs(avgProfit/avgLoss):0;
+
+  document.getElementById('advResult').innerHTML=`
+    <div class="ltadv-wrap"><table>
+      <thead><tr><th>Arah</th><th>Lot</th><th>Open → Close</th><th>Hasil</th><th>Waktu</th></tr></thead>
+      <tbody>${rowsHtml||'<tr><td colspan="5" style="color:#8e8e93;">Belum ada data — paste dulu di atas.</td></tr>'}</tbody>
+    </table></div>
+    <div class="ltadv-summary">
+      Total valid: <b>${total}</b>${errCount?` &nbsp;·&nbsp; error: <b style="color:#e0322e;">${errCount}</b>`:''}<br>
+      BUY: <b>${buyCount}</b> &nbsp;·&nbsp; SELL: <b>${sellCount}</b><br>
+      Winrate: <b>${winrate.toFixed(1)}%</b><br>
+      Rata-rata profit: <b style="color:#0a84ff;">${total?escapeHtml(formatMoney(avgProfit,2,false)):'—'}</b><br>
+      Rata-rata rugi: <b style="color:#e0322e;">${total?escapeHtml(formatMoney(avgLoss,2,false)):'—'}</b><br>
+      Rasio profit:rugi: <b>${ratio?ratio.toFixed(2)+' : 1':'—'}</b>
+    </div>
+  `;
+  document.getElementById('advSaveBtn').style.display=total>0?'':'none';
+}
+function advSave(){
+  if(!_advParsed.length){alert('Tidak ada data valid untuk disimpan.');return;}
+  const trades=cp().trades;
+  _advParsed.forEach(r=>{
+    trades.push({sym:'XAUUSDc',dir:r.dir,lot:r.lot,open:r.open,close:r.close,time:r.time});
+  });
+  const n=_advParsed.length;
+  renderSummary();renderTrades();saveProject();
+  advClear();
+  closeAdvPanel();
+  alert(n+' riwayat berhasil ditambahkan (total sekarang '+trades.length+').');
 }
 
 /* ══════════════════════════════════════════════
