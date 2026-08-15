@@ -2196,6 +2196,7 @@ function ltAiCloseChecked(){
   if(lt.aiMeter===false)return;
   ltAiRenderPhases(3,true);
 }
+const LT_SPREAD=0.28; /* spread realistis: harga open posisi dikurangi ini */
 async function ltPlayLoop(){
   let realized=0;
   while(_ltPlayActive){
@@ -2222,7 +2223,7 @@ async function ltPlayLoop(){
       for(let i=0;i<cy.layers;i++){
         if(!_ltPlayActive) return;
         const jitter=(Math.random()*2-1)*1.0; // toleransi open ±1 poin
-        layers.push({dir:cy.dir,lot:cy.lot,open:cy.open+jitter});
+        layers.push({dir:cy.dir,lot:cy.lot,open:cy.open+jitter-LT_SPREAD});
         const cur=path[Math.min(i,path.length-1)];
         const rows=layers.map(L=>({dir:L.dir,lot:L.lot,open:L.open,close:cy.close,cur,pnl:ltCalcPnl(L.dir,L.lot,L.open,cur)}));
         const floating=rows.reduce((sum,r)=>sum+r.pnl,0);
