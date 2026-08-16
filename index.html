@@ -2222,13 +2222,19 @@ async function ltPlayLoop(){
       const layers=[];
       for(let i=0;i<cy.layers;i++){
         if(!_ltPlayActive) return;
-        const jitter=(Math.random()*2-1)*1.0; // toleransi open ±1 poin
-        /* spread realistis: BUY beli di harga lebih TINGGI (ask), SELL jual
-           di harga lebih RENDAH (bid) — supaya floating awal konsisten
-           negatif (rugi spread) di KEDUA arah, bukan cuma salah satu */
+        /* harga saat layer ini dibuka: dari path asli, TAPI dibatasi maks
+           ±0.5 poin dari Harga Open cy.open — layer masuk beruntun dalam
+           hitungan detik jadi wajarnya saling dekat (maks beda ~1 poin
+           antar layer manapun, mis. 0.213), bukan jauh >2 poin seperti
+           generator acak sebelumnya (path bisa sudah jauh bergerak walau
+           baru beberapa tick kalau siklusnya bergejolak). */
+        const rawCur=path[Math.min(i,path.length-1)];
+        const cur=Math.max(cy.open-0.5,Math.min(cy.open+0.5,rawCur));
+        /* entry = harga pasar saat itu (cur) + spread — BUY di ask (lebih
+           tinggi), SELL di bid (lebih rendah) — jadi floating awal PERSIS
+           -28 x lot (spread x kontrak), tanpa noise acak tambahan. */
         const spreadAdj=cy.dir==='buy'?LT_SPREAD:-LT_SPREAD;
-        layers.push({dir:cy.dir,lot:cy.lot,open:cy.open+jitter+spreadAdj});
-        const cur=path[Math.min(i,path.length-1)];
+        layers.push({dir:cy.dir,lot:cy.lot,open:cur+spreadAdj});
         const rows=layers.map(L=>({dir:L.dir,lot:L.lot,open:L.open,close:cy.close,cur,pnl:ltCalcPnl(L.dir,L.lot,L.open,cur)}));
         const floating=rows.reduce((sum,r)=>sum+r.pnl,0);
         const marginTotal=layers.reduce((s,L)=>s+ltCalcMargin(L.lot,L.open),0);
