@@ -2196,7 +2196,7 @@ function ltAiCloseChecked(){
   if(lt.aiMeter===false)return;
   ltAiRenderPhases(3,true);
 }
-const LT_SPREAD=0.28; /* spread realistis: harga open posisi dikurangi ini */
+const LT_SPREAD=0.28; /* spread realistis (poin): BUY +spread, SELL -spread */
 async function ltPlayLoop(){
   let realized=0;
   while(_ltPlayActive){
@@ -2223,7 +2223,11 @@ async function ltPlayLoop(){
       for(let i=0;i<cy.layers;i++){
         if(!_ltPlayActive) return;
         const jitter=(Math.random()*2-1)*1.0; // toleransi open ±1 poin
-        layers.push({dir:cy.dir,lot:cy.lot,open:cy.open+jitter-LT_SPREAD});
+        /* spread realistis: BUY beli di harga lebih TINGGI (ask), SELL jual
+           di harga lebih RENDAH (bid) — supaya floating awal konsisten
+           negatif (rugi spread) di KEDUA arah, bukan cuma salah satu */
+        const spreadAdj=cy.dir==='buy'?LT_SPREAD:-LT_SPREAD;
+        layers.push({dir:cy.dir,lot:cy.lot,open:cy.open+jitter+spreadAdj});
         const cur=path[Math.min(i,path.length-1)];
         const rows=layers.map(L=>({dir:L.dir,lot:L.lot,open:L.open,close:cy.close,cur,pnl:ltCalcPnl(L.dir,L.lot,L.open,cur)}));
         const floating=rows.reduce((sum,r)=>sum+r.pnl,0);
