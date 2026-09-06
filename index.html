@@ -852,7 +852,7 @@ function renderTrades(){
     /* mark = label penutupan [sl]/[tp] bawaan riwayat turunan Live Trade */
     const priceSpan=spanTag(formatPriceNum(t.open,t.sym)+'  →  '+formatPriceNum(t.close,t.sym),GS.price,false);
     const dateSpan=spanTag(t.time,GS.date,true);
-    const pnlSpan=spanTag(formatMoney(pnl,2,true),Object.assign({},GS.pnl,{color:pnlColor}),true);
+    const pnlSpan=spanTag(formatMoney(pnl,2,false),Object.assign({},GS.pnl,{color:pnlColor}),true);
     return `<div class="trow"><div class="tbar ${bar}"></div><div class="tc"><div class="tleft"><div class="tsl">${symSpan}<span class="tcomma">,</span>${dirSpan}</div><div class="tprices">${priceSpan}</div></div><div class="tright"><div class="tdate">${dateSpan}</div><div class="tpnl">${pnlSpan}</div></div></div><div class="rowbtns"><button class="editbtn" onclick="openTradeForm('${t.dir}',${i})">✎</button><button class="copybtn" onclick="copyT(${i})">⧉</button><button class="delbtn" onclick="delT(${i})">✕</button></div></div>`;
   }).join('');
   applyStretchBoxes(c);
@@ -922,7 +922,7 @@ function advParse(){
     return `<tr>
       <td>${escapeHtml(r.dir.toUpperCase())}</td><td>${r.lot.toFixed(2)}</td>
       <td>${escapeHtml(formatPriceNum(r.open,'XAUUSDc'))} → ${escapeHtml(formatPriceNum(r.close,'XAUUSDc'))}</td>
-      <td style="color:${pnlColor};font-weight:700;">${escapeHtml(formatMoney(r.pnl,2,true))}</td>
+      <td style="color:${pnlColor};font-weight:700;">${escapeHtml(formatMoney(r.pnl,2,false))}</td>
       <td>${escapeHtml(r.time)}</td>
     </tr>`;
   }).join('');
@@ -1866,7 +1866,7 @@ function ltRenderHistList(){
   if(!lt.history.length){c.innerHTML='<div class="ltcyc-row" style="color:#8e8e93;">Belum ada — tambah siklus dulu.</div>';return;}
   c.innerHTML=lt.history.map(h=>{
     const pnlColor=h.pnl<0?'#ff6b60':'#6de8a0';
-    return `<div class="ltcyc-row"><div class="ltcyc-info"><b>${h.dir}</b> ${Number(h.lot).toFixed(2)} ${escapeHtml(h.sym)} · ${escapeHtml(formatPriceNum(h.open,h.sym))} → ${escapeHtml(formatPriceNum(h.close,h.sym))}<br><span style="color:#8e8e93;font-size:11px;">${escapeHtml(h.timeOpen)} → ${escapeHtml(h.timeClose)}</span></div><b style="color:${pnlColor};flex-shrink:0;">${escapeHtml(formatMoney(h.pnl,2,true))}</b></div>`;
+    return `<div class="ltcyc-row"><div class="ltcyc-info"><b>${h.dir}</b> ${Number(h.lot).toFixed(2)} ${escapeHtml(h.sym)} · ${escapeHtml(formatPriceNum(h.open,h.sym))} → ${escapeHtml(formatPriceNum(h.close,h.sym))}<br><span style="color:#8e8e93;font-size:11px;">${escapeHtml(h.timeOpen)} → ${escapeHtml(h.timeClose)}</span></div><b style="color:${pnlColor};flex-shrink:0;">${escapeHtml(formatMoney(h.pnl,2,false))}</b></div>`;
   }).join('');
 }
 /* kirim riwayat turunan ke app Riwayat sebagai project baru — semua fitur
